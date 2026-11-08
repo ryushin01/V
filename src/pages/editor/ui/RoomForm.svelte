@@ -99,10 +99,10 @@
 		{/each}
 	</ul>
 	<div class="actions">
-		<Button size="sm" onclick={() => session.addOpening('door')}
+		<Button size="sm" disabled={!session.canAddOpening} onclick={() => session.addOpening('door')}
 			><Icon name="plus" size={16} /> 문</Button
 		>
-		<Button size="sm" onclick={() => session.addOpening('window')}
+		<Button size="sm" disabled={!session.canAddOpening} onclick={() => session.addOpening('window')}
 			><Icon name="plus" size={16} /> 창문</Button
 		>
 	</div>

@@ -3,7 +3,14 @@ export { analyzePlan, CHAIR_CLEARANCE_CM, viewingRange } from './model/analysis'
 export { CATALOG, CATEGORY_LABELS, getCatalogEntry } from './model/catalog';
 export { createEmptyPlan, createSamplePlan } from './model/factory';
 export { findFreeSpot, halfExtents } from './model/placement';
-export { openingGeometry, ROOM_LIMITS, snapToWall, WALL_LABELS, wallLength } from './model/room';
+export {
+	openingGeometry,
+	PLAN_LIMITS,
+	ROOM_LIMITS,
+	snapToWall,
+	WALL_LABELS,
+	wallLength
+} from './model/room';
 export { parsePlan, stringifyPlan } from './model/serialize';
 export type {
 	Analysis,

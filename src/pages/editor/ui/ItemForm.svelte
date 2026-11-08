@@ -82,7 +82,7 @@
 				><Icon name="rotateRight" size={16} /> 오른쪽 15°</Button
 			>
 		{/if}
-		<Button size="sm" onclick={() => session.duplicateItem(item.id)}
+		<Button size="sm" disabled={!session.canAddItem} onclick={() => session.duplicateItem(item.id)}
 			><Icon name="copy" size={16} /> 복제</Button
 		>
 		<Button size="sm" variant="danger" onclick={() => session.removeItem(item.id)}

@@ -6,6 +6,7 @@ import {
 	findFreeSpot,
 	getCatalogEntry,
 	halfExtents,
+	PLAN_LIMITS,
 	ROOM_LIMITS,
 	snapToWall,
 	wallLength,
@@ -61,6 +62,8 @@ export class EditorSession {
 
 	readonly selected = $derived(this.items.find((item) => item.id === this.selectedId) ?? null);
 	readonly analysis = $derived(analyzePlan(this.room, this.items));
+	readonly canAddItem = $derived(this.items.length < PLAN_LIMITS.items);
+	readonly canAddOpening = $derived(this.room.openings.length < PLAN_LIMITS.openings);
 	readonly canUndo = $derived(this.#past.length > 0);
 	readonly canRedo = $derived(this.#future.length > 0);
 
@@ -145,6 +148,7 @@ export class EditorSession {
 	}
 
 	addItem(catalogId: string) {
+		if (!this.canAddItem) return;
 		const entry = getCatalogEntry(catalogId);
 		const before = this.#problemCount();
 		const spot = findFreeSpot(this.room, this.items, entry);
@@ -159,7 +163,7 @@ export class EditorSession {
 
 	duplicateItem(id: string) {
 		const source = this.items.find((item) => item.id === id);
-		if (!source) return;
+		if (!source || !this.canAddItem) return;
 		const copy = new PlacedItem({ ...source.toData(), id: createId() });
 		this.#place(copy, source.x + 20, source.y + 20);
 		this.#transact(() => {
@@ -318,6 +322,7 @@ export class EditorSession {
 	}
 
 	addOpening(kind: Opening['kind']) {
+		if (!this.canAddOpening) return;
 		this.#transact(() => {
 			this.room.openings.push({
 				id: createId(),

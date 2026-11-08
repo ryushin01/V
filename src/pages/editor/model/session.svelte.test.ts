@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyPlan, createSamplePlan } from '#entities/plan';
+import { createEmptyPlan, createSamplePlan, PLAN_LIMITS } from '#entities/plan';
 import { EditorSession } from './session.svelte';
 
 function sessionWithDesk() {
@@ -112,6 +112,25 @@ describe('EditorSession', () => {
 		session.items[0].x = session.room.width;
 		session.duplicateItem(session.items[0].id);
 		expect(session.items[1].x).toBe(session.room.width);
+	});
+
+	it('파일로 다시 불러올 수 있는 개수까지만 추가합니다', () => {
+		const plan = createEmptyPlan();
+		const session = new EditorSession({
+			...plan,
+			items: Array.from({ length: PLAN_LIMITS.items }, (_, index) => ({
+				id: `item-${index}`,
+				catalogId: 'chair',
+				label: '',
+				x: 100,
+				y: 100,
+				rotation: 0,
+				price: 0
+			}))
+		});
+		session.addItem('chair');
+		session.duplicateItem('item-0');
+		expect(session.items).toHaveLength(PLAN_LIMITS.items);
 	});
 
 	it('저장 데이터로 내보냅니다', () => {

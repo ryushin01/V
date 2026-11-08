@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Icon } from '#shared/ui';
-	import { CATALOG, CATEGORY_LABELS, type CatalogCategory } from '#entities/plan';
+	import { CATALOG, CATEGORY_LABELS, PLAN_LIMITS, type CatalogCategory } from '#entities/plan';
 	import type { EditorSession } from '../model/session.svelte';
 
 	let { session }: { session: EditorSession } = $props();
@@ -14,13 +14,20 @@
 
 <section class="panel" aria-labelledby="catalog-heading">
 	<h2 id="catalog-heading" tabindex="-1">물건 추가</h2>
+	{#if !session.canAddItem}
+		<p class="limit">물건은 {PLAN_LIMITS.items}개까지 놓을 수 있습니다.</p>
+	{/if}
 	{#each groups as group (group.category)}
 		<details open>
 			<summary>{group.label}</summary>
 			<ul>
 				{#each group.entries as entry (entry.id)}
 					<li>
-						<button type="button" onclick={() => session.addItem(entry.id)}>
+						<button
+							type="button"
+							disabled={!session.canAddItem}
+							onclick={() => session.addItem(entry.id)}
+						>
 							<span class="name">{entry.name}</span>
 							<span class="measure">{entry.width}×{entry.depth}</span>
 							<Icon name="plus" size={16} />
@@ -44,6 +51,17 @@
 		font-size: 1.125rem;
 		letter-spacing: -0.02em;
 		outline: none;
+	}
+
+	.limit {
+		margin-bottom: 0.5rem;
+		font-size: 0.875rem;
+		color: var(--accent-deep);
+	}
+
+	button:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
 	}
 
 	details {

@@ -2,6 +2,8 @@ import type { Point } from '#shared/lib/geometry';
 import type { Opening, RoomData, Wall } from './types';
 
 export const ROOM_LIMITS = { min: 150, max: 1500 } as const;
+/** 편집과 파일 불러오기에 함께 쓰는 개수 한도입니다. */
+export const PLAN_LIMITS = { items: 500, openings: 40 } as const;
 
 export const WALL_LABELS: Record<Wall, string> = {
 	north: '위쪽 벽',
