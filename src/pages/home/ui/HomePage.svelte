@@ -26,13 +26,20 @@
 
 	onMount(() => tracker.start());
 
-	let drawingWidth = $state(0);
-	let measure = $state<{ x: number; y: number } | null>(null);
-	const drawingScale = $derived(drawingWidth > 0 ? drawingWidth / (heroPlan.room.width + 16) : 1);
+	let areaWidth = $state(0);
+	let areaHeight = $state(0);
+	let measure = $state<{ px: number; py: number; x: number; y: number } | null>(null);
 
+	/** 도면 위 포인터 위치를 방 기준 cm로 바꿉니다. 도면 여백과 방 밖은 표시하지 않습니다. */
 	function trackMeasure(event: PointerEvent & { currentTarget: HTMLElement }) {
 		const rect = event.currentTarget.getBoundingClientRect();
-		measure = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+		const { width, depth } = heroPlan.room;
+		const scale = Math.min(areaWidth / (width + 16), areaHeight / (depth + 16));
+		const px = event.clientX - rect.left;
+		const py = event.clientY - rect.top;
+		const x = (px - (areaWidth - scale * (width + 16)) / 2) / scale - 8;
+		const y = (py - (areaHeight - scale * (depth + 16)) / 2) / scale - 8;
+		measure = x >= 0 && y >= 0 && x <= width && y <= depth ? { px, py, x, y } : null;
 	}
 
 	let plans = $state.raw<PlanData[]>([]);
@@ -128,31 +135,34 @@
 <main>
 	<section class="hero" data-section="소개">
 		<HeroRulers />
-		<figure
-			class="drawing"
-			bind:clientWidth={drawingWidth}
-			onpointermove={trackMeasure}
-			onpointerleave={() => (measure = null)}
-		>
-			<PlanPreview
-				plan={heroPlan}
-				xray={xray.on}
-				label="왼쪽 벽 쪽에 책상과 모니터, 오른쪽 벽 쪽에 TV장, 가운데에 소파를 놓은 방의 평면도"
-			/>
-			{#if measure}
-				<span class="line h" style:top={`${measure.y}px`} aria-hidden="true"></span>
-				<span class="line v" style:left={`${measure.x}px`} aria-hidden="true"></span>
-				<span
-					class="coords measure"
-					style:top={`${measure.y + 10}px`}
-					style:left={`${measure.x + 10}px`}
-					aria-hidden="true"
-				>
-					X {Math.round(measure.x / drawingScale - 8)} · Y {Math.round(
-						measure.y / drawingScale - 8
-					)} cm
-				</span>
-			{/if}
+		<figure class="drawing">
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="plan-area"
+				bind:clientWidth={areaWidth}
+				bind:clientHeight={areaHeight}
+				onpointermove={trackMeasure}
+				onpointerleave={() => (measure = null)}
+			>
+				(measure = null)} >
+				<PlanPreview
+					plan={heroPlan}
+					xray={xray.on}
+					label="왼쪽 벽 쪽에 책상과 모니터, 오른쪽 벽 쪽에 TV장, 가운데에 소파를 놓은 방의 평면도"
+				/>
+				{#if measure}
+					<span class="line h" style:top={`${measure.py}px`} aria-hidden="true"></span>
+					<span class="line v" style:left={`${measure.px}px`} aria-hidden="true"></span>
+					<span
+						class="coords measure"
+						style:top={`${measure.py + 10}px`}
+						style:left={`${measure.px + 10}px`}
+						aria-hidden="true"
+					>
+						X {Math.round(measure.x)} · Y {Math.round(measure.y)} cm
+					</span>
+				{/if}
+			</div>
 			<figcaption class="measure">460 × 380 cm</figcaption>
 		</figure>
 		<div class="title">
@@ -303,6 +313,11 @@
 		margin: 0;
 		aspect-ratio: 46 / 41;
 		grid-template-rows: minmax(0, 1fr) auto;
+	}
+
+	.plan-area {
+		position: relative;
+		min-height: 0;
 	}
 
 	.line {

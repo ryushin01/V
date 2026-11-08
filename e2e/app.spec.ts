@@ -61,6 +61,28 @@ test.describe('룰러', () => {
 		await expect(first).not.toHaveAttribute('x', before ?? '');
 	});
 
+	test('오른쪽 눈금이 없는 좁은 창에서는 기본 스크롤바를 유지합니다', async ({ page }) => {
+		await page.setViewportSize({ width: 600, height: 800 });
+		await page.goto('/');
+		await expect(page.getByTestId('page-scale')).toBeHidden();
+		const scrollbar = await page.evaluate(
+			() => getComputedStyle(document.documentElement).scrollbarWidth
+		);
+		expect(scrollbar).not.toBe('none');
+	});
+
+	test('처음 화면의 도면 좌표는 방 안에서만 표시합니다', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/');
+		const area = page.locator('.plan-area');
+		const box = await area.boundingBox();
+		if (!box) throw new Error('도면이 없습니다');
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+		await expect(area.locator('.coords')).toContainText(/X \d+ · Y \d+ cm/);
+		await page.mouse.move(box.x + 1, box.y + 1);
+		await expect(area.locator('.coords')).toHaveCount(0);
+	});
+
 	test('처음 화면 룰러는 64px마다 숫자를 표시합니다', async ({ page }) => {
 		await page.goto('/');
 		for (const axis of ['x', 'y']) {

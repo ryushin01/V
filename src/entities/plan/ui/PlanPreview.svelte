@@ -14,7 +14,13 @@
 	}: { plan: PlanData; label?: string; xray?: boolean } = $props();
 
 	let width = $state(0);
-	const scale = $derived(width > 0 ? width / (plan.room.width + 16) : 1);
+	let height = $state(0);
+	/** SVG는 viewBox 비율을 유지하므로 가로·세로 중 작은 배율로 그려집니다. */
+	const scale = $derived(
+		width > 0 && height > 0
+			? Math.min(width / (plan.room.width + 16), height / (plan.room.depth + 16))
+			: 1
+	);
 	const connections = $derived(xray ? analyzePlan(plan.room, plan.items).connections : []);
 
 	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, surface: 3 } as const;
@@ -32,6 +38,7 @@
 	aria-label={label || undefined}
 	aria-hidden={label ? undefined : 'true'}
 	bind:clientWidth={width}
+	bind:clientHeight={height}
 >
 	<RoomOutline room={plan.room} />
 	{#each items as { item, entry } (item.id)}

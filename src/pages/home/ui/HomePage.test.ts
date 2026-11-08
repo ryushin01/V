@@ -1,15 +1,13 @@
 import 'fake-indexeddb/auto';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { deletePlan, listPlans, savePlan, createEmptyPlan } from '#entities/plan';
+import { createEmptyPlan, createSamplePlan, deletePlan, listPlans, savePlan } from '#entities/plan';
 import HomePage from './HomePage.svelte';
 import BuildStage from './BuildStage.svelte';
 import HeroRulers from './HeroRulers.svelte';
 import PageScale from './PageScale.svelte';
 import { ScrollTracker } from '../model/scroll.svelte';
-import { createSamplePlan } from '#entities/plan';
-import { fireEvent } from '@testing-library/svelte';
 
 const goto = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 vi.mock('$app/navigation', () => ({ goto }));
