@@ -51,3 +51,7 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 ## CI
 
 `.github/workflows/ci.yml`이 포맷, ESLint, Steiger, 타입, 단위 테스트, 빌드, Storybook 빌드, E2E를 차례로 실행합니다.
+
+## 배포
+
+Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에, PR을 열면 미리보기에 배포됩니다. 배치도 편집 주소는 `vercel.json`의 rewrite로 `200.html`을 내려 줍니다.

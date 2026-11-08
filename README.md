@@ -6,6 +6,8 @@
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
 
+**[데모 바로 보기](https://v-setup-planner.vercel.app/)** · 첫 화면에서 **예시로 시작하기**를 누르면 됩니다.
+
 > **프로젝트 상태:** Svelte 5 runes mode로 만든 **포트폴리오 프로젝트**입니다. 사각형 방의 2D 배치까지 구현했고, 서버 없이 브라우저의 IndexedDB에만 저장합니다. 물건의 치수와 소비 전력은 흔한 제품을 기준으로 잡은 기본값이며, 화면의 금액은 모두 가상 데이터입니다.
 
 ## 화면
@@ -39,14 +41,14 @@
 
 ![Svelte, TypeScript, Vite, Vitest, Playwright, pnpm, GitHub Actions](https://skillicons.dev/icons?i=svelte,ts,vite,vitest,playwright,pnpm,githubactions)
 
-| 구분           | 사용 기술                                                                                                |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| 프레임워크     | Svelte 5 (runes mode), SvelteKit 3, adapter-static, TypeScript                                           |
-| 상태           | class 기반 `$state`·`$derived`, `$state.raw`, `$state.snapshot`(되돌리기), `svelte/motion`, `{@attach}`  |
-| 그리기         | SVG 2D, Scoped CSS와 CSS 변수                                                                            |
-| 저장           | IndexedDB, JSON 파일                                                                                     |
-| 품질           | Feature-Sliced Design(Steiger), ESLint, Prettier, svelte-check, Vitest, Testing Library, Playwright, axe |
-| 문서·배포 준비 | Storybook 10, GitHub Actions                                                                             |
+| 구분       | 사용 기술                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| 프레임워크 | Svelte 5 (runes mode), SvelteKit 3, adapter-static, TypeScript                                           |
+| 상태       | class 기반 `$state`·`$derived`, `$state.raw`, `$state.snapshot`(되돌리기), `svelte/motion`, `{@attach}`  |
+| 그리기     | SVG 2D, Scoped CSS와 CSS 변수                                                                            |
+| 저장       | IndexedDB, JSON 파일                                                                                     |
+| 품질       | Feature-Sliced Design(Steiger), ESLint, Prettier, svelte-check, Vitest, Testing Library, Playwright, axe |
+| 문서·배포  | Storybook 10, GitHub Actions, Vercel(정적 배포)                                                          |
 
 ## 시작하기
 
