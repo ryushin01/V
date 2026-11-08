@@ -1,11 +1,11 @@
 import type { Meta } from '@storybook/sveltekit';
-import RulerFrame from './RulerFrame.svelte';
+import HeroRulers from './HeroRulers.svelte';
 
 const meta = {
-	title: 'pages/home/RulerFrame',
-	component: RulerFrame,
+	title: 'pages/home/HeroRulers',
+	component: HeroRulers,
 	parameters: { layout: 'fullscreen' }
-} satisfies Meta<typeof RulerFrame>;
+} satisfies Meta<typeof HeroRulers>;
 
 export default meta;
 

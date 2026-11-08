@@ -15,15 +15,29 @@
 		range?: { start: number; end: number } | null;
 		/** 끌어서 화면을 옮길 때 호출합니다. 없으면 표시 전용입니다. */
 		onpan?: (delta: number) => void;
+		/** 배경과 테두리 없이 페이지 위에 바로 그립니다. */
+		bare?: boolean;
+		/** 배율과 상관없이 쓸 눈금 간격 */
+		fixedStep?: { majorCm: number; minorCm: number };
 	}
 
-	let { axis, length, scale, offset, pointer = null, range = null, onpan }: Props = $props();
+	let {
+		axis,
+		length,
+		scale,
+		offset,
+		pointer = null,
+		range = null,
+		onpan,
+		bare = false,
+		fixedStep
+	}: Props = $props();
 
 	const MINOR_TICK = 5;
-	const MID_TICK = 8;
+	const MID_TICK = 9;
 	const MAJOR_TICK = 14;
 
-	const ticks = $derived(computeRulerTicks(length, scale, offset));
+	const ticks = $derived(computeRulerTicks(length, scale, offset, fixedStep));
 	const tickPath = (positions: number[], size: number) =>
 		positions
 			.map((position) => {
@@ -73,6 +87,7 @@
 	class:x={axis === 'x'}
 	class:y={axis === 'y'}
 	class:pannable={!!onpan}
+	class:bare
 	aria-hidden="true"
 	data-testid={`ruler-${axis}`}
 	onpointerdown={handlePointerDown}
@@ -93,9 +108,10 @@
 		<path class="tick major" d={majorPath} />
 		{#each ticks.major as tick (tick.value)}
 			{#if axis === 'x'}
-				<text class="label" x={tick.position + 4} y="24">{tick.value}</text>
+				<text class="label" x={tick.position + (bare ? 0 : 4)} y={bare ? 28 : 24}>{tick.value}</text
+				>
 			{:else}
-				<text class="label" x="17" y={Math.max(tick.position + 4, 11)}>{tick.value}</text>
+				<text class="label" x="18" y={Math.max(tick.position + 4, 11)}>{tick.value}</text>
 			{/if}
 		{/each}
 	</svg>
@@ -126,6 +142,24 @@
 	.ruler.y {
 		width: var(--ruler-y);
 		border-right: 1px solid var(--line);
+	}
+
+	.bare {
+		overflow: visible;
+		border: 0 !important;
+		background: transparent;
+	}
+
+	.bare svg {
+		overflow: visible;
+	}
+
+	.bare .tick {
+		stroke: var(--steel);
+	}
+
+	.bare.x .label {
+		text-anchor: middle;
 	}
 
 	.pannable {

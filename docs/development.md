@@ -27,7 +27,13 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 
 ## 룰러
 
-`computeRulerTicks`가 큰 눈금 약 64px, 잔눈금 약 8px에 가까운 간격을 고릅니다. 숫자는 1·2·5 계열의 깔끔한 cm 값이어야 하므로 실제 간격은 배율에 따라 달라집니다.
+- 편집 화면: `computeRulerTicks`가 큰 눈금 약 64px, 잔눈금 약 8px에 가까운 간격을 고릅니다. 숫자는 1·2·5 계열의 깔끔한 cm 값이어야 하므로 실제 간격은 배율에 따라 달라집니다.
+- 첫 화면: 잔눈금 8px, 중간 눈금 32px, 큰 눈금과 숫자 64px로 고정합니다(`fixedStep`, `bare`). 숫자는 가독성을 위해 11px입니다.
+- 오른쪽 `PageScale`은 스크롤바를 대신하며, 휠·터치·키보드 스크롤은 그대로 동작합니다.
+
+## X-ray
+
+`features/toggle-xray`의 상태는 페이지를 옮겨도 유지됩니다. 켜면 `html[data-xray]`로 색 변수를 바꾸고 `XrayOverlay`가 도면 위에 치수를 그립니다. 같은 정보가 물건 이름과 점검 패널에 있어 오버레이는 보조기술에 숨깁니다.
 
 ## 점검 기준
 

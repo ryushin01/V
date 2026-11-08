@@ -3,6 +3,7 @@
 	import { Button, Dialog, Icon } from '#shared/ui';
 	import { stringifyPlan } from '#entities/plan';
 	import { ThemeToggle } from '#features/toggle-theme';
+	import { XrayToggle } from '#features/toggle-xray';
 	import type { EditorSession } from '../model/session.svelte';
 
 	type SaveStatus = 'saved' | 'saving' | 'error';
@@ -71,6 +72,7 @@
 		<Button size="sm" aria-label="단축키 안내" title="단축키 안내" onclick={() => (helpOpen = true)}
 			><Icon name="keyboard" /></Button
 		>
+		<XrayToggle />
 		<ThemeToggle />
 	</div>
 </header>

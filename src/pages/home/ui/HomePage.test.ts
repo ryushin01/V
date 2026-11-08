@@ -4,7 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { deletePlan, listPlans, savePlan, createEmptyPlan } from '#entities/plan';
 import HomePage from './HomePage.svelte';
-import RulerFrame from './RulerFrame.svelte';
+import BuildStage from './BuildStage.svelte';
+import HeroRulers from './HeroRulers.svelte';
+import PageScale from './PageScale.svelte';
+import { ScrollTracker } from '../model/scroll.svelte';
+import { createSamplePlan } from '#entities/plan';
+import { fireEvent } from '@testing-library/svelte';
 
 const goto = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 vi.mock('$app/navigation', () => ({ goto }));
@@ -47,10 +52,40 @@ describe('HomePage', () => {
 	});
 });
 
-describe('RulerFrame', () => {
-	it('X축과 Y축 룰러를 고정합니다', () => {
-		render(RulerFrame);
+describe('HeroRulers', () => {
+	it('X축과 Y축 룰러를 함께 그립니다', () => {
+		render(HeroRulers);
 		expect(screen.getByTestId('ruler-x')).toBeInTheDocument();
 		expect(screen.getByTestId('ruler-y')).toBeInTheDocument();
+	});
+});
+
+describe('PageScale', () => {
+	it('포인터를 누른 위치로 스크롤합니다', async () => {
+		const tracker = new ScrollTracker();
+		const scrollToProgress = vi.spyOn(tracker, 'scrollToProgress').mockImplementation(() => {});
+		render(PageScale, { tracker });
+		const scale = screen.getByTestId('page-scale');
+		await fireEvent.pointerDown(scale, { clientY: 10, pointerId: 1 });
+		expect(scrollToProgress).toHaveBeenCalledOnce();
+		expect(scale.getAttribute('aria-hidden')).toBe('true');
+	});
+
+	it('있는 동안에만 기본 스크롤바를 숨깁니다', () => {
+		const { unmount } = render(PageScale, { tracker: new ScrollTracker() });
+		expect(document.documentElement.classList.contains('has-scale')).toBe(true);
+		unmount();
+		expect(document.documentElement.classList.contains('has-scale')).toBe(false);
+	});
+});
+
+describe('BuildStage', () => {
+	it('여덟 단계를 모두 보조기술에 제공합니다', () => {
+		const { container } = render(BuildStage, {
+			tracker: new ScrollTracker(),
+			plan: createSamplePlan()
+		});
+		expect(container.querySelectorAll('ol > li')).toHaveLength(8);
+		expect(container.querySelector('[aria-current="step"]')?.textContent).toContain('벽');
 	});
 });
