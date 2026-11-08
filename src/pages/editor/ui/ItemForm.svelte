@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button, Icon, NumberField } from '#shared/ui';
-	import { SPEC_LIMITS, type SpecKey } from '#entities/plan';
+	import { getCatalogEntry, SPEC_LIMITS, type SpecKey } from '#entities/plan';
 	import type { PlacedItem } from '../model/placed-item.svelte';
 	import type { EditorSession } from '../model/session.svelte';
 
@@ -17,7 +17,8 @@
 	];
 	const specFields = $derived(
 		SPEC_FIELDS.filter(({ key }) => {
-			const value = item.entry[key];
+			// 0을 입력해도 입력란이 사라지지 않도록 카탈로그 기준으로 판단합니다.
+			const value = getCatalogEntry(item.catalogId)[key];
 			return value !== undefined && (key === 'width' || key === 'depth' || value > 0);
 		})
 	);

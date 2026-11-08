@@ -63,4 +63,4 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 
 ## 배포
 
-Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에, PR을 열면 미리보기에 배포됩니다. 배치도 편집 주소는 `vercel.json`의 rewrite로 `200.html`을 내려 줍니다.
+Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에, PR을 열면 미리보기에 배포됩니다. 배치도 편집 주소는 `vercel.json`의 rewrite로 `spa.html`을 내려 주고, 없는 주소는 같은 내용의 `404.html`을 404 상태로 내려 줘 앱의 오류 화면이 뜹니다.

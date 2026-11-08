@@ -121,6 +121,7 @@ export class EditorSession {
 		this.room = structuredClone(snapshot.room);
 		this.items = snapshot.items.map((item) => new PlacedItem(item));
 		this.underlay = snapshot.underlay;
+		if (!snapshot.underlay) this.calibration = null;
 		if (!this.items.some((item) => item.id === this.selectedId)) this.selectedId = null;
 	}
 

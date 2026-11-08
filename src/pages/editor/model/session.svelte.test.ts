@@ -180,6 +180,15 @@ describe('EditorSession', () => {
 		expect(session.calibration).toBeNull();
 	});
 
+	it('되돌리기로 이미지가 사라지면 축척 맞추기도 끝냅니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.setUnderlay(image);
+		session.startCalibration();
+		session.undo();
+		expect(session.underlay).toBeNull();
+		expect(session.calibration).toBeNull();
+	});
+
 	it('모서리를 자르면 문이 남은 벽으로 옮겨 갑니다', () => {
 		const session = new EditorSession(createEmptyPlan());
 		session.addOpening('window');
