@@ -10,7 +10,7 @@ import {
 	type RotatedRect
 } from '#shared/lib/geometry';
 import { josa } from '#shared/lib/josa';
-import { getCatalogEntry } from './catalog';
+import { resolveEntry } from './catalog';
 import { openingGeometry } from './room';
 import type {
 	Analysis,
@@ -42,7 +42,7 @@ interface Resolved {
 }
 
 function resolveItem(data: ItemData): Resolved {
-	const entry = getCatalogEntry(data.catalogId);
+	const entry = resolveEntry(data);
 	const rect = {
 		cx: data.x,
 		cy: data.y,

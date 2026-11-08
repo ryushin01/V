@@ -26,7 +26,12 @@ export interface ItemData {
 	y: number;
 	rotation: number;
 	price: number;
+	/** 카탈로그 기본값 대신 쓸 사용자 규격 */
+	specs?: ItemSpecs;
 }
+
+export type SpecKey = 'width' | 'depth' | 'watts' | 'cable' | 'diagonalInch' | 'ports';
+export type ItemSpecs = Partial<Record<SpecKey, number>>;
 
 export interface PlanData {
 	version: 1;

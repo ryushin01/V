@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createEmptyPlan, createSamplePlan } from '#entities/plan';
 import { EditorSession } from '../model/session.svelte';
 import CatalogPanel from './CatalogPanel.svelte';
@@ -27,6 +27,27 @@ describe('CatalogPanel', () => {
 });
 
 describe('ItemForm', () => {
+	it('실제 제품에 맞게 규격을 바꿉니다', async () => {
+		const session = empty();
+		session.addItem('tv-55');
+		render(ItemForm, { session, item: session.items[0] });
+		const size = screen.getByLabelText('화면 크기');
+		await userEvent.clear(size);
+		await userEvent.type(size, '75');
+		await userEvent.tab();
+		expect(session.items[0].entry.diagonalInch).toBe(75);
+		await userEvent.click(screen.getByRole('button', { name: '기본 규격으로' }));
+		expect(session.items[0].entry.diagonalInch).toBe(55);
+	});
+
+	it('해당 없는 규격은 보여 주지 않습니다', () => {
+		const session = empty();
+		session.addItem('chair');
+		render(ItemForm, { session, item: session.items[0] });
+		expect(screen.queryByLabelText('소비 전력')).toBeNull();
+		expect(screen.getByLabelText('가로')).toBeInTheDocument();
+	});
+
 	it('숫자 입력은 끌기의 대안입니다', async () => {
 		const session = empty();
 		session.addItem('desk-140');
@@ -137,6 +158,34 @@ describe('FloorPlan', () => {
 		const element = screen.getByRole('button', { name: /책상 140/ });
 		await fireEvent.keyDown(element, { key: 'r', ctrlKey: true });
 		expect(session.items[0].rotation).toBe(0);
+	});
+
+	it('두 손가락으로 확대하고 물건 끌기는 취소합니다', async () => {
+		const session = empty();
+		session.addItem('desk-140');
+		const { container } = render(FloorPlan, { session });
+		const svg = container.querySelector('.canvas svg') as SVGSVGElement;
+		svg.setPointerCapture = vi.fn();
+		const item = screen.getByRole('button', { name: /책상 140/ });
+		const start = session.items[0].x;
+		const touch = (id: number, clientX: number) => ({
+			pointerId: id,
+			pointerType: 'touch',
+			clientX,
+			clientY: 100,
+			button: 0
+		});
+		await fireEvent.pointerDown(item, touch(1, 100));
+		await fireEvent.pointerMove(svg, touch(1, 180));
+		expect(session.items[0].x).not.toBe(start);
+		await fireEvent.pointerDown(svg, touch(2, 200));
+		expect(session.items[0].x).toBe(start);
+		const before = session.viewport.scale;
+		await fireEvent.pointerMove(svg, touch(2, 400));
+		expect(session.viewport.scale).toBeGreaterThan(before);
+		await fireEvent.pointerUp(svg, touch(1, 180));
+		await fireEvent.pointerUp(svg, touch(2, 400));
+		expect(session.canUndo).toBe(true);
 	});
 
 	it('화면 이동 버튼으로 끌기 없이 움직입니다', async () => {

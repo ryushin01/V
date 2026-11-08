@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { Button, Dialog, Icon } from '#shared/ui';
-	import { stringifyPlan } from '#entities/plan';
+	import { encodePlan, stringifyPlan } from '#entities/plan';
 	import { ThemeToggle } from '#features/toggle-theme';
 	import { XrayToggle } from '#features/toggle-xray';
 	import type { EditorSession } from '../model/session.svelte';
@@ -29,6 +29,33 @@
 		['Esc', '끌던 동작 취소'],
 		['Shift + 끌기', '격자 맞춤 없이 이동']
 	] as const;
+
+	let shareOpen = $state(false);
+	let shareUrl = $state('');
+	let shareStatus = $state('');
+	/** 메신저에 따라 이보다 긴 주소가 잘릴 수 있습니다. */
+	const LONG_LINK = 2000;
+
+	async function openShare() {
+		shareUrl = '';
+		shareStatus = '';
+		shareOpen = true;
+		try {
+			const token = await encodePlan(session.toData());
+			shareUrl = `${new URL(resolve('/shared'), location.origin).href}#${token}`;
+		} catch {
+			shareStatus = '링크를 만들지 못했습니다. JSON 내보내기를 이용해 주세요.';
+		}
+	}
+
+	async function copyShare() {
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+			shareStatus = '링크를 복사했습니다.';
+		} catch {
+			shareStatus = '자동 복사가 막혀 있습니다. 위 입력란의 주소를 직접 복사해 주세요.';
+		}
+	}
 
 	function exportFile() {
 		const blob = new Blob([stringifyPlan(session.toData())], { type: 'application/json' });
@@ -68,6 +95,7 @@
 			disabled={!session.canRedo}
 			onclick={() => session.redo()}><Icon name="redo" /></Button
 		>
+		<Button size="sm" onclick={openShare}><Icon name="share" size={16} /> 공유</Button>
 		<Button size="sm" onclick={exportFile}><Icon name="download" size={16} /> 내보내기</Button>
 		<Button size="sm" aria-label="단축키 안내" title="단축키 안내" onclick={() => (helpOpen = true)}
 			><Icon name="keyboard" /></Button
@@ -76,6 +104,30 @@
 		<ThemeToggle />
 	</div>
 </header>
+
+<Dialog bind:open={shareOpen} title="공유 링크">
+	<p class="share-note">
+		받은 사람은 이 배치를 보고 자기 브라우저로 복사할 수 있습니다. 금액은 링크에 넣지 않습니다.
+	</p>
+	<div class="share-field">
+		<label for="share-url">주소</label>
+		<input
+			id="share-url"
+			type="text"
+			readonly
+			value={shareUrl}
+			onfocus={(event) => event.currentTarget.select()}
+		/>
+	</div>
+	{#if shareUrl.length > LONG_LINK}
+		<p class="share-note">주소가 길어 일부 메신저에서 잘릴 수 있습니다.</p>
+	{/if}
+	<p class="share-status" role="status">{shareStatus}</p>
+	{#snippet actions()}
+		<Button onclick={() => (shareOpen = false)}>닫기</Button>
+		<Button variant="primary" disabled={!shareUrl} onclick={copyShare}>복사</Button>
+	{/snippet}
+</Dialog>
 
 <Dialog bind:open={helpOpen} title="키보드 조작">
 	<dl class="keys">
@@ -160,6 +212,29 @@
 		flex-wrap: wrap;
 		gap: 0.25rem;
 		margin-left: auto;
+	}
+
+	.share-note,
+	.share-status {
+		font-size: 0.9375rem;
+		color: var(--ink-2);
+	}
+
+	.share-field {
+		display: grid;
+		gap: 0.25rem;
+		margin-block: 0.75rem;
+	}
+
+	.share-field label {
+		font-size: 0.8125rem;
+		color: var(--ink-2);
+	}
+
+	.share-field input {
+		border-color: var(--control);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
 	}
 
 	.keys {
