@@ -7,6 +7,8 @@ export type ParseResult = { ok: true; plan: PlanData } | { ok: false; error: str
 
 const WALLS: readonly Wall[] = ['north', 'east', 'south', 'west'];
 const COORDINATE_LIMIT = 10000;
+const MAX_OPENINGS = 40;
+const MAX_ITEMS = 500;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -70,6 +72,12 @@ export function parsePlan(text: string): ParseResult {
 	}
 	if (!Array.isArray(openings) || !Array.isArray(raw.items)) {
 		return { ok: false, error: '문·창문이나 물건 목록이 빠져 있습니다.' };
+	}
+	if (openings.length > MAX_OPENINGS || raw.items.length > MAX_ITEMS) {
+		return {
+			ok: false,
+			error: `문·창문은 ${MAX_OPENINGS}개, 물건은 ${MAX_ITEMS}개까지 불러올 수 있습니다.`
+		};
 	}
 	const parsedOpenings = openings.map((opening) => parseOpening(opening, { width, depth }));
 	if (parsedOpenings.some((opening) => opening === null)) {

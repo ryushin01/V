@@ -130,6 +130,15 @@ describe('FloorPlan', () => {
 		expect(item.x).toBe(209);
 	});
 
+	it('브라우저 단축키는 가로채지 않습니다', async () => {
+		const session = empty();
+		session.addItem('desk-140');
+		render(FloorPlan, { session });
+		const element = screen.getByRole('button', { name: /책상 140/ });
+		await fireEvent.keyDown(element, { key: 'r', ctrlKey: true });
+		expect(session.items[0].rotation).toBe(0);
+	});
+
 	it('화면 이동 버튼으로 끌기 없이 움직입니다', async () => {
 		const session = empty();
 		render(FloorPlan, { session });

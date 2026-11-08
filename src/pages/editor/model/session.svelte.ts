@@ -160,12 +160,8 @@ export class EditorSession {
 	duplicateItem(id: string) {
 		const source = this.items.find((item) => item.id === id);
 		if (!source) return;
-		const copy = new PlacedItem({
-			...source.toData(),
-			id: createId(),
-			x: source.x + 20,
-			y: source.y + 20
-		});
+		const copy = new PlacedItem({ ...source.toData(), id: createId() });
+		this.#place(copy, source.x + 20, source.y + 20);
 		this.#transact(() => {
 			this.items.push(copy);
 		});

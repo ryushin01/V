@@ -40,6 +40,7 @@
 		"jsdom": "^31.0.0",
 		"prettier": "^3.9.10",
 		"prettier-plugin-svelte": "^4.1.1",
+		"sirv-cli": "^3.0.1",
 		"steiger": "^0.9.0",
 		"storybook": "^10.6.6",
 		"svelte": "^5.57.2",

@@ -144,6 +144,7 @@ test.describe('점검과 저장', () => {
 		await page.waitForTimeout(500);
 		await page.reload();
 		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+		await expect(page).toHaveURL(/\/plans\//);
 	});
 
 	test('새 배치도 버튼을 빠르게 두 번 눌러도 하나만 만듭니다', async ({ page }) => {

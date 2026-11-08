@@ -98,6 +98,22 @@ describe('EditorSession', () => {
 		expect(session.focusRequest?.id).toBe(desk.id);
 	});
 
+	it('복제한 콘센트도 벽에 붙습니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addItem('outlet-2');
+		session.setPosition(session.items[0].id, 'x', 200);
+		session.duplicateItem(session.items[0].id);
+		expect(session.items[1]).toMatchObject({ x: 220, y: 2 });
+	});
+
+	it('복제한 물건은 방 밖으로 나가지 않습니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addItem('chair');
+		session.items[0].x = session.room.width;
+		session.duplicateItem(session.items[0].id);
+		expect(session.items[1].x).toBe(session.room.width);
+	});
+
 	it('저장 데이터로 내보냅니다', () => {
 		const sample = createSamplePlan();
 		const session = new EditorSession(sample);

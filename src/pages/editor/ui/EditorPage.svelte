@@ -22,16 +22,15 @@
 		const planId = id;
 		let active = true;
 		loadState = 'loading';
-		getPlan(planId).then(
-			(plan) => {
+		getPlan(planId)
+			.then((plan) => {
 				if (!active) return;
 				session = plan ? new EditorSession(plan) : null;
 				loadState = plan ? 'ready' : 'missing';
-			},
-			() => {
+			})
+			.catch(() => {
 				if (active) loadState = 'failed';
-			}
-		);
+			});
 		return () => {
 			active = false;
 		};

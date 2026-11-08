@@ -238,6 +238,18 @@ describe('파일 입출력', () => {
 		}
 	});
 
+	it('지나치게 많은 물건은 거절합니다', () => {
+		const items = Array.from({ length: 501 }, () => ({
+			catalogId: 'chair',
+			x: 10,
+			y: 10,
+			rotation: 0
+		}));
+		const room = { width: 300, depth: 300, openings: [] };
+		const parsed = parsePlan(JSON.stringify({ version: 1, room, items }));
+		expect(parsed.ok).toBe(false);
+	});
+
 	it.each([
 		['{', 'JSON'],
 		['{"version":2,"room":{}}', '버전'],

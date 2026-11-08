@@ -21,6 +21,7 @@
 	let plans = $state.raw<PlanData[]>([]);
 	let status = $state<'loading' | 'ready' | 'failed'>('loading');
 	let importError = $state('');
+	let actionError = $state('');
 	let pendingDelete = $state.raw<PlanData | null>(null);
 	let deleteOpen = $state(false);
 	let fileInput = $state<HTMLInputElement>();
@@ -40,13 +41,14 @@
 	async function openNewPlan(make: () => PlanData) {
 		if (creating) return;
 		creating = true;
+		actionError = '';
 		try {
 			const plan = make();
 			await savePlan(plan);
 			await goto(resolve('/plans/[id]', { id: plan.id }));
 		} catch {
 			creating = false;
-			status = 'failed';
+			actionError = '배치도를 저장하지 못했습니다. 비공개 창이라면 일반 창에서 열어 주세요.';
 		}
 	}
 
@@ -71,10 +73,15 @@
 
 	async function confirmDelete() {
 		if (!pendingDelete) return;
-		await deletePlan(pendingDelete.id);
+		actionError = '';
+		try {
+			await deletePlan(pendingDelete.id);
+			await refresh();
+		} catch {
+			actionError = '배치도를 삭제하지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+		}
 		deleteOpen = false;
 		pendingDelete = null;
-		await refresh();
 	}
 
 	const formatDate = (time: number) =>
@@ -162,6 +169,7 @@
 			</div>
 		</div>
 		{#if importError}<p class="error" role="alert">{importError}</p>{/if}
+		{#if actionError}<p class="error" role="alert">{actionError}</p>{/if}
 
 		{#if status === 'failed'}
 			<p class="error" role="alert">

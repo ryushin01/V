@@ -171,6 +171,8 @@
 	}
 
 	function handleItemKeydown(event: KeyboardEvent, item: PlacedItem) {
+		// Ctrl+R 같은 브라우저 단축키와 되돌리기는 그대로 둡니다.
+		if (event.ctrlKey || event.metaKey || event.altKey) return;
 		const directions: Record<string, Direction> = {
 			ArrowLeft: 'left',
 			ArrowRight: 'right',
