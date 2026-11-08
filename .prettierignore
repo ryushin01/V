@@ -1,0 +1,7 @@
+.svelte-kit
+build
+storybook-static
+playwright-report
+test-results
+pnpm-lock.yaml
+docs/images
