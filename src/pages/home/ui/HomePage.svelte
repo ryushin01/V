@@ -13,10 +13,34 @@
 		savePlan,
 		type PlanData
 	} from '#entities/plan';
-	import { ThemeToggle } from '#features/toggle-theme';
-	import RulerFrame from './RulerFrame.svelte';
+	import { xray } from '#features/toggle-xray';
+	import { reveal } from '#shared/lib/reveal';
+	import { ScrollTracker } from '../model/scroll.svelte';
+	import BuildStage from './BuildStage.svelte';
+	import HeroRulers from './HeroRulers.svelte';
+	import PageScale from './PageScale.svelte';
+	import SiteNav from './SiteNav.svelte';
 
 	const heroPlan = createSamplePlan();
+	const tracker = new ScrollTracker();
+
+	onMount(() => tracker.start());
+
+	let areaWidth = $state(0);
+	let areaHeight = $state(0);
+	let measure = $state<{ px: number; py: number; x: number; y: number } | null>(null);
+
+	/** 도면 위 포인터 위치를 방 기준 cm로 바꿉니다. 도면 여백과 방 밖은 표시하지 않습니다. */
+	function trackMeasure(event: PointerEvent & { currentTarget: HTMLElement }) {
+		const rect = event.currentTarget.getBoundingClientRect();
+		const { width, depth } = heroPlan.room;
+		const scale = Math.min(areaWidth / (width + 16), areaHeight / (depth + 16));
+		const px = event.clientX - rect.left;
+		const py = event.clientY - rect.top;
+		const x = (px - (areaWidth - scale * (width + 16)) / 2) / scale - 8;
+		const y = (py - (areaHeight - scale * (depth + 16)) / 2) / scale - 8;
+		measure = x >= 0 && y >= 0 && x <= width && y <= depth ? { px, py, x, y } : null;
+	}
 
 	let plans = $state.raw<PlanData[]>([]);
 	let status = $state<'loading' | 'ready' | 'failed'>('loading');
@@ -105,56 +129,86 @@
 </svelte:head>
 
 <a class="skip-link" href="#plans">내 배치도로 바로가기</a>
-<RulerFrame />
-
-<header class="top">
-	<a class="mark" href={resolve('/')} aria-label="V 처음으로"
-		>V<span class="tick" aria-hidden="true"></span></a
-	>
-	<ThemeToggle />
-</header>
+<SiteNav {tracker} />
+<PageScale {tracker} />
 
 <main>
-	<section class="hero">
-		<div class="copy">
+	<section class="hero" data-section="소개">
+		<HeroRulers />
+		<figure class="drawing">
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="plan-area"
+				bind:clientWidth={areaWidth}
+				bind:clientHeight={areaHeight}
+				onpointermove={trackMeasure}
+				onpointerleave={() => (measure = null)}
+			>
+				<PlanPreview
+					plan={heroPlan}
+					xray={xray.on}
+					label="왼쪽 벽 쪽에 책상과 모니터, 오른쪽 벽 쪽에 TV장, 가운데에 소파를 놓은 방의 평면도"
+				/>
+				{#if measure}
+					<span class="line h" style:top={`${measure.py}px`} aria-hidden="true"></span>
+					<span class="line v" style:left={`${measure.px}px`} aria-hidden="true"></span>
+					<span
+						class="coords measure"
+						style:top={`${measure.py + 10}px`}
+						style:left={`${measure.px + 10}px`}
+						aria-hidden="true"
+					>
+						X {Math.round(measure.x)} · Y {Math.round(measure.y)} cm
+					</span>
+				{/if}
+			</div>
+			<figcaption class="measure">460 × 380 cm</figcaption>
+		</figure>
+		<div class="title">
 			<p class="measure" lang="en">DESK · GAMING SETUP PLANNER</p>
-			<h1>자로 재고<br />놓으세요.</h1>
-			<p class="lead">
+			<h1 class="display-1">자로 재고<br />놓으세요.</h1>
+			<p class="hint">
+				<span class="dot" aria-hidden="true"></span>
+				<span><b lang="en">X-ray</b>를 켜면 도면 아래의 치수와 케이블이 드러납니다.</span>
+			</p>
+		</div>
+		<div class="lead">
+			<p>
 				책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 크기로 배치하고 동선과 전력까지
 				점검합니다.
 			</p>
 			<div class="cta">
-				<Button variant="primary" onclick={() => openNewPlan(createEmptyPlan)}>
-					새 배치도 만들기 <Icon name="arrow" size={16} />
+				<Button variant="primary" arrow onclick={() => openNewPlan(createEmptyPlan)}>
+					새 배치도 만들기
 				</Button>
 				<Button onclick={() => openNewPlan(createSamplePlan)}>예시로 시작하기</Button>
 			</div>
 		</div>
-		<figure class="drawing">
-			<PlanPreview
-				plan={heroPlan}
-				label="왼쪽 벽 쪽에 책상과 모니터, 오른쪽 벽 쪽에 TV장, 가운데에 소파를 놓은 방의 평면도"
-			/>
-			<figcaption class="measure">460 × 380 cm</figcaption>
-		</figure>
 	</section>
 
-	<section class="checks" aria-labelledby="checks-heading">
-		<h2 id="checks-heading">놓는 순간 점검합니다.</h2>
+	<BuildStage {tracker} plan={heroPlan} />
+
+	<section id="checks" class="checks" aria-labelledby="checks-heading" data-section="점검">
+		<h2 id="checks-heading" class="display-2" {@attach reveal}>놓는 순간 점검합니다.</h2>
 		<ul>
 			{#each CHECKS as [title, body], index (title)}
-				<li>
-					<span class="measure">0{index + 1}</span>
-					<h3>{title}</h3>
+				<li {@attach reveal} style:--i={index}>
+					<h3 class="display-4">{title}</h3>
 					<p>{body}</p>
 				</li>
 			{/each}
 		</ul>
 	</section>
 
-	<section id="plans" class="plans" aria-labelledby="plans-heading" tabindex="-1">
+	<section
+		id="plans"
+		class="plans"
+		aria-labelledby="plans-heading"
+		tabindex="-1"
+		data-section="내 배치도"
+	>
 		<div class="plans-head">
-			<h2 id="plans-heading">내 배치도</h2>
+			<h2 id="plans-heading" class="display-2">내 배치도</h2>
 			<div>
 				<input
 					bind:this={fileInput}
@@ -187,7 +241,7 @@
 							<span class="thumb">
 								<PlanPreview {plan} />
 							</span>
-							<span class="title">{plan.name}</span>
+							<span class="title-text">{plan.name}</span>
 							<span class="measure">
 								{plan.room.width}×{plan.room.depth}cm · 물건 {plan.items.length}개 · {formatDate(
 									plan.updatedAt
@@ -207,7 +261,19 @@
 			</ul>
 		{/if}
 	</section>
+
+	<section class="closing" aria-labelledby="closing-heading" data-section="시작">
+		<h2 id="closing-heading" class="display-1" {@attach reveal}>옮기기 전에,<br />재 보세요.</h2>
+		<Button variant="primary" arrow onclick={() => openNewPlan(createEmptyPlan)}
+			>빈 방에서 시작하기</Button
+		>
+	</section>
 </main>
+
+<footer class="foot measure">
+	<span>배치도는 이 브라우저에만 저장되며 서버로 보내지 않습니다.</span>
+	<a href="https://github.com/ryushin01/V" rel="noreferrer">GitHub</a>
+</footer>
 
 <Dialog bind:open={deleteOpen} title="배치도를 삭제할까요?">
 	<p>‘{pendingDelete?.name}’을 삭제하면 되돌릴 수 없습니다.</p>
@@ -218,62 +284,114 @@
 </Dialog>
 
 <style>
-	.top {
-		position: absolute;
-		top: 0;
-		right: 0;
-		left: 0;
-		z-index: 30;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 2.75rem var(--shell) 0;
-	}
-
-	.mark {
-		display: inline-flex;
-		align-items: flex-end;
-		gap: 0.25rem;
-		min-height: 2.75rem;
-		font-family: var(--font-display);
-		font-size: 2rem;
-		font-weight: 700;
-		line-height: 1.1;
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.tick {
-		width: 3px;
-		height: 0.625rem;
-		margin-bottom: 0.375rem;
-		background: var(--accent);
-	}
-
 	main {
 		padding-inline: calc(var(--shell) + 1rem) var(--shell);
 	}
 
 	.hero {
+		position: relative;
 		display: grid;
 		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-		align-items: end;
-		gap: clamp(2rem, 4vw, 4rem);
+		grid-template-rows: minmax(0, 1fr) auto;
+		gap: 1.5rem clamp(2rem, 4vw, 4rem);
 		min-height: 100svh;
-		padding-block: 7rem 4rem;
+		margin-inline: calc((var(--shell) + 1rem) * -1) calc(var(--shell) * -1);
+		padding: calc(var(--nav-h) + 3.5rem) var(--shell) 3rem calc(var(--shell) + 1rem);
 	}
 
-	h1 {
-		margin: 1rem 0 1.5rem;
-		font-family: var(--font-display);
-		font-size: clamp(3.5rem, 11vw, 10rem);
-		font-weight: 800;
-		line-height: 0.98;
-		letter-spacing: -0.05em;
+	.drawing {
+		position: relative;
+		grid-column: 2;
+		grid-row: 1;
+		align-self: end;
+		justify-self: end;
+		z-index: 2;
+		display: grid;
+		gap: 0.5rem;
+		width: min(100%, 62svh);
+		margin: 0;
+		aspect-ratio: 46 / 41;
+		grid-template-rows: minmax(0, 1fr) auto;
+	}
+
+	.plan-area {
+		position: relative;
+		min-height: 0;
+	}
+
+	.line {
+		position: absolute;
+		background: var(--accent);
+		opacity: 0.7;
+		pointer-events: none;
+	}
+
+	.line.h {
+		right: 0;
+		left: 0;
+		height: 1px;
+	}
+
+	.line.v {
+		top: 0;
+		bottom: 0;
+		width: 1px;
+	}
+
+	.coords {
+		position: absolute;
+		padding: 3px 6px;
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		white-space: nowrap;
+		color: var(--ink);
+		background: var(--paper);
+		pointer-events: none;
+	}
+
+	.title {
+		position: relative;
+		z-index: 2;
+		grid-column: 1;
+		grid-row: 1 / 3;
+		align-self: end;
+		display: grid;
+		justify-items: start;
+		gap: 1rem;
+	}
+
+	.hint {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.625rem;
+		min-height: 2.75rem;
+		padding: 0.25rem 1rem 0.25rem 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		font-size: 0.9375rem;
+		color: var(--ink-2);
+		background: var(--paper);
+	}
+
+	.hint b {
+		font-weight: 500;
+		color: var(--ink);
+	}
+
+	.dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--accent);
 	}
 
 	.lead {
-		max-width: 34rem;
+		position: relative;
+		z-index: 2;
+		grid-column: 2;
+		grid-row: 2;
+		display: grid;
+		gap: 1.5rem;
 		font-size: clamp(1.0625rem, 1.4vw, 1.3125rem);
 		color: var(--ink-2);
 	}
@@ -282,55 +400,36 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.625rem;
-		margin-top: 2rem;
-	}
-
-	.drawing {
-		display: grid;
-		gap: 0.5rem;
-		margin: 0;
-		aspect-ratio: 46 / 41;
-		grid-template-rows: minmax(0, 1fr) auto;
+		font-size: 1rem;
+		color: var(--ink);
 	}
 
 	.checks {
-		padding-block: 6rem;
-	}
-
-	h2 {
-		font-family: var(--font-display);
-		font-size: clamp(2.25rem, 5vw, 4.5rem);
-		font-weight: 700;
-		line-height: 1.05;
-		letter-spacing: -0.04em;
+		padding-block: 8rem 6rem;
+		scroll-margin-top: var(--nav-h);
 	}
 
 	.checks ul {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
 		gap: 2rem;
-		margin-top: 3rem;
+		margin-top: 3.5rem;
 	}
 
 	.checks li {
-		padding-top: 1.25rem;
+		padding-top: 20px;
 		border-top: 1px solid var(--line);
 	}
 
-	h3 {
-		margin: 0.5rem 0;
-		font-family: var(--font-display);
-		font-size: 1.375rem;
-		letter-spacing: -0.02em;
-	}
-
 	.checks p {
+		margin-top: 0.75rem;
 		color: var(--ink-2);
 	}
 
 	.plans {
-		padding-block: 2rem 8rem;
+		padding-block: 2rem 6rem;
 		outline: none;
+		scroll-margin-top: calc(var(--nav-h) + 2rem);
 	}
 
 	.plans-head {
@@ -343,7 +442,7 @@
 	}
 
 	.empty {
-		padding-top: 1.25rem;
+		padding-top: 20px;
 		border-top: 1px solid var(--line);
 		color: var(--ink-2);
 	}
@@ -387,13 +486,37 @@
 		background: var(--paper-2);
 	}
 
-	.title {
+	.title-text {
 		font-size: 1.125rem;
 		font-weight: 600;
 	}
 
-	.card a:hover .title {
+	.card a:hover .title-text {
 		color: var(--accent-deep);
+	}
+
+	.closing {
+		display: grid;
+		justify-items: start;
+		gap: 2rem;
+		padding-block: 8rem;
+		border-top: 1px solid var(--line);
+	}
+
+	.foot {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.5rem 1.5rem;
+		padding: 1.5rem var(--shell) 1.5rem calc(var(--shell) + 1rem);
+		border-top: 1px solid var(--line);
+	}
+
+	.foot a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 1.5rem;
+		color: var(--ink);
 	}
 
 	@media (max-width: 767px) {
@@ -401,14 +524,28 @@
 			padding-inline: var(--shell);
 		}
 
-		.top {
-			padding-top: 0.75rem;
-		}
-
 		.hero {
 			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto;
 			min-height: auto;
-			padding-top: 6rem;
+			margin-inline: calc(var(--shell) * -1);
+			padding: 6rem var(--shell) 3rem;
+		}
+
+		.drawing,
+		.title,
+		.lead {
+			grid-column: 1;
+			grid-row: auto;
+			width: 100%;
+		}
+
+		.title {
+			order: -1;
+		}
+
+		.foot {
+			padding-inline: var(--shell);
 		}
 	}
 </style>
