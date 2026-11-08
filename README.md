@@ -37,7 +37,7 @@
 
 ## 기술 스택
 
-![Svelte, TypeScript, Vite, Vitest, Playwright, pnpm, GitHub Actions](https://skillicons.dev/icons?i=svelte,ts,vite,vitest,playwright,pnpm,githubactions)
+![Svelte, TypeScript, Vite, Vitest, pnpm, GitHub Actions](https://skillicons.dev/icons?i=svelte,ts,vite,vitest,pnpm,githubactions)
 
 | 구분           | 사용 기술                                                                                                |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
