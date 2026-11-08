@@ -2,7 +2,8 @@
 	import { tick } from 'svelte';
 	import { corners, pointInConvex } from '#shared/lib/geometry';
 	import { Button, Icon, Ruler } from '#shared/ui';
-	import { RoomOutline } from '#entities/plan';
+	import { RoomOutline, XrayOverlay } from '#entities/plan';
+	import { xray } from '#features/toggle-xray';
 	import PlanItem from './PlanItem.svelte';
 	import type { PlacedItem } from '../model/placed-item.svelte';
 	import type { Direction, EditorSession } from '../model/session.svelte';
@@ -256,7 +257,7 @@
 			<rect width="100%" height="100%" fill="url(#dots)" />
 			<g transform={`translate(${view.offsetX} ${view.offsetY}) scale(${view.scale})`}>
 				<RoomOutline room={session.room} />
-				{#if showCables}
+				{#if showCables && !xray.on}
 					{#each cables as { connection, from, to } (`${connection.fromId}-${connection.toId}`)}
 						<line
 							class="cable"
@@ -281,6 +282,14 @@
 						onfocus={(target) => session.select(target.id)}
 					/>
 				{/each}
+				{#if xray.on}
+					<XrayOverlay
+						room={session.room}
+						items={session.items}
+						connections={session.analysis.connections}
+						scale={view.scale}
+					/>
+				{/if}
 				{#if dimensions && selectedBounds}
 					{@const size = 11 / view.scale}
 					<g class="dimension" font-size={size}>

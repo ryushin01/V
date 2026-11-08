@@ -1,4 +1,4 @@
-import '@fontsource-variable/bricolage-grotesque/wght.css';
+import '@fontsource-variable/bricolage-grotesque/standard.css';
 import '@fontsource-variable/space-grotesk/wght.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '../src/app/styles/global.css';

@@ -23,8 +23,13 @@ export function chooseRulerStep(scale: number): { majorCm: number; minorCm: numb
 }
 
 /** 화면 길이 `length`(px) 안에 보이는 눈금을 계산합니다. `offset`은 0cm가 놓인 화면 위치입니다. */
-export function computeRulerTicks(length: number, scale: number, offset: number): RulerTicks {
-	const { majorCm, minorCm } = chooseRulerStep(scale);
+export function computeRulerTicks(
+	length: number,
+	scale: number,
+	offset: number,
+	fixedStep?: { majorCm: number; minorCm: number }
+): RulerTicks {
+	const { majorCm, minorCm } = fixedStep ?? chooseRulerStep(scale);
 	const perMajor = Math.round(majorCm / minorCm);
 	const ticks: RulerTicks = { majorCm, minorCm, minor: [], mid: [], major: [] };
 	if (length <= 0 || scale <= 0) return ticks;
@@ -37,7 +42,7 @@ export function computeRulerTicks(length: number, scale: number, offset: number)
 		const position = offset + index * minorCm * scale;
 		const inMajor = ((index % perMajor) + perMajor) % perMajor;
 		if (inMajor === 0) {
-			ticks.major.push({ position, value: Math.round(index * minorCm) });
+			ticks.major.push({ position, value: Math.round(index * minorCm) + 0 });
 		} else if (midStep !== 0 && inMajor === midStep) {
 			ticks.mid.push(position);
 		} else {

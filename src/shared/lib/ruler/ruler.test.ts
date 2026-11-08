@@ -29,6 +29,13 @@ describe('룰러 눈금', () => {
 		}
 	});
 
+	it('고정 간격을 주면 그 간격으로 그립니다', () => {
+		const ticks = computeRulerTicks(128, 1, 0, { majorCm: 64, minorCm: 8 });
+		expect(ticks.major.map((tick) => tick.value)).toEqual([0, 64, 128]);
+		expect(ticks.mid).toEqual([32, 96]);
+		expect(ticks.minor).toContain(8);
+	});
+
 	it('길이가 0이면 빈 결과를 돌려줍니다', () => {
 		expect(computeRulerTicks(0, 1.6, 0).major).toEqual([]);
 	});
