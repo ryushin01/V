@@ -99,13 +99,16 @@ body {
 		color 0.35s var(--ease);
 }
 
-html.has-scale {
-	scrollbar-width: none;
-}
+/* 오른쪽 눈금이 보이는 환경에서만 기본 스크롤바를 대신합니다. */
+@media (min-width: 768px) and (hover: hover) {
+	html.has-scale {
+		scrollbar-width: none;
+	}
 
-html.has-scale::-webkit-scrollbar {
-	width: 0;
-	height: 0;
+	html.has-scale::-webkit-scrollbar {
+		width: 0;
+		height: 0;
+	}
 }
 
 .display-1,
