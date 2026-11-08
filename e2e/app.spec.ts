@@ -81,6 +81,8 @@ test.describe('룰러', () => {
 		await expect(area.locator('.coords')).toContainText(/X \d+ · Y \d+ cm/);
 		await page.mouse.move(box.x + 1, box.y + 1);
 		await expect(area.locator('.coords')).toHaveCount(0);
+		// 도면에는 눈금 설명 외의 글자가 끼어들지 않아야 합니다.
+		await expect(area).toHaveText('');
 	});
 
 	test('처음 화면 룰러는 64px마다 숫자를 표시합니다', async ({ page }) => {

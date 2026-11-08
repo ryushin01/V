@@ -144,7 +144,6 @@
 				onpointermove={trackMeasure}
 				onpointerleave={() => (measure = null)}
 			>
-				(measure = null)} >
 				<PlanPreview
 					plan={heroPlan}
 					xray={xray.on}
