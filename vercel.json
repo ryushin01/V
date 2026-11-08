@@ -3,5 +3,8 @@
 	"framework": null,
 	"buildCommand": "pnpm build",
 	"outputDirectory": "build",
-	"rewrites": [{ "source": "/plans/:id", "destination": "/spa.html" }]
+	"rewrites": [
+		{ "source": "/plans/:id", "destination": "/spa.html" },
+		{ "source": "/shared", "destination": "/shared.html" }
+	]
 }
