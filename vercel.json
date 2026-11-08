@@ -3,5 +3,5 @@
 	"framework": null,
 	"buildCommand": "pnpm build",
 	"outputDirectory": "build",
-	"rewrites": [{ "source": "/plans/:id", "destination": "/200.html" }]
+	"rewrites": [{ "source": "/plans/:id", "destination": "/spa.html" }]
 }

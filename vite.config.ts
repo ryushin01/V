@@ -10,7 +10,7 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter({ fallback: '200.html' })
+			adapter: adapter({ fallback: 'spa.html' })
 		}),
 		svelteTesting()
 	],

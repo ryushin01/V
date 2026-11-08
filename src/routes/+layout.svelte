@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '@fontsource-variable/bricolage-grotesque/wght.css';
+	import '@fontsource-variable/bricolage-grotesque/opsz.css';
 	import '@fontsource-variable/space-grotesk/wght.css';
 	import '@fontsource/ibm-plex-mono/400.css';
 	import '../app/styles/global.css';

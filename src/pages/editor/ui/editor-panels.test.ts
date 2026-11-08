@@ -42,6 +42,18 @@ describe('ItemForm', () => {
 		expect(session.items[0].entry.diagonalInch).toBe(55);
 	});
 
+	it('0을 입력해도 입력란이 남습니다', async () => {
+		const session = empty();
+		session.addItem('pc-tower');
+		render(ItemForm, { session, item: session.items[0] });
+		const watts = screen.getByLabelText('소비 전력');
+		await userEvent.clear(watts);
+		await userEvent.type(watts, '0');
+		await userEvent.tab();
+		expect(session.items[0].entry.watts).toBe(0);
+		expect(screen.getByLabelText('소비 전력')).toBeInTheDocument();
+	});
+
 	it('해당 없는 규격은 보여 주지 않습니다', () => {
 		const session = empty();
 		session.addItem('chair');
