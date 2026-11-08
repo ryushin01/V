@@ -1,7 +1,7 @@
 import { createId } from '#shared/lib/id';
-import { findCatalogEntry } from './catalog';
+import { findCatalogEntry, SPEC_LIMITS } from './catalog';
 import { PLAN_LIMITS, ROOM_LIMITS, wallLength } from './room';
-import type { ItemData, Opening, PlanData, RoomData, Wall } from './types';
+import type { ItemData, ItemSpecs, Opening, PlanData, RoomData, SpecKey, Wall } from './types';
 
 export type ParseResult = { ok: true; plan: PlanData } | { ok: false; error: string };
 
@@ -31,12 +31,27 @@ function parseOpening(raw: unknown, room: Pick<RoomData, 'width' | 'depth'>): Op
 	};
 }
 
+function parseSpecs(raw: unknown): ItemSpecs | undefined | null {
+	if (raw === undefined) return undefined;
+	if (!isRecord(raw)) return null;
+	const specs: ItemSpecs = {};
+	for (const key of Object.keys(SPEC_LIMITS) as SpecKey[]) {
+		const value = raw[key];
+		if (value === undefined) continue;
+		if (!finite(value) || value < SPEC_LIMITS[key].min || value > SPEC_LIMITS[key].max) return null;
+		specs[key] = value;
+	}
+	return Object.keys(specs).length > 0 ? specs : undefined;
+}
+
 function parseItem(raw: unknown): ItemData | null {
 	if (!isRecord(raw) || typeof raw.catalogId !== 'string') return null;
 	if (!findCatalogEntry(raw.catalogId)) return null;
 	const { x, y, rotation, price, label } = raw;
 	if (!finite(x) || !finite(y) || !finite(rotation)) return null;
 	if (Math.abs(x) > COORDINATE_LIMIT || Math.abs(y) > COORDINATE_LIMIT) return null;
+	const specs = parseSpecs(raw.specs);
+	if (specs === null) return null;
 	return {
 		id: createId(),
 		catalogId: raw.catalogId,
@@ -44,7 +59,8 @@ function parseItem(raw: unknown): ItemData | null {
 		y,
 		rotation,
 		price: finite(price) && price >= 0 ? price : 0,
-		label: typeof label === 'string' ? label.slice(0, 40) : ''
+		label: typeof label === 'string' ? label.slice(0, 40) : '',
+		...(specs ? { specs } : {})
 	};
 }
 

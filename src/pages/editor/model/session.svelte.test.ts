@@ -133,6 +133,30 @@ describe('EditorSession', () => {
 		expect(session.items).toHaveLength(PLAN_LIMITS.items);
 	});
 
+	it('사용자 규격이 점검과 저장에 반영됩니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addItem('tv-55');
+		const tv = session.items[0];
+		session.setSpec(tv.id, 'width', 170);
+		session.setSpec(tv.id, 'watts', 300);
+		expect(tv.entry.width).toBe(170);
+		expect(session.analysis.power.totalWatts).toBe(300);
+		expect(session.toData().items[0].specs).toEqual({ width: 170, watts: 300 });
+		session.resetSpecs(tv.id);
+		expect(tv.entry.width).toBe(123);
+		expect(session.toData().items[0].specs).toBeUndefined();
+	});
+
+	it('규격은 허용 범위로 맞추고 되돌릴 수 있습니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addItem('chair');
+		const chair = session.items[0];
+		session.setSpec(chair.id, 'width', 9999);
+		expect(chair.entry.width).toBe(500);
+		session.undo();
+		expect(session.items[0].entry.width).toBe(62);
+	});
+
 	it('저장 데이터로 내보냅니다', () => {
 		const sample = createSamplePlan();
 		const session = new EditorSession(sample);

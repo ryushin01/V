@@ -22,6 +22,7 @@
 		moon: 'M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10',
 		keyboard: 'M3 7h18v11H3zM7 11h.5M11 11h.5M15 11h.5M8 15h8',
 		arrow: 'M6 18 18 6M9 6h9v9',
+		share: 'M12 15V4M8 8l4-4 4 4M5 12v8h14v-8',
 		layers: 'M12 3 3 8l9 5 9-5zM3 13l9 5 9-5'
 	} as const;
 

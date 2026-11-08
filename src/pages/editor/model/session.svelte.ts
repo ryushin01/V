@@ -8,12 +8,14 @@ import {
 	halfExtents,
 	PLAN_LIMITS,
 	ROOM_LIMITS,
+	SPEC_LIMITS,
 	snapToWall,
 	wallLength,
 	type ItemData,
 	type Opening,
 	type PlanData,
-	type RoomData
+	type RoomData,
+	type SpecKey
 } from '#entities/plan';
 import { PlacedItem } from './placed-item.svelte';
 import { Viewport } from './viewport.svelte';
@@ -286,6 +288,27 @@ export class EditorSession {
 		this.#transact(() => {
 			item.rotation = normalizeAngle(value);
 		});
+	}
+
+	setSpec(id: string, key: SpecKey, value: number) {
+		const item = this.items.find((candidate) => candidate.id === id);
+		if (!item) return;
+		const { min, max } = SPEC_LIMITS[key];
+		this.#transact(() => {
+			item.specs[key] = Math.min(max, Math.max(min, value));
+			if (item.entry.layer === 'wall') this.#place(item, item.x, item.y);
+		});
+		this.announcement = `${item.name} 규격을 바꿨습니다.`;
+	}
+
+	resetSpecs(id: string) {
+		const item = this.items.find((candidate) => candidate.id === id);
+		if (!item) return;
+		this.#transact(() => {
+			item.specs = {};
+			if (item.entry.layer === 'wall') this.#place(item, item.x, item.y);
+		});
+		this.announcement = `${item.name} 규격을 기본값으로 되돌렸습니다.`;
 	}
 
 	setPrice(id: string, value: number) {

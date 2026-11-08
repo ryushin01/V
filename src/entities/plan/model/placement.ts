@@ -1,5 +1,5 @@
 import { boundsOf, corners, localToWorld, polygonsOverlap } from '#shared/lib/geometry';
-import { getCatalogEntry } from './catalog';
+import { getCatalogEntry, resolveEntry } from './catalog';
 import { snapToWall } from './room';
 import type { CatalogEntry, ItemData, RoomData } from './types';
 
@@ -16,7 +16,7 @@ export function findFreeSpot(
 	entry: CatalogEntry
 ): { x: number; y: number; rotation: number } {
 	const sameLayer = items
-		.map((item) => ({ item, entry: getCatalogEntry(item.catalogId) }))
+		.map((item) => ({ item, entry: resolveEntry(item) }))
 		.filter((other) => other.entry.layer === entry.layer);
 	const collides = (x: number, y: number, rotation: number) => {
 		const polygon = polygonFor(entry, x, y, rotation);
@@ -42,7 +42,7 @@ export function findFreeSpot(
 			return kind === 'desk' || kind === 'stand';
 		});
 		for (const support of supports) {
-			const supportEntry = getCatalogEntry(support.catalogId);
+			const supportEntry = resolveEntry(support);
 			const rect = {
 				cx: support.x,
 				cy: support.y,

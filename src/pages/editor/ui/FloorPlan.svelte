@@ -15,12 +15,16 @@
 	type Gesture =
 		| { type: 'move'; id: string; dx: number; dy: number }
 		| { type: 'rotate'; id: string }
-		| { type: 'pan'; x: number; y: number };
+		| { type: 'pan'; x: number; y: number }
+		| { type: 'pinch'; distance: number; x: number; y: number };
 
 	let svg = $state<SVGSVGElement>();
 	let pointer = $state<{ x: number; y: number; sx: number; sy: number } | null>(null);
 	let showCables = $state(true);
 	let gesture: Gesture | null = null;
+	// 화면에 그리지 않는 포인터 기록이라 반응형으로 만들지 않습니다.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	const touches = new Map<number, { x: number; y: number }>();
 	let fitted = false;
 
 	$effect(() => {
@@ -102,8 +106,33 @@
 		svg?.setPointerCapture?.(event.pointerId);
 	}
 
+	function pinchState(): Gesture {
+		const [a, b] = [...touches.values()];
+		return {
+			type: 'pinch',
+			distance: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+			x: (a.x + b.x) / 2,
+			y: (a.y + b.y) / 2
+		};
+	}
+
+	const isItemGesture = (value: Gesture | null) =>
+		value !== null && (value.type === 'move' || value.type === 'rotate');
+
+	/** 두 손가락이 닿으면 물건 끌기를 취소하고 확대로 바꿉니다. */
+	function trackTouch(event: PointerEvent) {
+		if (event.pointerType !== 'touch') return;
+		const { sx, sy } = local(event);
+		touches.set(event.pointerId, { x: sx, y: sy });
+		capture(event);
+		if (touches.size === 2) {
+			if (isItemGesture(gesture)) session.cancelGesture();
+			gesture = pinchState();
+		}
+	}
+
 	function startMove(event: PointerEvent, item: PlacedItem) {
-		if (event.button !== 0) return;
+		if (event.button !== 0 || touches.size > 1) return;
 		event.stopPropagation();
 		session.select(item.id);
 		session.beginGesture();
@@ -113,7 +142,7 @@
 	}
 
 	function startRotate(event: PointerEvent, item: PlacedItem) {
-		if (event.button !== 0) return;
+		if (event.button !== 0 || touches.size > 1) return;
 		event.stopPropagation();
 		session.beginGesture();
 		gesture = { type: 'rotate', id: item.id };
@@ -121,7 +150,7 @@
 	}
 
 	function startPan(event: PointerEvent) {
-		if (event.button !== 0) return;
+		if (event.button !== 0 || touches.size > 1) return;
 		session.select(null);
 		const { sx, sy } = local(event);
 		gesture = { type: 'pan', x: sx, y: sy };
@@ -131,8 +160,17 @@
 	function handleMove(event: PointerEvent) {
 		const { sx, sy } = local(event);
 		const point = view.toWorld(sx, sy);
-		pointer = { x: point.x, y: point.y, sx, sy };
+		if (event.pointerType !== 'touch') pointer = { x: point.x, y: point.y, sx, sy };
+		if (touches.has(event.pointerId)) touches.set(event.pointerId, { x: sx, y: sy });
 		if (!gesture) return;
+		if (gesture.type === 'pinch') {
+			if (touches.size < 2) return;
+			const next = pinchState() as Extract<Gesture, { type: 'pinch' }>;
+			view.zoomAt(next.x, next.y, next.distance / gesture.distance);
+			view.panBy(next.x - gesture.x, next.y - gesture.y);
+			gesture = next;
+			return;
+		}
 		if (gesture.type === 'move') {
 			session.dragItem(gesture.id, point.x + gesture.dx, point.y + gesture.dy, !event.shiftKey);
 		} else if (gesture.type === 'rotate') {
@@ -146,8 +184,9 @@
 		}
 	}
 
-	function handleUp() {
-		if (gesture && gesture.type !== 'pan') {
+	function handleUp(event: PointerEvent) {
+		touches.delete(event.pointerId);
+		if (gesture && gesture.type !== 'pan' && gesture.type !== 'pinch') {
 			session.endGesture();
 			const item = itemById.get(gesture.id);
 			if (item)
@@ -156,8 +195,9 @@
 		gesture = null;
 	}
 
-	function handleCancel() {
-		if (gesture && gesture.type !== 'pan') session.cancelGesture();
+	function handleCancel(event: PointerEvent) {
+		touches.delete(event.pointerId);
+		if (isItemGesture(gesture)) session.cancelGesture();
 		gesture = null;
 	}
 
@@ -197,7 +237,7 @@
 	}
 
 	function handleWindowKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape' && gesture && gesture.type !== 'pan') {
+		if (event.key === 'Escape' && isItemGesture(gesture)) {
 			session.cancelGesture();
 			gesture = null;
 		}
@@ -235,6 +275,7 @@
 			height="100%"
 			role="group"
 			aria-label="방 배치도. 물건에 초점을 두고 방향키로 옮깁니다."
+			onpointerdowncapture={trackTouch}
 			onpointerdown={startPan}
 			onpointermove={handleMove}
 			onpointerup={handleUp}

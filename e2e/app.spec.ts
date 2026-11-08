@@ -269,6 +269,58 @@ test.describe('첫 화면 연출과 X-ray', () => {
 	});
 });
 
+test.describe('공유와 오류 화면', () => {
+	test('공유 링크를 열어 내 배치도로 복사합니다', async ({ page }) => {
+		await openSample(page);
+		await page.getByRole('button', { name: '공유' }).click();
+		const field = page.getByLabel('주소');
+		await expect(field).toHaveValue(/\/shared#/);
+		const url = await field.inputValue();
+		await page.goto(url);
+		await expect(page.getByRole('heading', { level: 1 })).toContainText('예시');
+		await expectNoAxeViolations(page);
+		await page.getByRole('button', { name: /내 배치도로 복사/ }).click();
+		await page.waitForURL(/\/plans\//);
+		await expect(page.locator('[data-item-id]')).toHaveCount(13);
+	});
+
+	test('손상된 공유 링크는 이유를 알려 줍니다', async ({ page }) => {
+		await page.goto('/shared#broken');
+		await expect(page.getByRole('alert')).toContainText('V 공유 링크가 아닙니다');
+	});
+
+	test('없는 주소는 V의 안내 화면을 보여 줍니다', async ({ page }) => {
+		await page.goto('/no-such-page');
+		await expect(page.getByRole('heading', { level: 1 })).toContainText('맞지 않습니다');
+		await expect(page).toHaveTitle(/찾을 수 없습니다/);
+		await expectNoAxeViolations(page);
+	});
+
+	test('치수를 바꾸면 도면과 안내가 함께 바뀝니다', async ({ page }) => {
+		await openEmpty(page);
+		await page.getByRole('button', { name: /^책상 140/ }).click();
+		await page.getByLabel('가로', { exact: true }).fill('200');
+		await page.getByLabel('가로', { exact: true }).press('Tab');
+		await expect(page.locator('[data-item-id]').first()).toHaveAttribute('aria-label', /가로 200/);
+	});
+
+	test('보조기술에 노출되는 편집 화면 구조', async ({ page }) => {
+		await openSample(page);
+		await page.locator('[data-item-id]').first().focus();
+		const tree = await page.locator('body').ariaSnapshot();
+		for (const part of [
+			'banner',
+			'main',
+			'heading',
+			'group "방 배치도',
+			'button "책상 160, 가로 160'
+		]) {
+			expect(tree).toContain(part);
+		}
+		await expect(page.locator('[role="status"][aria-live="polite"]')).toBeAttached();
+	});
+});
+
 test.describe('화면 폭과 접근성', () => {
 	for (const width of [320, 390, 768, 1024, 1440]) {
 		test(`${width}px에서 가로로 넘치지 않습니다`, async ({ page }) => {

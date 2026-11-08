@@ -238,6 +238,21 @@ describe('파일 입출력', () => {
 		}
 	});
 
+	it('사용자 규격을 검사합니다', () => {
+		const make = (specs: unknown) =>
+			parsePlan(
+				JSON.stringify({
+					version: 1,
+					room: { width: 300, depth: 300, openings: [] },
+					items: [{ catalogId: 'chair', x: 10, y: 10, rotation: 0, specs }]
+				})
+			);
+		const valid = make({ width: 80 });
+		expect(valid.ok && valid.plan.items[0].specs).toEqual({ width: 80 });
+		expect(make({ width: 99999 }).ok).toBe(false);
+		expect(make('wide').ok).toBe(false);
+	});
+
 	it('지나치게 많은 물건은 거절합니다', () => {
 		const items = Array.from({ length: 501 }, () => ({
 			catalogId: 'chair',

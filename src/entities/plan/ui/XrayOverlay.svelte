@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { boundsOf, corners, localToWorld, type Point } from '#shared/lib/geometry';
 	import { CHAIR_CLEARANCE_CM, viewingRange } from '../model/analysis';
-	import { getCatalogEntry } from '../model/catalog';
+	import { resolveEntry } from '../model/catalog';
 	import { openingGeometry } from '../model/room';
 	import type { Connection, ItemData, RoomData } from '../model/types';
 
@@ -23,7 +23,7 @@
 
 	const resolved = $derived(
 		items.map((item) => {
-			const entry = getCatalogEntry(item.catalogId);
+			const entry = resolveEntry(item);
 			const rect = {
 				cx: item.x,
 				cy: item.y,
