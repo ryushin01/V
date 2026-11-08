@@ -22,6 +22,7 @@
 	--shell: clamp(1rem, 5vw, 5rem);
 	--ruler-x: 30px;
 	--ruler-y: 48px;
+	--nav-h: 4.5rem;
 
 	color-scheme: light;
 }
@@ -58,6 +59,22 @@
 	color-scheme: dark;
 }
 
+/* X-ray는 테마와 상관없이 도면 청사진 색으로 바꿉니다. */
+:root[data-xray='on'] {
+	--paper: #0b2545;
+	--paper-2: #102f57;
+	--ink: #eaf2ff;
+	--ink-2: #c3d4ee;
+	--steel: #a6bddc;
+	--line: #eaf2ff33;
+	--tick: #eaf2ff80;
+	--control: #8fa9cc;
+	--accent: #ff6b6b;
+	--accent-deep: #ffb3a7;
+	--ok: #8be0ae;
+	color-scheme: dark;
+}
+
 *,
 *::before,
 *::after {
@@ -77,6 +94,71 @@ body {
 	color: var(--ink);
 	background: var(--paper);
 	-webkit-font-smoothing: antialiased;
+	transition:
+		background-color 0.35s var(--ease),
+		color 0.35s var(--ease);
+}
+
+/* 오른쪽 눈금이 보이는 환경에서만 기본 스크롤바를 대신합니다. */
+@media (min-width: 768px) and (hover: hover) {
+	html.has-scale {
+		scrollbar-width: none;
+	}
+
+	html.has-scale::-webkit-scrollbar {
+		width: 0;
+		height: 0;
+	}
+}
+
+.display-1,
+.display-2,
+.display-3,
+.display-4 {
+	font-family: var(--font-display);
+	font-weight: 500;
+}
+
+.display-1 {
+	font-variation-settings: 'opsz' 96;
+	font-size: clamp(2.75rem, 7.2vw, 6.75rem);
+	line-height: 0.96;
+	letter-spacing: -0.035em;
+}
+
+.display-2 {
+	font-variation-settings: 'opsz' 96;
+	font-size: clamp(2.125rem, 4.6vw, 4rem);
+	line-height: 1.02;
+	letter-spacing: -0.03em;
+}
+
+.display-3 {
+	font-variation-settings: 'opsz' 48;
+	font-size: clamp(1.5rem, 2.4vw, 2.125rem);
+	line-height: 1.12;
+	letter-spacing: -0.02em;
+}
+
+.display-4 {
+	font-variation-settings: 'opsz' 24;
+	font-size: clamp(1.25rem, 1.6vw, 1.5rem);
+	line-height: 1.2;
+	letter-spacing: -0.015em;
+}
+
+[data-reveal] {
+	transition:
+		opacity 1s var(--ease),
+		transform 1.1s var(--ease),
+		filter 0.9s var(--ease);
+	transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+[data-reveal='pending'] {
+	opacity: 0;
+	filter: blur(6px);
+	transform: translateY(1.75rem);
 }
 
 h1,

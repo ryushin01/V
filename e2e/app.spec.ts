@@ -16,6 +16,13 @@ async function openEmpty(page: Page) {
 }
 
 async function expectNoAxeViolations(page: Page) {
+	// 스크롤하면 나타나는 요소도 나타난 뒤의 대비로 검사합니다.
+	await page.evaluate(() => {
+		for (const node of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
+			node.dataset.reveal = 'done';
+		}
+	});
+	await page.waitForTimeout(1500);
 	const { violations } = await new AxeBuilder({ page })
 		.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
 		.analyze();
@@ -52,6 +59,51 @@ test.describe('룰러', () => {
 		await page.mouse.move(box.x + 233, box.y + 10, { steps: 3 });
 		await page.mouse.up();
 		await expect(first).not.toHaveAttribute('x', before ?? '');
+	});
+
+	test('오른쪽 눈금이 없는 좁은 창에서는 기본 스크롤바를 유지합니다', async ({ page }) => {
+		await page.setViewportSize({ width: 600, height: 800 });
+		await page.goto('/');
+		await expect(page.getByTestId('page-scale')).toBeHidden();
+		const scrollbar = await page.evaluate(
+			() => getComputedStyle(document.documentElement).scrollbarWidth
+		);
+		expect(scrollbar).not.toBe('none');
+	});
+
+	test('처음 화면의 도면 좌표는 방 안에서만 표시합니다', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/');
+		const area = page.locator('.plan-area');
+		const box = await area.boundingBox();
+		if (!box) throw new Error('도면이 없습니다');
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+		await expect(area.locator('.coords')).toContainText(/X \d+ · Y \d+ cm/);
+		await page.mouse.move(box.x + 1, box.y + 1);
+		await expect(area.locator('.coords')).toHaveCount(0);
+		// 도면에는 눈금 설명 외의 글자가 끼어들지 않아야 합니다.
+		await expect(area).toHaveText('');
+	});
+
+	test('처음 화면 룰러는 64px마다 숫자를 표시합니다', async ({ page }) => {
+		await page.goto('/');
+		for (const axis of ['x', 'y']) {
+			const labels = await page.getByTestId(`ruler-${axis}`).locator('text').allTextContents();
+			expect(labels.slice(0, 4)).toEqual(['0', '64', '128', '192']);
+		}
+	});
+
+	test('오른쪽 눈금을 끌면 페이지가 스크롤됩니다', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/');
+		await expect(page.getByTestId('page-scale')).toBeVisible();
+		const box = await page.getByTestId('page-scale').boundingBox();
+		if (!box) throw new Error('눈금이 없습니다');
+		await page.mouse.move(box.x + 10, box.y + 20);
+		await page.mouse.down();
+		await page.mouse.move(box.x + 10, box.y + box.height / 2, { steps: 4 });
+		await page.mouse.up();
+		await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(500);
 	});
 
 	test('처음 화면에도 X축과 Y축 룰러가 있습니다', async ({ page }) => {
@@ -170,6 +222,50 @@ test.describe('점검과 저장', () => {
 		const download = page.waitForEvent('download');
 		await page.getByRole('button', { name: '내보내기' }).click();
 		expect((await download).suggestedFilename()).toMatch(/\.json$/);
+	});
+});
+
+test.describe('첫 화면 연출과 X-ray', () => {
+	test('스크롤에 따라 단계와 진행률이 바뀝니다', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/');
+		await expect(page.locator('[aria-current="step"]')).toContainText('벽');
+		await page.evaluate(() => {
+			const build = document.getElementById('build') as HTMLElement;
+			window.scrollTo(0, build.offsetTop + build.offsetHeight - window.innerHeight - 2);
+		});
+		await expect(page.locator('[aria-current="step"]')).toContainText('점검');
+		await expect(page.getByTestId('build-percent')).toHaveText(/(099|100)%/);
+	});
+
+	test('동작 줄이기에서는 완성된 도면을 바로 보여 줍니다', async ({ page }) => {
+		await page.emulateMedia({ reducedMotion: 'reduce' });
+		await page.goto('/');
+		await expect(page.locator('[aria-current="step"]')).toContainText('점검');
+		expect(await page.locator('#build').evaluate((node) => node.clientHeight)).toBeLessThan(2000);
+	});
+
+	test('X-ray를 켜면 편집 화면에 치수와 케이블 길이가 드러납니다', async ({ page }) => {
+		await openSample(page);
+		const overlay = page.getByTestId('xray-overlay');
+		await expect(overlay).toHaveCount(0);
+		await page.getByRole('button', { name: 'X-ray' }).click();
+		await expect(overlay).toContainText('460cm');
+		await expect(overlay).toContainText('245cm');
+		await expect(page.locator('html')).toHaveAttribute('data-xray', 'on');
+	});
+
+	test('X-ray 화면의 axe 검사', async ({ page }) => {
+		await page.goto('/');
+		await page.getByRole('button', { name: 'X-ray' }).click();
+		await expect(page.locator('html')).toHaveAttribute('data-xray', 'on');
+		await page.waitForTimeout(500);
+		await expectNoAxeViolations(page);
+		await page.getByRole('button', { name: '예시로 시작하기' }).click();
+		await page.waitForURL(/\/plans\//);
+		await expect(page.getByTestId('xray-overlay')).toBeAttached();
+		await page.waitForTimeout(500);
+		await expectNoAxeViolations(page);
 	});
 });
 

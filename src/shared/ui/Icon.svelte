@@ -21,7 +21,8 @@
 		sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2',
 		moon: 'M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10',
 		keyboard: 'M3 7h18v11H3zM7 11h.5M11 11h.5M15 11h.5M8 15h8',
-		arrow: 'M6 18 18 6M9 6h9v9'
+		arrow: 'M6 18 18 6M9 6h9v9',
+		layers: 'M12 3 3 8l9 5 9-5zM3 13l9 5 9-5'
 	} as const;
 
 	export type IconName = keyof typeof PATHS;

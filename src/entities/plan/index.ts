@@ -27,3 +27,4 @@ export type {
 export { default as ItemGlyph } from './ui/ItemGlyph.svelte';
 export { default as PlanPreview } from './ui/PlanPreview.svelte';
 export { default as RoomOutline } from './ui/RoomOutline.svelte';
+export { default as XrayOverlay } from './ui/XrayOverlay.svelte';
