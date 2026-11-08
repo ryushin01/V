@@ -1,5 +1,4 @@
 import {
-	boundsOf,
 	corners,
 	distance,
 	distanceToPolygon,
@@ -11,7 +10,7 @@ import {
 } from '#shared/lib/geometry';
 import { josa } from '#shared/lib/josa';
 import { resolveEntry } from './catalog';
-import { openingGeometry } from './room';
+import { cutoutPolygon, isOutsideRoom, openingGeometry } from './room';
 import type {
 	Analysis,
 	CatalogEntry,
@@ -26,7 +25,6 @@ import type {
 export const CHAIR_CLEARANCE_CM = 60;
 export const PASSAGE_WIDTH_CM = 60;
 export const MONITOR_RANGE_CM = { min: 50, max: 100 } as const;
-const ROOM_TOLERANCE_CM = 0.5;
 const ROUTE_GRID_CM = 10;
 const INCH_TO_CM = 2.54;
 /** 16:9 화면의 대각선 대비 가로 길이 */
@@ -69,16 +67,6 @@ const isSupport = (item: Resolved) => item.entry.kind === 'desk' || item.entry.k
 const isPowerSource = (item: Resolved) =>
 	item.entry.kind === 'outlet' || item.entry.kind === 'strip';
 
-function isOutside(room: RoomData, polygon: Point[]): boolean {
-	const bounds = boundsOf(polygon);
-	return (
-		bounds.minX < -ROOM_TOLERANCE_CM ||
-		bounds.minY < -ROOM_TOLERANCE_CM ||
-		bounds.maxX > room.width + ROOM_TOLERANCE_CM ||
-		bounds.maxY > room.depth + ROOM_TOLERANCE_CM
-	);
-}
-
 /** 16:9 화면에서 시야각 40도(가깝게)와 30도(멀게)가 되는 거리입니다. */
 export function viewingRange(inch: number): { min: number; max: number } {
 	const screenWidth = inch * INCH_TO_CM * SCREEN_WIDTH_RATIO;
@@ -108,7 +96,7 @@ function chairClearance(room: RoomData, chair: Resolved, floor: Resolved[]): num
 		};
 		const polygon = corners(strip);
 		const blocked =
-			isOutside(room, polygon) ||
+			isOutsideRoom(room, polygon) ||
 			floor.some((item) => item !== chair && polygonsOverlap(item.polygon, polygon));
 		if (blocked) return depth - 5;
 	}
@@ -125,6 +113,7 @@ function reachableSeats(room: RoomData, floor: Resolved[], seats: Resolved[]): S
 	if (columns === 0 || rows === 0 || doors.length === 0) return reached;
 
 	const obstacles = floor.filter((item) => !isSeat(item));
+	const removed = (room.cutouts ?? []).map((cutout) => cutoutPolygon(room, cutout));
 	const center = (column: number, row: number): Point => ({
 		x: (column + 0.5) * ROUTE_GRID_CM,
 		y: (row + 0.5) * ROUTE_GRID_CM
@@ -139,6 +128,7 @@ function reachableSeats(room: RoomData, floor: Resolved[], seats: Resolved[]): S
 				point.x > room.width - radius ||
 				point.y > room.depth - radius;
 			if (nearWall) continue;
+			if (removed.some((polygon) => distanceToPolygon(point, polygon) < radius)) continue;
 			if (obstacles.some((item) => distanceToPolygon(point, item.polygon) < radius)) continue;
 			open[row * columns + column] = 1;
 		}
@@ -368,7 +358,7 @@ export function analyzePlan(room: RoomData, data: readonly ItemData[]): Analysis
 	const surface = items.filter((item) => item.entry.layer === 'surface' && !onFloor(item));
 
 	for (const item of items) {
-		if (isOutside(room, item.polygon)) {
+		if (isOutsideRoom(room, item.polygon)) {
 			push({
 				code: 'out-of-room',
 				severity: 'error',

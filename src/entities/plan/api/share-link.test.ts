@@ -22,6 +22,22 @@ describe('공유 링크', () => {
 		expect(decoded.plan.items.every((item) => item.price === 0)).toBe(true);
 	});
 
+	it('평면도 이미지는 넣지 않습니다', async () => {
+		const plan = createSamplePlan();
+		plan.underlay = {
+			src: 'data:image/jpeg;base64,AAAA',
+			pixelWidth: 10,
+			pixelHeight: 10,
+			x: 0,
+			y: 0,
+			cmPerPixel: 1,
+			opacity: 0.5
+		};
+		const decoded = await decodePlan(await encodePlan(plan));
+		if (!decoded.ok) throw new Error(decoded.error);
+		expect(decoded.plan.underlay).toBeUndefined();
+	});
+
 	it('사용자 규격은 유지합니다', async () => {
 		const plan = createSamplePlan();
 		plan.items[0].specs = { width: 180 };

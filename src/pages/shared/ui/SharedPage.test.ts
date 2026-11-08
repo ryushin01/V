@@ -25,7 +25,7 @@ describe('SharedPage', () => {
 		const plan = createSamplePlan();
 		location.hash = `#${await encodePlan(plan)}`;
 		render(SharedPage);
-		expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(plan.name);
+		expect(await screen.findByRole('heading', { level: 1, name: plan.name })).toBeInTheDocument();
 		await userEvent.dblClick(screen.getByRole('button', { name: /내 배치도로 복사/ }));
 		await waitFor(() => expect(goto).toHaveBeenCalledOnce());
 		expect(await listPlans()).toHaveLength(before + 1);

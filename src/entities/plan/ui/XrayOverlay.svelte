@@ -2,7 +2,7 @@
 	import { boundsOf, corners, localToWorld, type Point } from '#shared/lib/geometry';
 	import { CHAIR_CLEARANCE_CM, viewingRange } from '../model/analysis';
 	import { resolveEntry } from '../model/catalog';
-	import { openingGeometry } from '../model/room';
+	import { openingGeometry, roomOutline } from '../model/room';
 	import type { Connection, ItemData, RoomData } from '../model/types';
 
 	interface Props {
@@ -133,7 +133,7 @@
 </script>
 
 <g class="xray" aria-hidden="true" font-size={fontSize} data-testid="xray-overlay">
-	<clipPath id={clipId}><rect width={room.width} height={room.depth} /></clipPath>
+	<clipPath id={clipId}><polygon points={pointsAttr(roomOutline(room))} /></clipPath>
 
 	<g clip-path={`url(#${clipId})`}>
 		{#each viewing as sector (sector.id)}

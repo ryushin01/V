@@ -10,6 +10,8 @@ import ItemForm from './ItemForm.svelte';
 import ItemList from './ItemList.svelte';
 import ReviewPanel from './ReviewPanel.svelte';
 import RoomForm from './RoomForm.svelte';
+import UnderlayForm from './UnderlayForm.svelte';
+import { validateImageFile } from '../lib/load-image';
 
 const empty = () => new EditorSession(createEmptyPlan());
 const sample = () => new EditorSession(createSamplePlan());
@@ -88,6 +90,36 @@ describe('RoomForm', () => {
 		render(RoomForm, { session });
 		await userEvent.click(screen.getByRole('button', { name: '문 1 삭제' }));
 		expect(session.room.openings).toHaveLength(0);
+	});
+});
+
+describe('RoomForm 모서리', () => {
+	it('모서리를 잘라내고 되돌립니다', async () => {
+		const session = empty();
+		render(RoomForm, { session });
+		await userEvent.click(screen.getByRole('button', { name: '모서리 잘라내기' }));
+		expect(session.room.cutouts).toHaveLength(1);
+		await userEvent.click(screen.getByRole('button', { name: '오른쪽 위 모서리 되돌리기' }));
+		expect(session.room.cutouts).toHaveLength(0);
+	});
+});
+
+describe('UnderlayForm', () => {
+	it('지원하지 않는 파일은 이유를 알립니다', () => {
+		expect(validateImageFile({ type: 'image/svg+xml', size: 10 })).toContain('JPG');
+		expect(validateImageFile({ type: 'image/png', size: 16 * 1024 * 1024 })).toContain('15MB');
+		expect(validateImageFile({ type: 'image/png', size: 10 })).toBeNull();
+	});
+
+	it('숫자로 축척을 맞춥니다', async () => {
+		const session = empty();
+		session.setUnderlay({ src: 'data:image/jpeg;base64,AAAA', pixelWidth: 100, pixelHeight: 100 });
+		render(UnderlayForm, { session });
+		const width = screen.getByLabelText('이미지 실제 가로');
+		await userEvent.clear(width);
+		await userEvent.type(width, '500');
+		await userEvent.tab();
+		expect(session.underlay?.cmPerPixel).toBe(5);
 	});
 });
 

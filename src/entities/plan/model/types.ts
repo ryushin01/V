@@ -11,10 +11,33 @@ export interface Opening {
 	hinge: 'start' | 'end';
 }
 
+export type Corner = 'nw' | 'ne' | 'se' | 'sw';
+
+/** 방의 모서리에서 잘라 낸 직사각형입니다. ㄱ자, ㄴ자, T자 방을 만듭니다. */
+export interface Cutout {
+	id: string;
+	corner: Corner;
+	width: number;
+	depth: number;
+}
+
 export interface RoomData {
 	width: number;
 	depth: number;
 	openings: Opening[];
+	cutouts?: Cutout[];
+}
+
+/** 배치도 아래에 깔아 두는 평면도 이미지입니다. */
+export interface Underlay {
+	src: string;
+	pixelWidth: number;
+	pixelHeight: number;
+	/** 이미지 왼쪽 위의 방 기준 위치(cm) */
+	x: number;
+	y: number;
+	cmPerPixel: number;
+	opacity: number;
 }
 
 export interface ItemData {
@@ -40,6 +63,7 @@ export interface PlanData {
 	room: RoomData;
 	items: ItemData[];
 	updatedAt: number;
+	underlay?: Underlay;
 }
 
 export type ItemKind =

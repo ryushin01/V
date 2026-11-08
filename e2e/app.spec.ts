@@ -321,6 +321,58 @@ test.describe('공유와 오류 화면', () => {
 	});
 });
 
+test.describe('다각형 방과 평면도 이미지', () => {
+	const PNG = Buffer.from(
+		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+		'base64'
+	);
+
+	test('모서리를 잘라 ㄱ자 방을 만듭니다', async ({ page }) => {
+		await openEmpty(page);
+		await page.getByRole('button', { name: '모서리 잘라내기' }).click();
+		const points = await page.locator('.canvas polygon.wall').getAttribute('points');
+		expect(points?.split(' ')).toHaveLength(6);
+		await expectNoAxeViolations(page);
+	});
+
+	test('평면도 이미지를 올리고 두 점으로 축척을 맞춥니다', async ({ page }) => {
+		await openEmpty(page);
+		await page.getByTestId('underlay-file').setInputFiles({
+			name: 'plan.png',
+			mimeType: 'image/png',
+			buffer: PNG
+		});
+		const image = page.getByTestId('underlay');
+		await expect(image).toHaveAttribute('width', '400');
+
+		await page.getByRole('button', { name: '두 점으로 축척 맞추기' }).click();
+		const box = await page.locator('.canvas > svg').boundingBox();
+		if (!box) throw new Error('도면이 없습니다');
+		await page.mouse.click(box.x + 200, box.y + 200);
+		await page.mouse.click(box.x + 400, box.y + 200);
+		const dialog = page.getByRole('dialog', { name: '두 점 사이의 실제 길이' });
+		await expect(dialog).toBeVisible();
+		await dialog.getByLabel('실제 길이').fill('500');
+		await dialog.getByLabel('실제 길이').press('Tab');
+		await dialog.getByRole('button', { name: '적용' }).click();
+		await expect(dialog).toBeHidden();
+		const width = Number(await image.getAttribute('width'));
+		expect(width).toBeGreaterThan(400);
+	});
+
+	test('축척 맞추기는 Esc로 취소합니다', async ({ page }) => {
+		await openEmpty(page);
+		await page.getByTestId('underlay-file').setInputFiles({
+			name: 'plan.png',
+			mimeType: 'image/png',
+			buffer: PNG
+		});
+		await page.getByRole('button', { name: '두 점으로 축척 맞추기' }).click();
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('button', { name: '두 점으로 축척 맞추기' })).toBeVisible();
+	});
+});
+
 test.describe('화면 폭과 접근성', () => {
 	for (const width of [320, 390, 768, 1024, 1440]) {
 		test(`${width}px에서 가로로 넘치지 않습니다`, async ({ page }) => {

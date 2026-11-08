@@ -11,6 +11,7 @@
 	import ItemList from './ItemList.svelte';
 	import ReviewPanel from './ReviewPanel.svelte';
 	import RoomForm from './RoomForm.svelte';
+	import UnderlayForm from './UnderlayForm.svelte';
 
 	let { id }: { id: string } = $props();
 
@@ -109,6 +110,7 @@
 					{/key}
 				{:else}
 					<RoomForm {session} />
+					<UnderlayForm {session} />
 				{/if}
 				<ReviewPanel {session} />
 				<ItemList {session} />
