@@ -3,8 +3,22 @@
 	"framework": null,
 	"buildCommand": "pnpm build",
 	"outputDirectory": "build",
-	"rewrites": [
-		{ "source": "/plans/:id", "destination": "/spa.html" },
-		{ "source": "/shared", "destination": "/shared.html" }
+	"routes": [
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "^/plans/[^/]+/?$",
+			"dest": "/spa.html"
+		},
+		{
+			"src": "^/shared/?$",
+			"dest": "/shared.html"
+		},
+		{
+			"src": "^/.*$",
+			"status": 404,
+			"dest": "/404.html"
+		}
 	]
 }
