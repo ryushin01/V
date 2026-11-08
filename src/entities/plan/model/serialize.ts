@@ -1,7 +1,18 @@
 import { createId } from '#shared/lib/id';
 import { findCatalogEntry, SPEC_LIMITS } from './catalog';
-import { PLAN_LIMITS, ROOM_LIMITS, wallLength } from './room';
-import type { ItemData, ItemSpecs, Opening, PlanData, RoomData, SpecKey, Wall } from './types';
+import { cutoutLimits, PLAN_LIMITS, ROOM_LIMITS, wallRange } from './room';
+import type {
+	Corner,
+	Cutout,
+	Underlay,
+	ItemData,
+	ItemSpecs,
+	Opening,
+	PlanData,
+	RoomData,
+	SpecKey,
+	Wall
+} from './types';
 
 export type ParseResult = { ok: true; plan: PlanData } | { ok: false; error: string };
 
@@ -14,13 +25,66 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const finite = (value: unknown): value is number =>
 	typeof value === 'number' && Number.isFinite(value);
 
-function parseOpening(raw: unknown, room: Pick<RoomData, 'width' | 'depth'>): Opening | null {
+const CORNERS: readonly Corner[] = ['nw', 'ne', 'se', 'sw'];
+
+function parseCutouts(raw: unknown, width: number, depth: number): Cutout[] | null {
+	if (raw === undefined) return [];
+	if (!Array.isArray(raw) || raw.length > CORNERS.length) return null;
+	const cutouts: Cutout[] = [];
+	for (const entry of raw) {
+		if (!isRecord(entry) || !CORNERS.includes(entry.corner as Corner)) return null;
+		const corner = entry.corner as Corner;
+		if (cutouts.some((cutout) => cutout.corner === corner)) return null;
+		if (!finite(entry.width) || !finite(entry.depth)) return null;
+		const limits = cutoutLimits({ width, depth, cutouts }, corner);
+		if (
+			entry.width < limits.min ||
+			entry.depth < limits.min ||
+			entry.width > limits.maxWidth ||
+			entry.depth > limits.maxDepth
+		) {
+			return null;
+		}
+		cutouts.push({ id: createId(), corner, width: entry.width, depth: entry.depth });
+	}
+	return cutouts;
+}
+
+const UNDERLAY_SRC = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+const MAX_UNDERLAY_CHARS = 8_000_000;
+
+function parseUnderlay(raw: unknown): Underlay | undefined | null {
+	if (raw === undefined) return undefined;
+	if (!isRecord(raw)) return null;
+	const { src, pixelWidth, pixelHeight, x, y, cmPerPixel, opacity } = raw;
+	if (typeof src !== 'string' || src.length > MAX_UNDERLAY_CHARS || !UNDERLAY_SRC.test(src)) {
+		return null;
+	}
+	if (![pixelWidth, pixelHeight, x, y, cmPerPixel, opacity].every(finite)) return null;
+	const size = [pixelWidth, pixelHeight, cmPerPixel] as number[];
+	if (size.some((value) => value <= 0)) return null;
+	if ((opacity as number) < 0 || (opacity as number) > 1) return null;
+	return {
+		src,
+		pixelWidth: pixelWidth as number,
+		pixelHeight: pixelHeight as number,
+		x: x as number,
+		y: y as number,
+		cmPerPixel: cmPerPixel as number,
+		opacity: opacity as number
+	};
+}
+
+function parseOpening(
+	raw: unknown,
+	room: Pick<RoomData, 'width' | 'depth' | 'cutouts'>
+): Opening | null {
 	if (!isRecord(raw)) return null;
 	const { kind, wall, offset, width, hinge } = raw;
 	if (kind !== 'door' && kind !== 'window') return null;
 	if (!WALLS.includes(wall as Wall) || !finite(offset) || !finite(width)) return null;
-	const length = wallLength(room, wall as Wall);
-	if (width <= 0 || width > length || offset < 0 || offset + width > length) return null;
+	const range = wallRange(room, wall as Wall);
+	if (width <= 0 || offset < range.start || offset + width > range.end) return null;
 	return {
 		id: createId(),
 		kind,
@@ -93,7 +157,17 @@ export function parsePlan(text: string): ParseResult {
 			error: `문·창문은 ${PLAN_LIMITS.openings}개, 물건은 ${PLAN_LIMITS.items}개까지 불러올 수 있습니다.`
 		};
 	}
-	const parsedOpenings = openings.map((opening) => parseOpening(opening, { width, depth }));
+	const cutouts = parseCutouts(raw.room.cutouts, width, depth);
+	if (!cutouts) {
+		return { ok: false, error: '잘라 낸 모서리의 크기나 위치가 올바르지 않습니다.' };
+	}
+	const underlay = parseUnderlay(raw.underlay);
+	if (underlay === null) {
+		return { ok: false, error: '평면도 이미지 정보가 올바르지 않습니다.' };
+	}
+	const parsedOpenings = openings.map((opening) =>
+		parseOpening(opening, { width, depth, cutouts })
+	);
 	if (parsedOpenings.some((opening) => opening === null)) {
 		return { ok: false, error: '문이나 창문의 위치가 벽을 벗어났습니다.' };
 	}
@@ -111,7 +185,13 @@ export function parsePlan(text: string): ParseResult {
 					? raw.name.trim().slice(0, 60)
 					: '불러온 배치도',
 			updatedAt: Date.now(),
-			room: { width, depth, openings: parsedOpenings as Opening[] },
+			room: {
+				width,
+				depth,
+				openings: parsedOpenings as Opening[],
+				...(cutouts.length > 0 ? { cutouts } : {})
+			},
+			...(underlay ? { underlay } : {}),
 			items: items as ItemData[]
 		}
 	};

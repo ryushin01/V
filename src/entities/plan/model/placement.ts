@@ -1,6 +1,6 @@
 import { boundsOf, corners, localToWorld, polygonsOverlap } from '#shared/lib/geometry';
 import { getCatalogEntry, resolveEntry } from './catalog';
-import { snapToWall } from './room';
+import { isOutsideRoom, snapToWall } from './room';
 import type { CatalogEntry, ItemData, RoomData } from './types';
 
 const GRID_CM = 10;
@@ -69,7 +69,9 @@ export function findFreeSpot(
 	const halfD = entry.depth / 2;
 	for (let y = halfD; y <= room.depth - halfD; y += GRID_CM) {
 		for (let x = halfW; x <= room.width - halfW; x += GRID_CM) {
-			if (!collides(x, y, 0)) return { x, y, rotation: 0 };
+			if (!collides(x, y, 0) && !isOutsideRoom(room, polygonFor(entry, x, y))) {
+				return { x, y, rotation: 0 };
+			}
 		}
 	}
 	return { x: room.width / 2, y: room.depth / 2, rotation: 0 };

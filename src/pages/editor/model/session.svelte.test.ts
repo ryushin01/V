@@ -157,6 +157,50 @@ describe('EditorSession', () => {
 		expect(session.items[0].entry.width).toBe(62);
 	});
 
+	const image = { src: 'data:image/jpeg;base64,AAAA', pixelWidth: 400, pixelHeight: 300 };
+
+	it('평면도 이미지를 방 가로에 맞춰 깔고 되돌립니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.setUnderlay(image);
+		expect(session.underlay?.cmPerPixel).toBe(1);
+		expect(session.toData().underlay?.src).toBe(image.src);
+		session.undo();
+		expect(session.underlay).toBeNull();
+	});
+
+	it('두 점과 실제 길이로 축척을 맞춥니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.setUnderlay(image);
+		session.startCalibration();
+		session.addCalibrationPoint({ x: 100, y: 100 });
+		session.addCalibrationPoint({ x: 200, y: 100 });
+		session.applyCalibration(300);
+		expect(session.underlay?.cmPerPixel).toBe(3);
+		expect(session.underlay?.x).toBe(-200);
+		expect(session.calibration).toBeNull();
+	});
+
+	it('모서리를 자르면 문이 남은 벽으로 옮겨 갑니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addOpening('window');
+		session.addCutout();
+		const cutout = session.room.cutouts?.[0];
+		expect(cutout?.corner).toBe('ne');
+		session.updateOpening(session.room.openings[1].id, { offset: 390 });
+		const opening = session.room.openings[1];
+		expect(opening.offset + opening.width).toBeLessThanOrEqual(400 - (cutout?.width ?? 0));
+		session.undo();
+		session.undo();
+		expect(session.room.cutouts ?? []).toHaveLength(0);
+	});
+
+	it('모서리는 네 곳까지만 자릅니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		for (let index = 0; index < 5; index += 1) session.addCutout();
+		expect(session.room.cutouts).toHaveLength(4);
+		expect(session.freeCorners).toEqual([]);
+	});
+
 	it('저장 데이터로 내보냅니다', () => {
 		const sample = createSamplePlan();
 		const session = new EditorSession(sample);

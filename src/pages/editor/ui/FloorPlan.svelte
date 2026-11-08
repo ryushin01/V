@@ -121,6 +121,13 @@
 
 	/** 두 손가락이 닿으면 물건 끌기를 취소하고 확대로 바꿉니다. */
 	function trackTouch(event: PointerEvent) {
+		if (session.calibration && event.button === 0) {
+			// 축척을 맞추는 동안에는 물건을 잡지 않고 점만 찍습니다.
+			event.stopPropagation();
+			const { sx, sy } = local(event);
+			session.addCalibrationPoint(view.toWorld(sx, sy));
+			return;
+		}
 		if (event.pointerType !== 'touch') return;
 		const { sx, sy } = local(event);
 		touches.set(event.pointerId, { x: sx, y: sy });
@@ -237,6 +244,7 @@
 	}
 
 	function handleWindowKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && session.calibration) session.cancelCalibration();
 		if (event.key === 'Escape' && isItemGesture(gesture)) {
 			session.cancelGesture();
 			gesture = null;
@@ -282,6 +290,7 @@
 			onpointercancel={handleCancel}
 			onpointerleave={() => (pointer = null)}
 			onwheel={handleWheel}
+			class:calibrating={!!session.calibration}
 		>
 			<defs>
 				<pattern
@@ -298,6 +307,20 @@
 			<rect width="100%" height="100%" fill="url(#dots)" />
 			<g transform={`translate(${view.offsetX} ${view.offsetY}) scale(${view.scale})`}>
 				<RoomOutline room={session.room} />
+				{#if session.underlay}
+					{@const image = session.underlay}
+					<image
+						class="underlay"
+						href={image.src}
+						x={image.x}
+						y={image.y}
+						width={image.pixelWidth * image.cmPerPixel}
+						height={image.pixelHeight * image.cmPerPixel}
+						opacity={image.opacity}
+						preserveAspectRatio="none"
+						data-testid="underlay"
+					/>
+				{/if}
 				{#if showCables && !xray.on}
 					{#each cables as { connection, from, to } (`${connection.fromId}-${connection.toId}`)}
 						<line
@@ -330,6 +353,21 @@
 						connections={session.analysis.connections}
 						scale={view.scale}
 					/>
+				{/if}
+				{#if session.calibration}
+					{@const points = session.calibration.points}
+					{#if points.length === 2}
+						<line
+							class="calibration"
+							x1={points[0].x}
+							y1={points[0].y}
+							x2={points[1].x}
+							y2={points[1].y}
+						/>
+					{/if}
+					{#each points as point, index (index)}
+						<circle class="calibration-point" cx={point.x} cy={point.y} r={5 / view.scale} />
+					{/each}
 				{/if}
 				{#if dimensions && selectedBounds}
 					{@const size = 11 / view.scale}
@@ -456,6 +494,27 @@
 		display: block;
 		touch-action: none;
 		cursor: default;
+	}
+
+	.underlay {
+		pointer-events: none;
+	}
+
+	.calibration {
+		stroke: var(--accent);
+		stroke-width: 2;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.calibration-point {
+		fill: var(--accent);
+		stroke: var(--paper);
+		stroke-width: 2;
+		vector-effect: non-scaling-stroke;
+	}
+
+	svg.calibrating {
+		cursor: crosshair;
 	}
 
 	.dot {

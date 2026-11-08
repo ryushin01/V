@@ -1,9 +1,14 @@
 <script lang="ts">
-	import { openingGeometry } from '../model/room';
+	import { openingGeometry, roomOutline } from '../model/room';
 	import type { RoomData } from '../model/types';
 
 	let { room }: { room: RoomData } = $props();
 
+	const outline = $derived(
+		roomOutline(room)
+			.map((p) => `${p.x},${p.y}`)
+			.join(' ')
+	);
 	const openings = $derived(
 		room.openings.map((opening) => {
 			const geometry = openingGeometry(room, opening);
@@ -20,8 +25,8 @@
 </script>
 
 <g class="room">
-	<rect class="floor" x="0" y="0" width={room.width} height={room.depth} />
-	<rect class="wall" x="0" y="0" width={room.width} height={room.depth} />
+	<polygon class="floor" points={outline} />
+	<polygon class="wall" points={outline} />
 	{#each openings as { opening, geometry, arc } (opening.id)}
 		<line
 			class="gap"
