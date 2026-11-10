@@ -2,7 +2,7 @@
 	import { prefersReducedMotion } from 'svelte/motion';
 	import {
 		analyzePlan,
-		getCatalogEntry,
+		resolveEntry,
 		ItemGlyph,
 		RoomOutline,
 		XrayOverlay,
@@ -60,7 +60,7 @@
 	const analysis = $derived(analyzePlan(plan.room, plan.items));
 	const pieces = $derived(
 		plan.items.map((item) => {
-			const entry = getCatalogEntry(item.catalogId);
+			const entry = resolveEntry(item);
 			return { item, entry, appearsAt: STEP_OF_KIND[entry.kind] ?? 3 };
 		})
 	);

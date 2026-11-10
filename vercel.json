@@ -3,5 +3,29 @@
 	"framework": null,
 	"buildCommand": "pnpm build",
 	"outputDirectory": "build",
-	"rewrites": [{ "source": "/plans/:id", "destination": "/200.html" }]
+	"routes": [
+		{
+			"src": "^/(.+)/$",
+			"status": 308,
+			"headers": {
+				"Location": "/$1"
+			}
+		},
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "^/plans/[^/]+/?$",
+			"dest": "/spa.html"
+		},
+		{
+			"src": "^/shared/?$",
+			"dest": "/shared.html"
+		},
+		{
+			"src": "^/.*$",
+			"status": 404,
+			"dest": "/404.html"
+		}
+	]
 }

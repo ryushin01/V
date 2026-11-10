@@ -10,7 +10,7 @@ export default defineConfig({
 	projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 	webServer: {
 		// 배포와 같은 조건으로 정적 결과물과 200.html 대체 경로를 검사합니다.
-		command: 'pnpm exec sirv build --single 200.html --port 4173',
+		command: 'pnpm exec sirv build --single spa.html --port 4173',
 		url: 'http://localhost:4173',
 		reuseExistingServer: !process.env.CI
 	}

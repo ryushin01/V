@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { analyzePlan } from '../model/analysis';
-	import { getCatalogEntry } from '../model/catalog';
+	import { resolveEntry } from '../model/catalog';
 	import type { PlanData } from '../model/types';
 	import ItemGlyph from './ItemGlyph.svelte';
 	import RoomOutline from './RoomOutline.svelte';
@@ -26,7 +26,7 @@
 	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, surface: 3 } as const;
 	const items = $derived(
 		plan.items
-			.map((item) => ({ item, entry: getCatalogEntry(item.catalogId) }))
+			.map((item) => ({ item, entry: resolveEntry(item) }))
 			.sort((a, b) => LAYER_ORDER[a.entry.layer] - LAYER_ORDER[b.entry.layer])
 	);
 </script>

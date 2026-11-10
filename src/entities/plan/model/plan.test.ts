@@ -3,7 +3,7 @@ import { analyzePlan, viewingRange } from './analysis';
 import { createSamplePlan } from './factory';
 import { findFreeSpot } from './placement';
 import { getCatalogEntry } from './catalog';
-import { openingGeometry, snapToWall } from './room';
+import { openingGeometry, roomOutline, snapToWall, wallRange } from './room';
 import { parsePlan, stringifyPlan } from './serialize';
 import type { ItemData, RoomData } from './types';
 
@@ -211,6 +211,110 @@ describe('방 계산', () => {
 	});
 });
 
+describe('다각형 방', () => {
+	const lRoom = (): RoomData => ({
+		width: 400,
+		depth: 400,
+		openings: [],
+		cutouts: [{ id: 'c', corner: 'ne', width: 150, depth: 120 }]
+	});
+
+	it('윤곽선에 잘라 낸 모서리가 들어갑니다', () => {
+		expect(roomOutline(lRoom())).toEqual([
+			{ x: 0, y: 0 },
+			{ x: 250, y: 0 },
+			{ x: 250, y: 120 },
+			{ x: 400, y: 120 },
+			{ x: 400, y: 400 },
+			{ x: 0, y: 400 }
+		]);
+	});
+
+	it('잘라 낸 곳에 놓으면 방 밖입니다', () => {
+		expect(codes(lRoom(), [item('chair', 350, 60)])).toContain('out-of-room');
+		expect(codes(lRoom(), [item('chair', 350, 300)])).not.toContain('out-of-room');
+	});
+
+	it('벽의 쓸 수 있는 구간이 줄어듭니다', () => {
+		expect(wallRange(lRoom(), 'north')).toEqual({ start: 0, end: 250 });
+		expect(wallRange(lRoom(), 'east')).toEqual({ start: 120, end: 400 });
+	});
+
+	it('콘센트는 잘라 낸 구간을 피해 붙습니다', () => {
+		expect(snapToWall(lRoom(), 340, 2, 4, 12).x).toBe(244);
+	});
+
+	it('잘라 낸 곳을 지나는 통로는 막힙니다', () => {
+		const door = {
+			id: 'd',
+			kind: 'door' as const,
+			wall: 'south' as const,
+			offset: 40,
+			width: 90,
+			hinge: 'start' as const
+		};
+		const room: RoomData = {
+			width: 300,
+			depth: 400,
+			openings: [door],
+			cutouts: [
+				{ id: 'a', corner: 'nw', width: 200, depth: 200 },
+				{ id: 'b', corner: 'ne', width: 40, depth: 200 }
+			]
+		};
+		expect(codes(room, [item('chair', 230, 100)])).toContain('blocked-route');
+	});
+
+	it('자동 배치는 잘라 낸 곳을 피합니다', () => {
+		const spot = findFreeSpot(lRoom(), [item('desk-140', 70, 35)], getCatalogEntry('desk-140'));
+		expect(codes(lRoom(), [item('desk-140', spot.x, spot.y)])).not.toContain('out-of-room');
+	});
+
+	it('파일 입출력에서 검사합니다', () => {
+		const make = (cutouts: unknown) =>
+			parsePlan(
+				JSON.stringify({
+					version: 1,
+					room: { width: 400, depth: 400, openings: [], cutouts },
+					items: []
+				})
+			);
+		const valid = make([{ corner: 'ne', width: 150, depth: 120 }]);
+		expect(valid.ok && valid.plan.room.cutouts?.[0].corner).toBe('ne');
+		expect(make([{ corner: 'x', width: 150, depth: 120 }]).ok).toBe(false);
+		expect(make([{ corner: 'ne', width: 390, depth: 120 }]).ok).toBe(false);
+		expect(
+			make([
+				{ corner: 'ne', width: 100, depth: 100 },
+				{ corner: 'ne', width: 100, depth: 100 }
+			]).ok
+		).toBe(false);
+	});
+
+	it('평면도 이미지는 안전한 형식만 받습니다', () => {
+		const make = (src: string) =>
+			parsePlan(
+				JSON.stringify({
+					version: 1,
+					room: { width: 400, depth: 400, openings: [] },
+					items: [],
+					underlay: {
+						src,
+						pixelWidth: 10,
+						pixelHeight: 10,
+						x: 0,
+						y: 0,
+						cmPerPixel: 1,
+						opacity: 0.5
+					}
+				})
+			);
+		expect(make('data:image/jpeg;base64,AAAA').ok).toBe(true);
+		expect(make('data:image/svg+xml;base64,AAAA').ok).toBe(false);
+		expect(make('https://example.com/a.jpg').ok).toBe(false);
+	});
+});
+
 describe('자동 배치', () => {
 	it('모니터를 책상 위에 놓습니다', () => {
 		const desk = item('desk-140', 100, 100);
@@ -236,6 +340,21 @@ describe('파일 입출력', () => {
 			expect(parsed.plan.items).toHaveLength(sample.items.length);
 			expect(parsed.plan.id).not.toBe(sample.id);
 		}
+	});
+
+	it('사용자 규격을 검사합니다', () => {
+		const make = (specs: unknown) =>
+			parsePlan(
+				JSON.stringify({
+					version: 1,
+					room: { width: 300, depth: 300, openings: [] },
+					items: [{ catalogId: 'chair', x: 10, y: 10, rotation: 0, specs }]
+				})
+			);
+		const valid = make({ width: 80 });
+		expect(valid.ok && valid.plan.items[0].specs).toEqual({ width: 80 });
+		expect(make({ width: 99999 }).ok).toBe(false);
+		expect(make('wide').ok).toBe(false);
 	});
 
 	it('지나치게 많은 물건은 거절합니다', () => {

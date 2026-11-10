@@ -48,10 +48,19 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 
 정격과 치수는 `entities/plan/model/catalog.ts`의 기본값이며 특정 제품의 사양이 아닙니다.
 
+## 방 모양
+
+사각형에서 모서리를 잘라 내는 방식(`RoomData.cutouts`)입니다. 네 모서리까지 자를 수 있어 ㄱ자, ㄴ자, T자, 십자형을 만들 수 있습니다. ㄷ자처럼 벽 중간이 들어간 방과 임의의 다각형은 지원하지 않고, 문·창문·콘센트는 바깥쪽 네 벽의 남은 구간에만 놓습니다.
+
+## 공유 링크와 평면도 이미지
+
+- 공유 링크는 배치도를 `deflate-raw`로 압축해 주소의 해시에 넣습니다. 해시는 서버로 전송되지 않으며, 받을 때 파일 불러오기와 같은 검사를 거칩니다. 금액과 평면도 이미지는 넣지 않습니다.
+- 평면도 이미지는 긴 변 2000px의 JPEG로 줄여 배치도와 함께 IndexedDB에 저장하고, JSON 내보내기에 포함합니다.
+
 ## CI
 
 `.github/workflows/ci.yml`이 포맷, ESLint, Steiger, 타입, 단위 테스트, 빌드, Storybook 빌드, E2E를 차례로 실행합니다.
 
 ## 배포
 
-Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에, PR을 열면 미리보기에 배포됩니다. 배치도 편집 주소는 `vercel.json`의 rewrite로 `200.html`을 내려 줍니다.
+Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에, PR을 열면 미리보기에 배포됩니다. 배치도 편집 주소는 `vercel.json`의 `routes`로 `spa.html`을 내려 주고, 없는 주소는 같은 내용의 `404.html`을 404 상태로 내려 줘 앱의 오류 화면이 뜹니다. Vercel이 Svelte를 감지하면 없는 주소에 `index.html`을 내려 주므로, `rewrites` 대신 끝에 404를 명시한 `routes`를 씁니다.

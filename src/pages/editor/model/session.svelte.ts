@@ -1,19 +1,25 @@
 import { createId } from '#shared/lib/id';
-import { normalizeAngle } from '#shared/lib/geometry';
+import { distance, normalizeAngle, type Point } from '#shared/lib/geometry';
 import { josa } from '#shared/lib/josa';
 import {
 	analyzePlan,
 	findFreeSpot,
 	getCatalogEntry,
 	halfExtents,
+	cutoutLimits,
 	PLAN_LIMITS,
 	ROOM_LIMITS,
+	SPEC_LIMITS,
 	snapToWall,
-	wallLength,
+	wallRange,
 	type ItemData,
 	type Opening,
 	type PlanData,
-	type RoomData
+	type RoomData,
+	type Corner,
+	type Cutout,
+	type Underlay,
+	type SpecKey
 } from '#entities/plan';
 import { PlacedItem } from './placed-item.svelte';
 import { Viewport } from './viewport.svelte';
@@ -21,6 +27,7 @@ import { Viewport } from './viewport.svelte';
 interface Snapshot {
 	room: RoomData;
 	items: ItemData[];
+	underlay: Underlay | null;
 }
 
 export type Direction = 'left' | 'right' | 'up' | 'down';
@@ -43,6 +50,17 @@ const DIRECTION_VECTOR: Record<Direction, [number, number]> = {
 	down: [0, 1]
 };
 
+/** 큰 이미지 문자열은 참조로 비교합니다. */
+function sameSnapshot(a: Snapshot, b: Snapshot): boolean {
+	const body = (snapshot: Snapshot) =>
+		JSON.stringify({
+			room: snapshot.room,
+			items: snapshot.items,
+			underlay: snapshot.underlay && { ...snapshot.underlay, src: '' }
+		});
+	return a.underlay?.src === b.underlay?.src && body(a) === body(b);
+}
+
 export class EditorSession {
 	readonly id: string;
 	readonly viewport = new Viewport();
@@ -52,6 +70,9 @@ export class EditorSession {
 	items = $state<PlacedItem[]>([]);
 	selectedId = $state<string | null>(null);
 	announcement = $state('');
+	underlay = $state.raw<Underlay | null>(null);
+	/** 두 점으로 축척을 맞추는 중이면 찍은 점을 담습니다. */
+	calibration = $state.raw<{ points: Point[] } | null>(null);
 	focusRequest = $state<{ id: string | null } | null>(null);
 
 	#past = $state.raw<Snapshot[]>([]);
@@ -72,29 +93,41 @@ export class EditorSession {
 		this.name = plan.name;
 		this.room = plan.room;
 		this.items = plan.items.map((item) => new PlacedItem(item));
+		this.underlay = plan.underlay ?? null;
 	}
 
 	toData(): PlanData {
-		const { room, items } = this.#capture();
-		return { version: 1, id: this.id, name: this.name, room, items, updatedAt: Date.now() };
+		const { room, items, underlay } = this.#capture();
+		return {
+			version: 1,
+			id: this.id,
+			name: this.name,
+			room,
+			items,
+			updatedAt: Date.now(),
+			...(underlay ? { underlay } : {})
+		};
 	}
 
 	#capture(): Snapshot {
 		return {
 			room: $state.snapshot(this.room),
-			items: this.items.map((item) => item.toData())
+			items: this.items.map((item) => item.toData()),
+			underlay: this.underlay
 		};
 	}
 
 	#restore(snapshot: Snapshot) {
 		this.room = structuredClone(snapshot.room);
 		this.items = snapshot.items.map((item) => new PlacedItem(item));
+		this.underlay = snapshot.underlay;
+		if (!snapshot.underlay) this.calibration = null;
 		if (!this.items.some((item) => item.id === this.selectedId)) this.selectedId = null;
 	}
 
 	#commit(before: Snapshot, key: string | null = null) {
 		this.#gestureStart = null;
-		if (JSON.stringify(before) === JSON.stringify(this.#capture())) return;
+		if (sameSnapshot(before, this.#capture())) return;
 		const now = Date.now();
 		const coalesce = key !== null && key === this.#lastKey && now - this.#lastTime < COALESCE_MS;
 		this.#lastKey = key;
@@ -288,6 +321,27 @@ export class EditorSession {
 		});
 	}
 
+	setSpec(id: string, key: SpecKey, value: number) {
+		const item = this.items.find((candidate) => candidate.id === id);
+		if (!item) return;
+		const { min, max } = SPEC_LIMITS[key];
+		this.#transact(() => {
+			item.specs[key] = Math.min(max, Math.max(min, value));
+			if (item.entry.layer === 'wall') this.#place(item, item.x, item.y);
+		});
+		this.announcement = `${item.name} 규격을 바꿨습니다.`;
+	}
+
+	resetSpecs(id: string) {
+		const item = this.items.find((candidate) => candidate.id === id);
+		if (!item) return;
+		this.#transact(() => {
+			item.specs = {};
+			if (item.entry.layer === 'wall') this.#place(item, item.x, item.y);
+		});
+		this.announcement = `${item.name} 규격을 기본값으로 되돌렸습니다.`;
+	}
+
 	setPrice(id: string, value: number) {
 		const item = this.items.find((candidate) => candidate.id === id);
 		if (!item) return;
@@ -304,21 +358,142 @@ export class EditorSession {
 		}, `label:${id}`);
 	}
 
+	/** 방 모양이 바뀐 뒤 잘라 낸 모서리, 문, 콘센트를 벽 안으로 맞춥니다. */
+	#fitToRoom() {
+		for (const cutout of this.room.cutouts ?? []) this.#clampCutout(cutout);
+		for (const opening of this.room.openings) this.#clampOpening(opening);
+		for (const item of this.items) {
+			if (item.entry.layer === 'wall') this.#place(item, item.x, item.y);
+		}
+	}
+
+	#clampCutout(cutout: Cutout) {
+		const limits = cutoutLimits(this.room, cutout.corner);
+		cutout.width = Math.max(limits.min, Math.min(limits.maxWidth, cutout.width));
+		cutout.depth = Math.max(limits.min, Math.min(limits.maxDepth, cutout.depth));
+	}
+
 	setRoomSize(axis: 'width' | 'depth', value: number) {
 		const size = Math.min(ROOM_LIMITS.max, Math.max(ROOM_LIMITS.min, value));
 		this.#transact(() => {
 			this.room[axis] = size;
-			for (const opening of this.room.openings) this.#clampOpening(opening);
-			for (const item of this.items) {
-				if (item.entry.layer === 'wall') this.#place(item, item.x, item.y);
-			}
+			this.#fitToRoom();
 		});
 	}
 
+	readonly freeCorners = $derived(
+		(['ne', 'nw', 'se', 'sw'] as Corner[]).filter(
+			(corner) => !this.room.cutouts?.some((cutout) => cutout.corner === corner)
+		)
+	);
+
+	addCutout() {
+		const [corner] = this.freeCorners;
+		if (!corner) return;
+		const limits = cutoutLimits(this.room, corner);
+		if (limits.maxWidth < limits.min || limits.maxDepth < limits.min) {
+			this.announcement = '방이 작아 모서리를 더 잘라 낼 수 없습니다.';
+			return;
+		}
+		this.#transact(() => {
+			this.room.cutouts = [
+				...(this.room.cutouts ?? []),
+				{
+					id: createId(),
+					corner,
+					width: Math.min(120, limits.maxWidth),
+					depth: Math.min(100, limits.maxDepth)
+				}
+			];
+			this.#fitToRoom();
+		});
+		this.announcement = '모서리를 잘라 냈습니다.';
+	}
+
+	updateCutout(id: string, patch: Partial<Omit<Cutout, 'id'>>) {
+		const cutout = this.room.cutouts?.find((candidate) => candidate.id === id);
+		if (!cutout) return;
+		this.#transact(() => {
+			Object.assign(cutout, patch);
+			this.#fitToRoom();
+		});
+	}
+
+	removeCutout(id: string) {
+		this.#transact(() => {
+			this.room.cutouts = this.room.cutouts?.filter((cutout) => cutout.id !== id);
+			this.#fitToRoom();
+		});
+		this.announcement = '잘라 낸 모서리를 되돌렸습니다.';
+	}
+
+	setUnderlay(image: Pick<Underlay, 'src' | 'pixelWidth' | 'pixelHeight'>) {
+		this.#transact(() => {
+			this.underlay = {
+				...image,
+				x: 0,
+				y: 0,
+				cmPerPixel: this.room.width / image.pixelWidth,
+				opacity: 0.6
+			};
+		});
+		this.announcement = '평면도 이미지를 올렸습니다. 실제 길이에 맞게 축척을 조정해 주세요.';
+	}
+
+	updateUnderlay(patch: Partial<Pick<Underlay, 'x' | 'y' | 'cmPerPixel' | 'opacity'>>) {
+		if (!this.underlay) return;
+		const next = { ...this.underlay, ...patch };
+		this.#transact(() => {
+			this.underlay = next;
+		});
+	}
+
+	removeUnderlay() {
+		this.calibration = null;
+		this.#transact(() => {
+			this.underlay = null;
+		});
+		this.announcement = '평면도 이미지를 삭제했습니다.';
+	}
+
+	startCalibration() {
+		this.calibration = { points: [] };
+		this.announcement = '도면에서 길이를 아는 두 점을 차례로 눌러 주세요.';
+	}
+
+	addCalibrationPoint(point: Point) {
+		if (!this.calibration || this.calibration.points.length >= 2) return;
+		const points = [...this.calibration.points, point];
+		this.calibration = { points };
+		if (points.length === 1) this.announcement = '두 번째 점을 눌러 주세요.';
+	}
+
+	cancelCalibration() {
+		this.calibration = null;
+		this.announcement = '축척 맞추기를 취소했습니다.';
+	}
+
+	/** 첫 번째 점을 고정하고 두 점 사이가 실제 길이가 되도록 이미지를 늘립니다. */
+	applyCalibration(realCm: number) {
+		const [a, b] = this.calibration?.points ?? [];
+		const image = this.underlay;
+		this.calibration = null;
+		if (!a || !b || !image) return;
+		const measured = distance(a, b);
+		if (measured <= 0 || realCm <= 0) return;
+		const ratio = realCm / measured;
+		this.updateUnderlay({
+			cmPerPixel: image.cmPerPixel * ratio,
+			x: a.x - (a.x - image.x) * ratio,
+			y: a.y - (a.y - image.y) * ratio
+		});
+		this.announcement = '축척을 맞췄습니다.';
+	}
+
 	#clampOpening(opening: Opening) {
-		const length = wallLength(this.room, opening.wall);
-		opening.width = Math.min(length, Math.max(30, opening.width));
-		opening.offset = Math.min(length - opening.width, Math.max(0, opening.offset));
+		const { start, end } = wallRange(this.room, opening.wall);
+		opening.width = Math.min(end - start, Math.max(30, opening.width));
+		opening.offset = Math.min(end - opening.width, Math.max(start, opening.offset));
 	}
 
 	addOpening(kind: Opening['kind']) {

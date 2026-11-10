@@ -1,11 +1,14 @@
 import { boundsOf, corners, type RotatedRect } from '#shared/lib/geometry';
-import { getCatalogEntry, type CatalogEntry, type ItemData } from '#entities/plan';
+import { resolveEntry, type CatalogEntry, type ItemData, type ItemSpecs } from '#entities/plan';
 
 /** 물건 하나의 상태입니다. 좌표가 바뀌면 이 물건을 쓰는 값만 다시 계산됩니다. */
 export class PlacedItem implements ItemData {
 	readonly id: string;
 	readonly catalogId: string;
-	readonly entry: CatalogEntry;
+	specs = $state<ItemSpecs>({});
+	readonly entry: CatalogEntry = $derived.by(() =>
+		resolveEntry({ catalogId: this.catalogId, specs: this.specs })
+	);
 	label = $state('');
 	x = $state(0);
 	y = $state(0);
@@ -25,7 +28,7 @@ export class PlacedItem implements ItemData {
 	constructor(data: ItemData) {
 		this.id = data.id;
 		this.catalogId = data.catalogId;
-		this.entry = getCatalogEntry(data.catalogId);
+		this.specs = { ...data.specs };
 		this.label = data.label;
 		this.x = data.x;
 		this.y = data.y;
@@ -41,7 +44,8 @@ export class PlacedItem implements ItemData {
 			x: this.x,
 			y: this.y,
 			rotation: this.rotation,
-			price: this.price
+			price: this.price,
+			...(Object.keys(this.specs).length > 0 ? { specs: $state.snapshot(this.specs) } : {})
 		};
 	}
 }
