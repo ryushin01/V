@@ -46,6 +46,10 @@ describe('직접 등록 제품', () => {
 		expect(createCustomEntry({ ...input, width: 9999 }).width).toBe(500);
 	});
 
+	it('화면 크기를 비워 두면 27인치로 저장합니다', () => {
+		expect(createCustomEntry({ ...input, kind: 'monitor', glyph: '' }).diagonalInch).toBe(27);
+	});
+
 	it('멀티탭은 구 수와 정격을 가집니다', () => {
 		expect(createCustomEntry({ ...input, kind: 'strip', ports: 8 })).toMatchObject({
 			ports: 8,
@@ -62,6 +66,8 @@ describe('직접 등록 제품', () => {
 		});
 		expect(parseCustomEntry({ ...entry, id: '../evil' })).toBeNull();
 		expect(parseCustomEntry({ ...entry, kind: 'rocket' })).toBeNull();
+		expect(parseCustomEntry({ ...entry, kind: 'constructor' })).toBeNull();
+		expect(parseCustomEntry({ ...entry, kind: 'toString' })).toBeNull();
 		expect(parseCustomEntry({ ...entry, width: -5 })).toBeNull();
 		expect(parseCustomEntry({ ...entry, name: '' })).toBeNull();
 		// 층·분류는 파일 값을 믿지 않고 종류에서 다시 정합니다.

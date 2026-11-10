@@ -19,10 +19,18 @@
 	let draft = $derived(String(Math.round(value * 100) / 100));
 	let error = $state('');
 
+	/** 쉼표 소수(29,4)도 받습니다. 비어 있으면 NaN입니다. */
+	function parseDraft(text: string): number {
+		const trimmed = text.trim().replace(',', '.');
+		return trimmed === '' ? Number.NaN : Number(trimmed);
+	}
+
+	const parsedDraft = $derived(parseDraft(draft));
+
 	/** type="number"는 '29.'처럼 입력 중인 소수를 비워 버려 글자 입력으로 받고, 위아래 방향키로 증감합니다. */
 	function stepWithArrows(event: KeyboardEvent) {
 		if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-		const current = Number(draft);
+		const current = parseDraft(draft);
 		if (!Number.isFinite(current)) return;
 		event.preventDefault();
 		const next = Math.min(max, Math.max(min, current + (event.key === 'ArrowUp' ? step : -step)));
@@ -31,7 +39,7 @@
 	}
 
 	function commit() {
-		const parsed = Number(draft.trim().replace(',', '.'));
+		const parsed = parseDraft(draft);
 		if (draft.trim() === '' || !Number.isFinite(parsed)) {
 			error = '숫자를 입력해 주세요.';
 			return;
@@ -51,6 +59,10 @@
 		<input
 			{id}
 			type="text"
+			role="spinbutton"
+			aria-valuemin={min}
+			aria-valuemax={max}
+			aria-valuenow={Number.isFinite(parsedDraft) ? parsedDraft : undefined}
 			inputmode="decimal"
 			autocomplete="off"
 			spellcheck="false"

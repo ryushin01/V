@@ -284,6 +284,9 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 	strip: { label: '멀티탭', category: 'power', layer: 'cable', hasPorts: true, glyphs: [BASIC] }
 };
 
+/** 화면 크기를 입력하지 않으면 입력란에 보이는 값과 같은 27인치로 저장합니다. */
+export const DEFAULT_SCREEN_INCH = 27;
+
 export const CUSTOM_KINDS = Object.keys(KIND_PRESETS) as ItemKind[];
 export const CUSTOM_LIMITS = { name: 40, brand: 30, entries: 100 } as const;
 const ID_PATTERN = /^custom-[\w-]{1,64}$/;
@@ -324,8 +327,8 @@ export function createCustomEntry(input: CustomProductInput): CatalogEntry {
 		cable: Math.min(SPEC_LIMITS.cable.max, Math.max(0, input.cable)),
 		...(preset.requiresSupport ? { requiresSupport: true } : {}),
 		...(glyph ? { glyph } : {}),
-		...(preset.hasScreen && input.diagonalInch
-			? { diagonalInch: clamp(input.diagonalInch, 'diagonalInch') }
+		...(preset.hasScreen
+			? { diagonalInch: clamp(input.diagonalInch ?? DEFAULT_SCREEN_INCH, 'diagonalInch') }
 			: {}),
 		...(preset.hasPorts
 			? {
@@ -351,7 +354,8 @@ export function parseCustomEntry(raw: unknown): CatalogEntry | null {
 	if (brand !== undefined && (typeof brand !== 'string' || brand.length > CUSTOM_LIMITS.brand)) {
 		return null;
 	}
-	if (typeof kind !== 'string' || !(kind in KIND_PRESETS)) return null;
+	// 'constructor' 같은 상속 속성 이름을 막기 위해 자기 속성만 인정합니다.
+	if (typeof kind !== 'string' || !Object.hasOwn(KIND_PRESETS, kind)) return null;
 	const numbers: [unknown, keyof typeof SPEC_LIMITS][] = [
 		[width, 'width'],
 		[depth, 'depth'],

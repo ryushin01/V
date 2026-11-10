@@ -34,6 +34,22 @@ describe('NumberField', () => {
 		expect(oncommit).toHaveBeenCalledWith(101);
 	});
 
+	it('쉼표 소수도 방향키로 바꿉니다', async () => {
+		const { oncommit, input } = setup();
+		await userEvent.clear(input);
+		await userEvent.type(input, '29,4');
+		await userEvent.keyboard('{ArrowUp}');
+		expect(oncommit).toHaveBeenLastCalledWith(30.4);
+	});
+
+	it('보조기술에 숫자 입력란과 범위를 알립니다', () => {
+		const { input } = setup();
+		expect(input.getAttribute('role')).toBe('spinbutton');
+		expect(input.getAttribute('aria-valuemin')).toBe('10');
+		expect(input.getAttribute('aria-valuemax')).toBe('200');
+		expect(input.getAttribute('aria-valuenow')).toBe('100');
+	});
+
 	it('범위를 벗어나면 오류를 연결하고 확정하지 않습니다', async () => {
 		const { oncommit, input } = setup();
 		await userEvent.clear(input);
