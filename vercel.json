@@ -5,6 +5,13 @@
 	"outputDirectory": "build",
 	"routes": [
 		{
+			"src": "^/(.+)/$",
+			"status": 308,
+			"headers": {
+				"Location": "/$1"
+			}
+		},
+		{
 			"handle": "filesystem"
 		},
 		{
