@@ -36,7 +36,8 @@ export function findFreeSpot(
 		return snapToWall(room, room.width / 2, room.depth, entry.depth, entry.width);
 	}
 
-	if (entry.layer === 'surface') {
+	// 책상 위에 놓는 물건(패드·조명·모니터암 포함)은 책상이나 장 위에서 자리를 찾습니다.
+	if (entry.layer === 'surface' || entry.layer === 'mat' || entry.layer === 'mount') {
 		const supports = items.filter((item) => {
 			const kind = getCatalogEntry(item.catalogId).kind;
 			return kind === 'desk' || kind === 'stand';

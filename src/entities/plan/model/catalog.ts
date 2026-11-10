@@ -274,7 +274,7 @@ export const WATTS_BASIS_LABELS: Record<WattsBasis, string> = {
 	psu: '내장 전원부 정격',
 	adapter: '전원 어댑터 정격',
 	measured: '리뷰 실측값 (제조사 미표기)',
-	estimate: 'PC 구성에 따라 다른 추정값',
+	estimate: '추정값 (제조사 미표기, 실제 제품 확인 필요)',
 	default: '제조사 미표기, 카탈로그 기본값',
 	usb: 'USB 전원이라 콘센트를 쓰지 않음'
 };

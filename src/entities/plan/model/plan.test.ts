@@ -421,6 +421,14 @@ describe('자동 배치', () => {
 		expect(Math.abs(spot.y - 100)).toBeLessThanOrEqual(25);
 	});
 
+	it('마우스패드와 모니터 조명도 책상 위에 놓습니다', () => {
+		const desk = item('desk-160', 200, 100);
+		for (const id of ['razer-strider-l', 'benq-screenbar-plus', 'ergotron-hx']) {
+			const spot = findFreeSpot(room(), [desk], getCatalogEntry(id));
+			expect(codes(room(), [desk, item(id, spot.x, spot.y)]), id).not.toContain('no-support');
+		}
+	});
+
 	it('이미 놓인 물건과 겹치지 않게 놓습니다', () => {
 		const first = item('desk-140', 70, 35);
 		const spot = findFreeSpot(room(), [first], getCatalogEntry('desk-140'));

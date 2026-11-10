@@ -95,7 +95,10 @@
 					label={field.label}
 					hint={field.key === 'watts'
 						? wattsHint
-						: field.key === 'width' && base.dimsBasis === 'estimate'
+						: field.key === 'width' &&
+							  base.dimsBasis === 'estimate' &&
+							  item.specs.width === undefined &&
+							  item.specs.depth === undefined
 							? '추정 치수입니다. 실제 제품을 확인해 주세요.'
 							: undefined}
 					unit={field.unit}
