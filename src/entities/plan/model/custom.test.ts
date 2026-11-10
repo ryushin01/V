@@ -103,6 +103,26 @@ describe('직접 등록 제품', () => {
 		expect(parsePlan(stringifyPlan(plan)).ok).toBe(false);
 	});
 
+	it('편집기에서 놓을 수 있는 만큼의 내 제품이 담긴 파일을 읽습니다', () => {
+		const entries = Array.from({ length: 120 }, (_, index) =>
+			createCustomEntry({ ...input, id: `custom-many-${index}` })
+		);
+		const plan = {
+			...createEmptyPlan(),
+			customEntries: entries,
+			items: entries.map((entry, index) => ({
+				id: `i${index}`,
+				catalogId: entry.id,
+				label: '',
+				x: 100,
+				y: 100,
+				rotation: 0,
+				price: 0
+			}))
+		};
+		expect(parsePlan(stringifyPlan(plan)).ok).toBe(true);
+	});
+
 	it('이 브라우저에 등록된 제품이라도 파일에 정의가 없으면 거절합니다', () => {
 		const entry = createCustomEntry({ ...input, id: 'custom-local-only' });
 		registerCustomEntries([entry]);
