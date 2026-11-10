@@ -17,6 +17,13 @@ const MONITOR: Base = {
 };
 const TV: Base = { category: 'display', kind: 'tv', layer: 'surface', cable: 180 };
 const CONSOLE: Base = { category: 'computing', kind: 'console', layer: 'surface', cable: 150 };
+const LAPTOP: Base = {
+	category: 'computing',
+	kind: 'laptop',
+	layer: 'surface',
+	cable: 180,
+	requiresSupport: true
+};
 const DOCK: Base = { ...CONSOLE, requiresSupport: true };
 const PC: Base = { category: 'computing', kind: 'pc', layer: 'surface', cable: 180 };
 const DESK: Base = { category: 'furniture', kind: 'desk', layer: 'floor', cable: 0 };
@@ -57,7 +64,7 @@ function model(
  * 화면은 스탠드를 포함한 값, 게임기는 눕혀 놓은 값(Xbox Series X는 세운 값)입니다.
  * 출처와 기준은 docs/catalog.md에 정리했습니다.
  */
-export const MODEL_ENTRIES: readonly CatalogEntry[] = [
+const ENTRIES: CatalogEntry[] = [
 	model(
 		MONITOR,
 		'samsung-odyssey-oled-g9',
@@ -194,5 +201,95 @@ export const MODEL_ENTRIES: readonly CatalogEntry[] = [
 		26,
 		'typical'
 	),
-	model(RECEIVER, 'denon-avr-x1800h', 'Denon', 'AVR-X1800H AV 리시버', 43.4, 33.9, 430, 'rated')
+	model(RECEIVER, 'denon-avr-x1800h', 'Denon', 'AVR-X1800H AV 리시버', 43.4, 33.9, 430, 'rated'),
+	model(
+		LAPTOP,
+		'apple-macbook-air-13',
+		'Apple',
+		'MacBook Air 13인치 (M4)',
+		30.4,
+		21.5,
+		30,
+		'adapter',
+		{ keywords: ['맥북'] }
+	),
+	model(
+		LAPTOP,
+		'apple-macbook-air-15',
+		'Apple',
+		'MacBook Air 15인치 (M4)',
+		34.0,
+		23.8,
+		35,
+		'adapter',
+		{ keywords: ['맥북'] }
+	),
+	model(LAPTOP, 'apple-macbook-pro-14', 'Apple', 'MacBook Pro 14인치', 31.3, 22.1, 70, 'adapter', {
+		keywords: ['맥북']
+	}),
+	model(LAPTOP, 'apple-macbook-pro-16', 'Apple', 'MacBook Pro 16인치', 35.6, 24.8, 140, 'adapter', {
+		keywords: ['맥북']
+	}),
+	model(MONITOR, 'apple-imac-24', 'Apple', 'iMac 24인치 (M4)', 54.7, 14.7, 143, 'adapter', {
+		diagonalInch: 23.5,
+		keywords: ['아이맥']
+	}),
+	model(
+		MONITOR,
+		'apple-studio-display',
+		'Apple',
+		'Studio Display 27인치',
+		62.3,
+		16.8,
+		21,
+		'typical',
+		{ diagonalInch: 27, keywords: ['스튜디오 디스플레이'] }
+	),
+	model(PC, 'antec-torque', 'Antec', 'Torque 오픈 프레임 케이스', 28.5, 62.1, 550, 'estimate', {
+		keywords: ['토크']
+	})
 ];
+
+/** 모델별 일러스트 (entities/plan/ui/model-glyphs.ts) */
+const GLYPHS: Record<string, string> = {
+	'samsung-odyssey-oled-g9': 'odyssey-g9',
+	'lg-ultragear-45gr95qe': 'ultragear-45',
+	'dell-alienware-aw3423dwf': 'alienware-34',
+	'lg-ultragear-27gs95qe': 'ultragear-27',
+	'lg-oled-c4-65': 'oled-c4',
+	'lg-oled-c4-55': 'oled-c4',
+	'samsung-s90d-65': 's90d',
+	'sony-bravia-8-ii-65': 'bravia-8',
+	'sony-ps5-pro': 'ps5-pro',
+	'sony-ps5-slim': 'ps5-slim',
+	'microsoft-xbox-series-x': 'xbox-series-x',
+	'microsoft-xbox-series-s': 'xbox-series-s',
+	'nintendo-switch-2-dock': 'switch-2-dock',
+	'apple-mac-mini-m4': 'mac-mini',
+	'apple-mac-studio-2025': 'mac-studio',
+	'lian-li-o11-dynamic-evo': 'o11-evo',
+	'nzxt-h9-flow': 'h9-flow',
+	'fractal-north': 'north',
+	'ikea-uppspel-180': 'uppspel',
+	'secretlab-magnus-pro': 'magnus-pro',
+	'secretlab-magnus-pro-xl': 'magnus-pro',
+	'ikea-besta-180': 'besta',
+	'herman-miller-aeron-b': 'aeron',
+	'sonos-arc-ultra': 'arc-ultra',
+	'sonos-sub-4': 'sub-4',
+	'samsung-hw-q990d': 'q990d',
+	'samsung-hw-q990d-sub': 'q990d-sub',
+	'denon-avr-x1800h': 'avr',
+	'apple-macbook-air-13': 'macbook',
+	'apple-macbook-air-15': 'macbook',
+	'apple-macbook-pro-14': 'macbook',
+	'apple-macbook-pro-16': 'macbook',
+	'apple-imac-24': 'imac-24',
+	'apple-studio-display': 'studio-display',
+	'antec-torque': 'torque'
+};
+
+export const MODEL_ENTRIES: readonly CatalogEntry[] = ENTRIES.map((entry) => ({
+	...entry,
+	glyph: GLYPHS[entry.id]
+}));

@@ -1,6 +1,6 @@
 # 실제 모델 카탈로그
 
-실제 제품은 `src/entities/plan/model/catalog-models.ts`에 있습니다. 값은 2026-11-10에 공개 자료로 확인했습니다. 제조사 공식 사양을 바로 찾지 못한 경우가 많아, 판매처와 사양 정리 사이트의 값이 서로 맞는지 확인해 넣었습니다. 출처마다 값이 달라 확인할 수 없는 제품(Secretlab TITAN Evo 의자 크기, KEF LSX II 전력, PS5 슬림 정격 전력 등)은 넣지 않거나 기준을 밝혔습니다.
+실제 제품은 `src/entities/plan/model/catalog-models.ts`에 있습니다. 값은 2026-11-10에 공개 자료로 확인했습니다. Antec Torque는 출처마다 축 표기가 달라, 두 출처가 맞는 깊이 621mm를 세로로 썼습니다. 제조사 공식 사양을 바로 찾지 못한 경우가 많아, 판매처와 사양 정리 사이트의 값이 서로 맞는지 확인해 넣었습니다. 출처마다 값이 달라 확인할 수 없는 제품(Secretlab TITAN Evo 의자 크기, KEF LSX II 전력, PS5 슬림 정격 전력 등)은 넣지 않거나 기준을 밝혔습니다.
 
 배치 전에 실제 제품을 확인하고, 다르면 편집 화면의 규격 입력으로 고쳐 주세요.
 
@@ -48,6 +48,19 @@
 | Sonos Arc Ultra / Sub 4                | 117.8×11.1 / 40.2×15.8 | 40 / 120 | 기본값      |
 | Samsung HW-Q990D 사운드바 / 서브우퍼   | 123.2×13.8 / 22.0×41.0 | 41 / 26  | 일반 사용   |
 | Denon AVR-X1800H                       | 43.4×33.9              | 430      | 정격        |
+| MacBook Air 13인치 (M4)                | 30.4×21.5              | 30       | 어댑터      |
+| MacBook Air 15인치 (M4)                | 34.0×23.8              | 35       | 어댑터      |
+| MacBook Pro 14인치                     | 31.3×22.1              | 70       | 어댑터      |
+| MacBook Pro 16인치                     | 35.6×24.8              | 140      | 어댑터      |
+| iMac 24인치 (M4)                       | 54.7×14.7              | 143      | 어댑터      |
+| Apple Studio Display 27인치            | 62.3×16.8              | 21       | 일반 사용   |
+| Antec Torque 오픈 프레임 케이스        | 28.5×62.1              | 550      | 추정        |
+
+## 일러스트
+
+실제 모델은 `src/entities/plan/ui/model-glyphs.ts`에서 위에서 본 모습을 따로 그립니다. 곡면 화면의 곡률(G9 1000R, 45인치 800R, AW3423DWF 1800R), 스탠드와 받침 모양, 통풍구, 패널 분할처럼 위에서 알아볼 수 있는 특징을 선으로 옮겼고, 제조사 로고는 그리지 않습니다. 사용자가 치수를 바꿔도 비율대로 늘어납니다.
+
+새 모델을 추가할 때는 사양 확인과 출처 기록, 모델별 일러스트를 함께 만듭니다.
 
 ## 출처
 
@@ -71,3 +84,8 @@
 - Sonos Arc Ultra·Sub 4: [B&H](https://www.bhphotovideo.com/c/product/1865279-REG/sonos_arc_ultra_soundbar.html/specs), [Sonos Sub 4](https://www.sonos.com/en-au/shop/sub-4)
 - Samsung HW-Q990D: [Coolblue](https://www.coolblue.nl/en/product/946981/samsung-hw-q990d-2024.html), [사양서(Secomp)](https://www.secomp.ch/media/pdf/s05/05050263_en_data_2024.pdf)
 - Denon AVR-X1800H: [Denon](https://www.denon.com/en/product/av-receivers/avr-x1800h/AVRX1800H.html)
+- MacBook Air M4: [Multitronic 13인치](https://www.multitronic.fi/en/products/4466736), [Appalachian State 15인치](https://campusstore.appstate.edu/15-MA), [iDownloadBlog 15인치 사양](https://www.idownloadblog.com/?p=1030029)
+- MacBook Pro 14·16인치: [Apple 사양](https://apple.com/uk/macbook-pro/specs), [iDownloadBlog 16인치](https://www.idownloadblog.com/?p=1017598)
+- iMac 24인치: [Apple 사양](https://hn.jakechampion.name/reader/https://www.apple.com/imac-24/specs), [Multitronic](https://multitronic.fi/en/products/4408291)
+- Apple Studio Display: [Apple 사양](https://apple.com/kg/studio-display/specs)
+- Antec Torque: [TechPowerUp](https://www.techpowerup.com/248923/antec-presents-futuristic-angular-frame-open-air-chassis), [bit-tech](https://bit-tech.net/reviews/tech/cases/antec-torque-review/1/)

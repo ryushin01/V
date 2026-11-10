@@ -75,6 +75,7 @@ export type ItemKind =
 	| 'tv'
 	| 'pc'
 	| 'console'
+	| 'laptop'
 	| 'speaker'
 	| 'subwoofer'
 	| 'soundbar'
@@ -106,6 +107,8 @@ export interface CatalogEntry {
 	requiresSupport?: boolean;
 	/** 실제 제품이면 제조사 이름 */
 	brand?: string;
+	/** 실물을 닮은 모델별 일러스트 (entities/plan/ui/model-glyphs.ts) */
+	glyph?: string;
 	/** 검색할 때 함께 비교하는 별칭 */
 	keywords?: readonly string[];
 	/** 소비 전력 값의 기준. 없으면 카탈로그 기본값입니다. */
