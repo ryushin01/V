@@ -92,6 +92,8 @@ describe('ItemForm', () => {
 		await userEvent.type(width, '38');
 		await userEvent.tab();
 		expect(screen.getByLabelText('가로')).not.toHaveAccessibleDescription(/추정 치수/);
+		// 고치지 않은 세로는 여전히 추정값입니다.
+		expect(screen.getByLabelText('세로')).toHaveAccessibleDescription(/추정 치수/);
 	});
 
 	it('해당 없는 규격은 보여 주지 않습니다', () => {
