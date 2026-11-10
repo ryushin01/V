@@ -47,6 +47,7 @@ export type GlyphId =
 	| 'kb-60'
 	| 'kb-hhkb'
 	| 'kb-magic'
+	| 'kb-phoenix'
 	| 'palm-rest'
 	| 'mouse-palm'
 	| 'mouse-symmetric'
@@ -533,6 +534,36 @@ export const MODEL_GLYPHS: Record<GlyphId, Draw> = {
 	'kb-60': (w, d) => keyboard(w, d, '60'),
 	'kb-hhkb': (w, d) => keyboard(w, d, 'hhkb'),
 	'kb-magic': (w, d) => keyboard(w, d, 'magic'),
+	// F13 텐키리스: 얇은 베젤, 떨어진 기능키 줄 끝의 F13, 앞쪽으로 살짝 보이는 하판
+	'kb-phoenix': (w, d) => {
+		const bezel = 0.8;
+		const unit = (w - bezel * 2) / 18.25;
+		const left = -w / 2 + bezel;
+		const top = -d / 2 + bezel;
+		const rowGap = unit * 0.25;
+		const mainWidth = unit * 15;
+		const fnRow = top + unit;
+		const shapes: Shape[] = [
+			rect(-w / 2 + 0.4, -d / 2 + 0.6, w - 0.8, d - 0.2, 0.8, 'faint'),
+			rect(-w / 2, -d / 2, w, d - 0.6, 0.5, 'body'),
+			rect(left, top, unit, unit, 0.2),
+			...[0, 1, 2].map((group) =>
+				rect(left + unit * (1.25 + group * 4.25), top, unit * 4, unit, 0.2)
+			),
+			rect(left + unit * 14, top, unit, unit, 0.2, 'solid'),
+			rect(left + unit * 15.25, top, unit * 3, unit, 0.2),
+			rect(left, fnRow + rowGap, mainWidth, unit * 5, 0.3),
+			rect(left + unit * 15.25, fnRow + rowGap, unit * 3, unit * 2, 0.3),
+			rect(left + unit * 16.25, fnRow + rowGap + unit * 3, unit, unit, 0.2),
+			rect(left + unit * 15.25, fnRow + rowGap + unit * 4, unit * 3, unit, 0.2),
+			rect(left + unit * 3.75, fnRow + rowGap + unit * 4.1, unit * 6.25, unit * 0.8, 0.2, 'faint')
+		];
+		for (let row = 1; row < 5; row += 1) {
+			const y = fnRow + rowGap + row * unit;
+			shapes.push(line(left, y, left + mainWidth, y, 'faint'));
+		}
+		return shapes;
+	},
 	'palm-rest': (w, d) => [
 		rect(-w / 2, -d / 2, w, d, d * 0.35, 'body'),
 		path(`M${-w * 0.42} ${-d * 0.1}Q0 ${-d * 0.3} ${w * 0.42} ${-d * 0.1}`, 'faint'),
