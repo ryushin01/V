@@ -411,6 +411,29 @@ test.describe('내 제품 등록', () => {
 		);
 		await fresh.close();
 	});
+
+	test('내 제품 목록을 파일로 내보내 다른 브라우저에서 가져옵니다', async ({ page }) => {
+		await openEmpty(page);
+		await page.getByRole('button', { name: '제품 등록' }).click();
+		const dialog = page.getByRole('dialog', { name: '제품 등록' });
+		await dialog.getByLabel('제품 이름 (필수)').fill('옮길 스피커');
+		await dialog.getByLabel('종류').selectOption({ label: '스피커' });
+		await dialog.getByLabel('등록하고 배치도에 놓기').uncheck();
+		await dialog.getByRole('button', { name: '등록' }).click();
+		await expect(dialog).toBeHidden();
+
+		const downloading = page.waitForEvent('download');
+		await page.getByRole('button', { name: '파일로 내보내기' }).click();
+		const file = await (await downloading).path();
+
+		const fresh = await page.context().browser()!.newContext();
+		const other = await fresh.newPage();
+		await openEmpty(other);
+		await other.locator('input[type="file"][accept*="json"]').setInputFiles(file);
+		await expect(other.getByRole('button', { name: '옮길 스피커 고치기' })).toBeVisible();
+		await expectNoAxeViolations(other);
+		await fresh.close();
+	});
 });
 
 test.describe('화면 폭과 접근성', () => {

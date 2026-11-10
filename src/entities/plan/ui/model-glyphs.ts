@@ -82,7 +82,51 @@ export type GlyphId =
 	| 'hdmi-switch'
 	| 'hub'
 	| 'pen'
-	| 'car';
+	| 'car'
+	| 'desk-motion'
+	| 'desk-wood'
+	| 'shelf-plank'
+	| 'shelf-steel'
+	| 'shelf-tiered'
+	| 'shelf-modular'
+	| 'shelf-dual'
+	| 'studio-stand'
+	| 'speaker-stand'
+	| 'desk-mat-leather'
+	| 'desk-mat-felt'
+	| 'speaker-bookshelf'
+	| 'speaker-knob'
+	| 'speaker-acton'
+	| 'speaker-pebble'
+	| 'light-bar-halo'
+	| 'hue-play'
+	| 'wall-washer'
+	| 'floor-lamp'
+	| 'pole-lamp'
+	| 'hue-bridge'
+	| 'touch-strip'
+	| 'photo-frame'
+	| 'stream-deck'
+	| 'gamepad-micro'
+	| 'wrist-rest-wave'
+	| 'footrest-step'
+	| 'footrest-dual'
+	| 'chair-omni'
+	| 'chair-uniback'
+	| 'charger-stand'
+	| 'cable-tray'
+	| 'tray'
+	| 'tray-handle'
+	| 'coaster-set'
+	| 'diffuser-reed'
+	| 'stone-diffuser'
+	| 'lava-ball'
+	| 'clock-frame'
+	| 'timer-cube'
+	| 'thermo-hygro'
+	| 'flower-lamp'
+	| 'coaster-light'
+	| 'poster-frame';
 
 export interface Shape {
 	tag: 'path' | 'rect' | 'circle' | 'ellipse' | 'line';
@@ -260,6 +304,19 @@ function mouseShape(w: number, d: number, ergo: boolean): string {
 	const hd = d / 2;
 	const thumb = ergo ? hw * 0.25 : 0;
 	return `M0 ${-hd}C${hw} ${-hd} ${hw} ${-hd * 0.3} ${hw * 0.95} ${hd * 0.4}C${hw * 0.9} ${hd} ${-hw * 0.9} ${hd} ${-hw - thumb} ${hd * 0.4}C${-hw} ${-hd * 0.3} ${-hw} ${-hd} 0 ${-hd}Z`;
+}
+
+/** 의자 아래 다섯 갈래 다리와 바퀴 */
+function starBase(w: number, d: number): Shape[] {
+	const legs: Shape[] = [];
+	const radius = Math.min(w, d) * 0.46;
+	for (let index = 0; index < 5; index += 1) {
+		const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
+		const x = Math.cos(angle) * radius;
+		const y = Math.sin(angle) * radius;
+		legs.push(line(0, 0, x, y), circle(x, y, 2.2, 'solid'));
+	}
+	return legs;
 }
 
 type Draw = (w: number, d: number) => Shape[];
@@ -766,6 +823,343 @@ export const MODEL_GLYPHS: Record<GlyphId, Draw> = {
 		rect(-w / 2, -d / 2, w, d, d / 2, 'body'),
 		line(-w * 0.2, -d * 0.45, w * 0.25, -d * 0.45, 'solid'),
 		circle(w / 2 - 0.6, 0, d * 0.2, 'dot')
+	],
+	// 2단 기둥과 T자 발, 앞쪽 오른편의 높이 조절 버튼
+	'desk-motion': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1.2, 'body'),
+		rect(-w * 0.4 - 3, -d * 0.4, 6, d * 0.8, 1, 'faint'),
+		rect(w * 0.4 - 3, -d * 0.4, 6, d * 0.8, 1, 'faint'),
+		rect(-w * 0.4 - 2, -2.5, 4, 5, 0.6),
+		rect(w * 0.4 - 2, -2.5, 4, 5, 0.6),
+		line(-w * 0.4 + 2, 0, w * 0.4 - 2, 0, 'faint'),
+		rect(w * 0.28, d / 2 - 2.6, 9, 2, 0.6, 'solid')
+	],
+	// 둥근 모서리의 원목 상판과 나뭇결
+	'desk-wood': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 3, 'body'),
+		...[-0.28, -0.05, 0.2].map((ratio) =>
+			path(
+				`M${-w * 0.45} ${d * ratio}C${-w * 0.2} ${d * (ratio - 0.08)} ${w * 0.05} ${d * (ratio + 0.08)} ${w * 0.45} ${d * ratio}`,
+				'faint'
+			)
+		),
+		rect(-w * 0.4 - 3, -d * 0.4, 6, d * 0.8, 1, 'faint'),
+		rect(w * 0.4 - 3, -d * 0.4, 6, d * 0.8, 1, 'faint')
+	],
+	// 긴 상판과 양 끝 다리
+	'shelf-plank': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 0.8, 'body'),
+		rect(-w / 2 + 1, -d / 2 + 1, Math.max(2, w * 0.04), d - 2, 0.4, 'faint'),
+		rect(w / 2 - 1 - Math.max(2, w * 0.04), -d / 2 + 1, Math.max(2, w * 0.04), d - 2, 0.4, 'faint'),
+		line(-w / 2, d / 2 - 1, w / 2, d / 2 - 1, 'faint')
+	],
+	// 얇은 금속판과 네 귀퉁이 다리
+	'shelf-steel': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 0.6, 'body'),
+		...[
+			[-1, -1],
+			[1, -1],
+			[-1, 1],
+			[1, 1]
+		].map(([x, y]) => circle((x * w) / 2 - x * 3, (y * d) / 2 - y * 3, 1.2, 'solid')),
+		...dots(-w * 0.3, -d * 0.1, w * 0.6, d * 0.2, 6, 0.35)
+	],
+	// 앞뒤로 높이가 다른 두 단
+	'shelf-tiered': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 0.8, 'body'),
+		rect(-w / 2 + 1, -d / 2 + 1, w - 2, d * 0.45, 0.6),
+		line(-w / 2, d * 0.05, w / 2, d * 0.05, 'faint'),
+		line(-w / 2 + 1, d / 2 - 1.5, w / 2 - 1, d / 2 - 1.5, 'faint')
+	],
+	// 칸을 이어 붙이는 모듈형 받침대
+	'shelf-modular': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1, 'body'),
+		line(-w / 6, -d / 2, -w / 6, d / 2, 'faint'),
+		line(w / 6, -d / 2, w / 6, d / 2, 'faint'),
+		rect(-w * 0.45, -d * 0.3, w * 0.22, d * 0.6, 0.6, 'faint')
+	],
+	// 두 화면을 받치는 넓은 알루미늄 판과 접힌 양 끝
+	'shelf-dual': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1.5, 'body'),
+		line(-w / 2 + 3, -d / 2, -w / 2 + 3, d / 2, 'faint'),
+		line(w / 2 - 3, -d / 2, w / 2 - 3, d / 2, 'faint'),
+		line(0, -d / 2 + 2, 0, d / 2 - 2, 'faint')
+	],
+	// 전원부를 품은 모니터 받침대와 앞쪽 조명 띠
+	'studio-stand': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1.2, 'body'),
+		line(-w / 2 + 2, d / 2 - 1.5, w / 2 - 2, d / 2 - 1.5, 'solid'),
+		...dots(-w * 0.42, -d * 0.35, w * 0.2, d * 0.3, 2.2, 0.4),
+		rect(w * 0.25, -d * 0.35, w * 0.18, d * 0.3, 0.6, 'faint')
+	],
+	// 받침 위의 회전하는 윗판
+	'speaker-stand': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1.5, 'body'),
+		circle(0, 0, Math.min(w, d) * 0.18, 'solid'),
+		rect(-w * 0.32, -d * 0.4, w * 0.64, d * 0.8, 1, 'faint')
+	],
+	// 박음질 선과 마그네틱 홀더
+	'desk-mat-leather': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1.5, 'body'),
+		rect(-w / 2 + 1.2, -d / 2 + 1.2, w - 2.4, d - 2.4, 1, 'faint'),
+		rect(w / 2 - 12, -d / 2 + 3, 8, 3, 1.5)
+	],
+	// 펠트 결을 점으로
+	'desk-mat-felt': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 2, 'body'),
+		...dots(-w / 2 + 3, -d / 2 + 3, w - 6, d - 6, Math.max(6, w / 14), 0.3)
+	],
+	// 위에서 본 북셀프 스피커: 상자와 앞면 배플
+	'speaker-bookshelf': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1, 'body'),
+		line(-w / 2, d / 2 - 1.6, w / 2, d / 2 - 1.6),
+		rect(-w * 0.3, d / 2 - 1.2, w * 0.6, 0.8, 0.4, 'faint')
+	],
+	// 윗면에 음량 손잡이가 있는 액티브 스피커
+	'speaker-knob': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1, 'body'),
+		line(-w / 2, d / 2 - 1.6, w / 2, d / 2 - 1.6),
+		circle(w * 0.18, d * 0.18, Math.min(w, d) * 0.12),
+		circle(w * 0.18, d * 0.18, Math.min(w, d) * 0.04, 'solid')
+	],
+	// 윗면 금색 띠의 손잡이 줄과 앞면 그릴
+	'speaker-acton': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1.5, 'body'),
+		...dots(-w / 2 + 1, d / 2 - 3.4, w - 2, 3, 1.2, 0.25),
+		line(-w / 2, d * 0.12, w / 2, d * 0.12, 'faint'),
+		...[0.08, 0.2, 0.32, 0.42].map((ratio) => circle(w * ratio, -d * 0.06, Math.min(w, d) * 0.045))
+	],
+	// 공 모양 몸체와 45도 위를 보는 드라이버
+	'speaker-pebble': (w, d) => [
+		path(
+			`M0 ${-d / 2}C${w * 0.55} ${-d / 2} ${w * 0.55} ${d / 2} 0 ${d / 2}C${-w * 0.55} ${d / 2} ${-w * 0.55} ${-d / 2} 0 ${-d / 2}Z`,
+			'body'
+		),
+		circle(0, d * 0.12, Math.min(w, d) * 0.26),
+		circle(0, d * 0.12, Math.min(w, d) * 0.08, 'solid')
+	],
+	// 앞 조명 막대와 뒤쪽 무드등, 화면 위 고정부
+	'light-bar-halo': (w, d) => [
+		path(`M${-w * 0.42} ${-d * 0.1}Q0 ${-d * 0.6} ${w * 0.42} ${-d * 0.1}`, 'faint'),
+		rect(-w / 2, -d * 0.05, w, d * 0.3, d * 0.15, 'body'),
+		rect(-w * 0.08, -d / 2, w * 0.16, d, 0.6, 'faint'),
+		rect(-w * 0.12, d * 0.25, w * 0.24, d * 0.2, 0.6)
+	],
+	// 받침에 눕힌 납작한 조명 막대
+	'hue-play': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, d * 0.3, 'body'),
+		line(-w * 0.44, d * 0.2, w * 0.44, d * 0.2, 'faint'),
+		rect(-w * 0.1, -d / 2, w * 0.2, d * 0.25, 0.3, 'solid')
+	],
+	// 원통형 몸체와 위로 열린 렌즈
+	'wall-washer': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, Math.min(w, d) * 0.45, 'body'),
+		path(`M${-w * 0.35} ${-d * 0.2}Q0 ${-d * 0.45} ${w * 0.35} ${-d * 0.2}`),
+		circle(0, d * 0.15, Math.min(w, d) * 0.12, 'faint')
+	],
+	// 둥근 받침과 기둥, 위의 갓
+	'floor-lamp': (w, d) => [
+		circle(0, 0, Math.min(w, d) / 2, 'body'),
+		circle(0, 0, Math.min(w, d) * 0.36, 'faint'),
+		circle(0, 0, Math.min(w, d) * 0.08, 'solid')
+	],
+	// 좁은 받침에 세운 막대 조명
+	'pole-lamp': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, Math.min(w, d) * 0.2, 'body'),
+		circle(0, 0, Math.min(w, d) * 0.14, 'solid'),
+		line(-w * 0.3, d * 0.3, w * 0.3, d * 0.3, 'faint')
+	],
+	// 둥근 사각 브리지와 상태 표시등
+	'hue-bridge': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, Math.min(w, d) * 0.22, 'body'),
+		circle(0, 0, Math.min(w, d) * 0.22, 'faint'),
+		...[-0.12, 0, 0.12].map((ratio) => circle(w * ratio, d * 0.32, 0.45, 'solid'))
+	],
+	// 길고 낮은 터치 화면과 뒤쪽 받침
+	'touch-strip': (w, d) => [
+		rect(-w * 0.3, -d / 2 + 0.5, w * 0.6, d * 0.55, 1.5, 'body'),
+		flatPanel(w, d, d / 2 - 2.4, 2),
+		line(-w * 0.48, d / 2 - 1.4, w * 0.48, d / 2 - 1.4, 'faint')
+	],
+	// 투명 화면 액자와 받침
+	'photo-frame': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 0.8, 'body'),
+		rect(-w / 2 + 0.6, -d * 0.1, w - 1.2, d * 0.2, 0.3, 'faint'),
+		rect(-w * 0.1, -d / 2, w * 0.2, d * 0.3, 0.4, 'solid')
+	],
+	// 버튼 8개, 손잡이 4개와 그 사이 터치 띠
+	'stream-deck': (w, d) => {
+		const key = Math.min(w / 4.8, d / 5);
+		const keys: Shape[] = [];
+		for (let row = 0; row < 2; row += 1)
+			for (let column = 0; column < 4; column += 1)
+				keys.push(rect(-w * 0.42 + column * w * 0.215, -d * 0.42 + row * key * 1.2, key, key, 0.5));
+		return [
+			rect(-w / 2, -d / 2, w, d, 1.2, 'body'),
+			...keys,
+			rect(-w * 0.42, d * 0.06, w * 0.84, d * 0.12, 0.4, 'solid'),
+			...[0, 1, 2, 3].map((column) =>
+				circle(-w * 0.32 + column * w * 0.215, d * 0.33, Math.min(w, d) * 0.07)
+			)
+		];
+	},
+	// 손바닥만 한 패드: 십자키와 버튼 넷
+	'gamepad-micro': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, d * 0.35, 'body'),
+		path(`M${-w * 0.28} ${-d * 0.2}V${d * 0.2}M${-w * 0.38} 0H${-w * 0.18}`, 'solid'),
+		...[
+			[0.28, -0.18],
+			[0.38, 0],
+			[0.28, 0.18],
+			[0.18, 0]
+		].map(([x, y]) => circle(w * x, d * y, d * 0.08, 'solid')),
+		line(-w * 0.05, -d * 0.1, w * 0.05, -d * 0.1, 'faint')
+	],
+	// 손목을 따라 물결치는 원목
+	'wrist-rest-wave': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, d * 0.4, 'body'),
+		path(`M${-w * 0.42} 0Q${-w * 0.21} ${-d * 0.25} 0 0T${w * 0.42} 0`, 'faint'),
+		path(
+			`M${-w * 0.42} ${d * 0.22}Q${-w * 0.21} ${-d * 0.03} 0 ${d * 0.22}T${w * 0.42} ${d * 0.22}`,
+			'faint'
+		)
+	],
+	// 높이가 다른 두 발판
+	'footrest-step': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 2.5, 'body'),
+		rect(-w / 2 + 2, -d / 2 + 2, w - 4, d * 0.42, 2),
+		...[0.2, 0.32].map((ratio) => line(-w * 0.4, d * ratio, w * 0.4, d * ratio, 'faint'))
+	],
+	// 아래 발판과 발목을 올리는 위 받침
+	'footrest-dual': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 3, 'body'),
+		rect(-w * 0.42, -d * 0.42, w * 0.84, d * 0.3, d * 0.15),
+		path(`M${-w * 0.4} ${d * 0.2}Q0 ${d * 0.32} ${w * 0.4} ${d * 0.2}`, 'faint')
+	],
+	// 다섯 갈래 다리와 세로로 나뉜 등받이
+	'chair-omni': (w, d) => [
+		...starBase(w, d),
+		rect(-w * 0.28, -d * 0.32, w * 0.56, d * 0.5, w * 0.08, 'body'),
+		path(`M${-w * 0.3} ${d * 0.26}Q0 ${d * 0.42} ${w * 0.3} ${d * 0.26}`),
+		line(0, d * 0.24, 0, d * 0.4, 'solid'),
+		rect(-w * 0.44, -d * 0.14, 3, d * 0.3, 1.5, 'body'),
+		rect(w * 0.44 - 3, -d * 0.14, 3, d * 0.3, 1.5, 'body')
+	],
+	// 앞이 둥글게 내려가는 곡면 좌판과 넓은 등받이
+	'chair-uniback': (w, d) => [
+		...starBase(w, d),
+		path(
+			`M${-w * 0.27} ${d * 0.18}V${-d * 0.18}Q${-w * 0.27} ${-d * 0.34} 0 ${-d * 0.34}Q${w * 0.27} ${-d * 0.34} ${w * 0.27} ${-d * 0.18}V${d * 0.18}Z`,
+			'body'
+		),
+		path(`M${-w * 0.18} ${-d * 0.05}Q0 ${d * 0.05} ${w * 0.18} ${-d * 0.05}`, 'faint'),
+		path(`M${-w * 0.32} ${d * 0.24}Q0 ${d * 0.4} ${w * 0.32} ${d * 0.24}`),
+		rect(-w * 0.42, -d * 0.12, 3, d * 0.28, 1.5, 'body'),
+		rect(w * 0.42 - 3, -d * 0.12, 3, d * 0.28, 1.5, 'body')
+	],
+	// 받침의 이어폰 자리, 세운 휴대폰 판, 시계 충전부
+	'charger-stand': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1.5, 'body'),
+		rect(-w * 0.42, -d * 0.35, w * 0.4, d * 0.2, 0.6, 'solid'),
+		circle(-w * 0.22, d * 0.15, d * 0.22),
+		circle(w * 0.28, d * 0.1, d * 0.16),
+		line(w * 0.28, -d * 0.4, w * 0.28, -d * 0.1, 'faint')
+	],
+	// 책상 밑에 다는 열린 트레이와 클램프
+	'cable-tray': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 0.8, 'body'),
+		rect(-w / 2 + 1, -d / 2 + 1, w - 2, d - 2, 0.6, 'faint'),
+		rect(-w * 0.35 - 2, -d / 2 - 1, 4, 3, 0.4, 'solid'),
+		rect(w * 0.35 - 2, -d / 2 - 1, 4, 3, 0.4, 'solid')
+	],
+	tray: (w, d) => [
+		rect(-w / 2, -d / 2, w, d, Math.min(w, d) * 0.2, 'body'),
+		rect(-w / 2 + 1.2, -d / 2 + 1.2, w - 2.4, d - 2.4, Math.min(w, d) * 0.15, 'faint')
+	],
+	// 손잡이 홈이 있는 원목 트레이
+	'tray-handle': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, Math.min(w, d) * 0.35, 'body'),
+		rect(-w / 2 + 1.5, -d / 2 + 1.5, w - 3, d - 3, Math.min(w, d) * 0.3, 'faint'),
+		rect(-w / 2 + 2, -d * 0.12, 2.5, d * 0.24, 1),
+		rect(w / 2 - 4.5, -d * 0.12, 2.5, d * 0.24, 1)
+	],
+	// 원목 받침에 꽂은 원형 코스터
+	'coaster-set': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 1, 'body'),
+		circle(0, d * 0.05, Math.min(w, d) * 0.42),
+		circle(0, d * 0.05, Math.min(w, d) * 0.3, 'faint')
+	],
+	// 병과 퍼져 나온 막대
+	'diffuser-reed': (w, d) => {
+		const r = Math.min(w, d) / 2;
+		return [
+			circle(0, 0, r * 0.8, 'body'),
+			circle(0, 0, r * 0.25, 'faint'),
+			...[0, 1, 2, 3, 4].map((index) => {
+				const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
+				return line(0, 0, Math.cos(angle) * r, Math.sin(angle) * r);
+			})
+		];
+	},
+	// 접시 위의 돌 여러 개
+	'stone-diffuser': (w, d) => [
+		circle(0, 0, Math.min(w, d) / 2, 'body'),
+		...[
+			[-0.18, -0.12, 0.16],
+			[0.15, -0.15, 0.13],
+			[0.05, 0.16, 0.17],
+			[-0.2, 0.18, 0.1]
+		].map(([x, y, r]) => circle(w * x, d * y, Math.min(w, d) * r))
+	],
+	'lava-ball': (w, d) => [
+		circle(0, 0, Math.min(w, d) / 2, 'body'),
+		...[
+			[-0.14, -0.1],
+			[0.14, -0.1],
+			[0, 0.15]
+		].map(([x, y]) => circle(w * x, d * y, Math.min(w, d) * 0.14, 'solid'))
+	],
+	// 얇은 액자형 시계와 뒤 받침
+	'clock-frame': (w, d) => [
+		rect(-w / 2, d * 0.1, w, d * 0.4, 0.4, 'body'),
+		path(
+			`M${-w * 0.3} ${d * 0.1}L${-w * 0.2} ${-d / 2}M${w * 0.3} ${d * 0.1}L${w * 0.2} ${-d / 2}`,
+			'faint'
+		)
+	],
+	// 위에 다이얼이 있는 육면체 타이머
+	'timer-cube': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, Math.min(w, d) * 0.2, 'body'),
+		circle(0, 0, Math.min(w, d) * 0.32),
+		line(0, 0, 0, -Math.min(w, d) * 0.25, 'solid')
+	],
+	// 작은 화면이 있는 온습도계
+	'thermo-hygro': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 0.6, 'body'),
+		rect(-w * 0.4, -d * 0.1, w * 0.8, d * 0.5, 0.3, 'solid')
+	],
+	// 코스터 조명 위의 장미
+	'flower-lamp': (w, d) => {
+		const r = Math.min(w, d) / 2;
+		return [
+			circle(0, 0, r, 'body'),
+			...[0, 1, 2, 3, 4].map((index) => {
+				const angle = (Math.PI * 2 * index) / 5;
+				return circle(Math.cos(angle) * r * 0.32, Math.sin(angle) * r * 0.32, r * 0.3);
+			}),
+			circle(0, 0, r * 0.15, 'solid')
+		];
+	},
+	// 빛이 새는 고리 모양 코스터
+	'coaster-light': (w, d) => [
+		circle(0, 0, Math.min(w, d) / 2, 'body'),
+		circle(0, 0, Math.min(w, d) * 0.38, 'faint'),
+		circle(0, 0, Math.min(w, d) * 0.3)
+	],
+	// 벽에 건 액자
+	'poster-frame': (w, d) => [
+		rect(-w / 2, -d / 2, w, d, 0.2, 'body'),
+		line(-w / 2 + 1.5, 0, w / 2 - 1.5, 0, 'faint')
 	],
 	// 위에서 본 세단: 본네트, 앞유리, 지붕, 뒷유리
 	car: (w, d) => [

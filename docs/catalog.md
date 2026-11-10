@@ -67,6 +67,44 @@
 - **넣지 않은 것:** 이어폰 케이블과 이어팁(바닥 배치에서 면적이 의미 없음), 이미 있는 모델(Odyssey OLED G9, PS5 Pro, Aeron B, Antec Torque, MacBook Pro 14·16, MacBook Air 13)
 - **출처:** [Logitech G PRO X SUPERLIGHT 2(mousespecs)](https://mousespecs.org/logitech-g-pro-x-superlight-2), [DeathAdder V2 Pro(TechPowerUp)](https://techpowerup.com/review/razer-deathadder-v2-pro), [Magic Mouse(Apple)](https://support.apple.com/en-gb/111885), [Magic Keyboard(Dimensions)](https://dimensions.com/element/apple-magic-keyboard), [Kensington 트랙볼 리뷰](https://www.trackballmouse.org/?p=3154), [Wooting 80HE(Digital Trends)](https://digitaltrends.com/computing/wooting-80he-review), [Razer Strider(Review Geek)](https://www.reviewgeek.com/94785/razer-strider-mousepad-review-large-and-subdued/), [Katana V2(PCPer)](https://pcper.com/2022/09/creative-sound-blaster-katana-v2-gaming-soundbar-review/), [Dell UP3216Q 사용 설명서](https://dl.dell.com/manuals/all-products/esuprt_electronics/esuprt_display_projector/esuprt_display/dell-up3216q-monitor_User's%20Guide_en-us.pdf), [DisplayDB UP3216Q](https://displaydb.com/monitor/dell-ultrasharp-up3216q), [BenQ ScreenBar Plus](https://www.benq.eu/en-uk/lighting/monitor-light/screenbar-plus/spec.html), [IKEA UPPSPEL 설명서](https://www.ikea.com/us/en/manuals/uppspel-sit-stand-underframe-for-table-top-black__AA-2301012-3-100.pdf)
 
+## futureterior 태그 제품 (2026-11-10)
+
+[futureterior](https://futureterior.com/) 커뮤니티 사진에 태그된 제품 76종 중 67종을 넣었습니다. 쇼핑몰 상세 페이지는 사양이 대부분 이미지라, 본문 옵션에 적힌 치수와 제조사·판매처 자료를 썼습니다. 옵션으로 크기를 고르는 제품은 대표 크기 하나를 넣었으니, 다른 크기는 규격 입력으로 고쳐 주세요.
+
+| 모델                                   | 가로×세로(cm)           | 전력(W) | 기준·출처                                          |
+| -------------------------------------- | ----------------------- | ------- | -------------------------------------------------- |
+| 오프레임 BARCO·LARGO 모션데스크        | 160×80                  | 200     | 추정 전력, 상판 1200~1800×700~800 옵션 중 1600×800 |
+| 메이우드 Homage 원목 모션데스크        | 160×80                  | 200     | 추정 전력, 1400~2000×800 옵션 중 1600×800          |
+| 브리드 패닉스 스탠딩 데스크 (Fenix30T) | 160×78                  | 200     | 추정 전력, 1400~2000×680~780 옵션 중 1600×780      |
+| 큐데스크 스테인리스 데스크선반 컴팩트  | 75×22                   | -       | 판매처 상품 요약 (와이드형 115×22)                 |
+| 메이우드 리놀리움 데스크매트 L         | 90×43                   | -       | 판매처 옵션 (M 80×40)                              |
+| 헥스칼 펠트 마그네틱 풀커버 데스크매트 | 140×70                  | -       | 판매처 옵션 (1400~2000)                            |
+| 오롯이제작소 천연 리놀륨 데스크매트    | 90×40                   | -       | 판매처 옵션 (80×35)                                |
+| 오롯이제작소 두마루 손목 받침대        | 36×12.5                 | -       | 판매처 옵션 (길이 31~44, 폭 11·12.5)               |
+| Kanto SP6HD 스피커 스탠드              | 17.8×21.6               | -       | Abt (7×8.5인치)                                    |
+| BenQ ScreenBar Halo 2                  | 50×10.9                 | USB     | Adorama, BenQ 사양 (5V 3A, 최대 15W)               |
+| Philips Hue Play 라이트 바             | 25.3×4.4                | 6.6     | 일반 사용, 판매처                                  |
+| Philips Hue Play 월 워셔               | 9.1×7.6                 | 60      | 판매처 표기 (TechRadar, Wayfair)                   |
+| Philips Hue 그라디언트 Signe 플로어    | 11.1×11.1               | 29      | 판매처 표기 (Toolstation, PB Tech)                 |
+| Philips Hue 브릿지 프로                | 9.23×9.23               | 5       | 판매처 표기 (Harvey Norman)                        |
+| Edifier QR65 액티브 / 패시브           | 14.15×21.68 / 13.0×21.2 | 65      | 판매처 표기 (Galaxus). 충전 출력일 수도 있음       |
+| Edifier QR30 액티브 / 패시브           | 12.75×14.2 / 11.2×14.2  | 30      | 추정 전력 (출력 30W RMS)                           |
+| KEF LSX II LT 주 / 보조 스피커         | 15.5×18.0               | 200     | 판매처 표기 동작 전력 (Music Direct)               |
+| Marshall Acton III                     | 26×15                   | 60      | 추정 전력 (앰프 출력 60W), 치수는 Marshall         |
+| Creative Pebble V2 (한 쪽)             | 11.6×11.5               | USB     | Creative 사양서 (5V 2A)                            |
+| Corsair XENEON EDGE 14.5인치           | 37.2×12                 | USB     | Corsair (372×120mm)                                |
+| Elgato Stream Deck +                   | 14.0×13.8               | USB     | 판매처 (140×138×110mm)                             |
+| 8BitDo Micro                           | 7.2×4.1                 | -       | Nintendo Life (72×40.7mm)                          |
+| Lofree Flow 2 (100키)                  | 39.8×12.6               | -       | 리뷰·판매처 (398.2×126mm)                          |
+| Logitech G PRO X TKL RAPID             | 35.7×15.0               | -       | 판매처 (357×150mm)                                 |
+| LiberNovo Omni                         | 74×79                   | -       | 판매처 (폭 74~79, 깊이 79.3), 제조사 받침 폭 54    |
+
+- **추정 치수:** 오프레임 STILO·페노 선반(폭 1000 옵션, 깊이 추정), 메이우드 Prestige 선반, 일리안 모듈러 받침대, 1OFF 듀얼 모니터 선반, 브레스밋 오거나이저·키보드 진열대, 헥스칼 스튜디오 플러스(같은 회사 Hexcal Studio의 약 119×23cm를 기준), 헥스칼·브릭사 가죽 데스크매트, Fellowes 모니터암 두 종, 탱그램 이더 장스탠드, 무딕스 바이브폴, 후후루 블루밍코스터·뢰흐블루, Divoom 타임즈 프레임, VARO V108(풀배열 기준), Lofree Flow 2 for Mac(84키로 가정), 레니프 유니백체어 프로, 로우모 발받침대 두 종(LC99는 폭 51.2cm만 확인), LINAK DL6(상판 미포함 프레임이라 1200×700 상판 기준), 메이우드 거치대, 오아 3in1 충전기, 덱스탑 멀티탭 트레이, 트레이·코스터·디퓨저·시계·타이머·온습도계 등 소품, 버니언스 A2 액자
+- **새 종류:** 데스크 선반·받침대와 스피커 스탠드는 책상 위에 깔리는 층이라 그 위에 모니터·스피커를 올려도 겹침이 아닙니다. 장스탠드는 바닥 물건, 월 워셔는 책상과 바닥 어디에나 둘 수 있는 조명입니다. 멀티탭 트레이는 책상 아래에 달려 책상 위 물건과 겹치지 않고, 액자는 벽에 붙습니다.
+- **스피커 한 쌍:** 왼쪽·오른쪽을 따로 넣었습니다. 전원은 전원을 받는 쪽에만 있습니다.
+- **넣지 않은 것:** 쇼핑몰 소개 페이지 3개, 오프라인 판매로 중복된 4개(Hue 브릿지 프로·월 워셔, 스크린바 헤일로 2, 마샬 액톤 3), 이미 있는 모델(델타허브 카르피오 2.0, 호버펜 2.0), 바닥 면적이 의미 없는 것(240W 충전 케이블, 키캡 세트, 룸 스프레이, 퍼퓸 사쉐)
+- **출처:** [Edifier QR65(LDLC)](https://www.ldlc.com/en/product/PB00607603.html), [Edifier QR65(Galaxus)](https://galaxus.de/en/s1/product/edifier-qr65-pc-speakers-43353225), [Edifier QR30(LDLC)](https://www.ldlc.com/en/product/PB00666808.html), [KEF LSX II LT(Music Direct)](https://musicdirect.com/equipment/speakers/kef-lsx-ii-lt-wireless-bookshelf-speakers-pair), [Marshall Acton III](https://www.marshall.com/ba/en/product/acton-iii), [Creative Pebble V2](https://nordic.creative.com/p/speakers/creative-pebble-v2), [Kanto SP6HD(Abt)](https://www.abt.com/Kanto-Black-SP6HD-Elevated-Desktop-Speaker-Stands-Pair-SP6HD/p/184854.html), [BenQ ScreenBar Halo 2 사양](https://www.benq.com/th-th/lighting/monitor-light/screenbar-halo-2/spec.html), [ScreenBar Halo 2(Adorama)](https://www.adorama.com/benq-screenbar-halo-2-monitor-light-bar-wireless-controller/p/bq9hw4pwtwc1), [Corsair XENEON EDGE](https://www.corsair.com/ca/en/p/monitors/cc-9011306-ww/xeneon-edge-14-5-lcd-touchscreen-cc-9011306-ww), [Hue Play 라이트 바(Datek)](https://store.datek.co.uk/philips-hue-white-and-colour-ambience-play-light-bar-single-pack-915005734401), [Hue Play 월 워셔(TechRadar)](https://www.techradar.com/home/smart-lights/philips-hue-play-wall-washer-review), [Hue Signe(Toolstation)](https://www.toolstation.com/philips-hue-signe-gradient-led-smart-floor-lamp/p32470), [Hue 브릿지 프로(Harvey Norman)](https://www.harveynorman.co.nz/networking-smart-home-and-home-phones/smart-home/smart-lighting/philips-hue-bridge-pro-for-hue-lights-white-hue582605.html), [Stream Deck +(Dateks)](https://www.dateks.lv/en/cenas/pc-aksesuari/920179-elgato-stream-deck-?vat=0), [8BitDo Micro(Nintendo Life)](https://nintendolife.com/news/2023/08/8bitdo-unveils-new-micro-switch-controller-available-in-blue-and-green), [Lofree Flow 2 100(syskb)](https://syskb.com/lofree-flow-2-100-le-format-96-en-aluminium-pour-ceux-qui-ne-lachent-pas-le-pave-numerique/), [G PRO X TKL RAPID(Alza)](https://www.alza.hu/logitech-g-pro-x-tkl-rapid-white-us-intl-d12718090.htm), [LiberNovo 치수 안내](https://ca.libernovo.com/blogs/news/ergonomic-chair-for-small-apartments-compact-solutions-that-dont-compromise), [LiberNovo Omni(Digitec)](https://www.digitec.ch/en/s1/product/libernovo-omni-48-43-55-cm-office-chairs-66021303), [Hexcal Studio](https://hexcal.com/blogs/news/this-workstation-hexcal-studio-offers-a-clever-way-to-organize-and-power-your-deskspace), [로우모 LC99(Makuake)](https://www.makuake.com/project/dualrestlc99/), [Fellowes Tallo 1FM 제품 시트](https://assets.fellowes.com/manuals/07233_SellSheet_8616101_8615101_8613501_Tallo_1FM_EU.pdf), [LINAK DL6 EXPERIENCE](https://www.linak.com/products/lifting-columns/dl6-experience), 판매처 옵션 치수는 각 [futureterior 상품 페이지](https://futureterior.com/)
+
 ## 일러스트
 
 실제 모델은 `src/entities/plan/ui/model-glyphs.ts`에서 위에서 본 모습을 따로 그립니다. 곡면 화면의 곡률(G9 1000R, 45인치 800R, AW3423DWF 1800R), 스탠드와 받침 모양, 통풍구, 패널 분할처럼 위에서 알아볼 수 있는 특징을 선으로 옮겼고, 제조사 로고는 그리지 않습니다. 사용자가 치수를 바꿔도 비율대로 늘어납니다.
