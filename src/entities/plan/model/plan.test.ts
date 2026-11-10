@@ -206,6 +206,16 @@ describe('방 계산', () => {
 		expect(geometry.leafEnd).toEqual({ x: 190, y: 310 });
 	});
 
+	it('벽에 거는 액자도 가장 가까운 벽에 붙습니다', () => {
+		const frame = getCatalogEntry('bunyans-a2-frame');
+		expect(frame.layer).toBe('wall');
+		expect(snapToWall(room(), 395, 200, frame.depth, frame.width)).toEqual({
+			x: 398.5,
+			y: 200,
+			rotation: 90
+		});
+	});
+
 	it('콘센트는 가장 가까운 벽에 붙습니다', () => {
 		expect(snapToWall(room(), 395, 100, 4, 12)).toEqual({ x: 398, y: 100, rotation: 90 });
 	});
@@ -401,6 +411,32 @@ describe('책상 위 소품의 겹침', () => {
 
 	it('책상 없이 놓은 소품은 받침 경고가 나옵니다', () => {
 		expect(codes(room(), [item('razer-strider-l', 200, 300)])).toContain('no-support');
+	});
+
+	it('데스크 선반 위의 모니터와 스피커 스탠드 위의 스피커는 겹침이 아닙니다', () => {
+		const items = onDesk(
+			['oframe-stilo-1000', 200, 80],
+			['dell-up3216q', 200, 80],
+			['kanto-sp6hd', 140, 100],
+			['edifier-qr65-active', 140, 100]
+		);
+		expect(codes(room(), items)).not.toContain('overlap');
+		expect(codes(room(), items)).not.toContain('no-support');
+	});
+
+	it('책상 밖의 선반은 받침 경고가 나옵니다', () => {
+		expect(codes(room(), [item('qdesk-stainless-shelf-750', 200, 300)])).toContain('no-support');
+	});
+
+	it('장스탠드는 바닥 물건이라 다른 가구와 겹치면 오류입니다', () => {
+		const items = [item('desk-160', 200, 100), item('philips-hue-signe-gradient-floor', 200, 100)];
+		expect(codes(room(), items)).toContain('overlap');
+		expect(codes(room(), [item('tangram-ether-floor', 300, 300)])).not.toContain('no-support');
+	});
+
+	it('책상 아래 멀티탭 트레이는 책상 위 물건과 겹쳐도 됩니다', () => {
+		const items = onDesk(['dextop-mct-05', 200, 90], ['dell-up3216q', 200, 90]);
+		expect(codes(room(), items)).not.toContain('overlap');
 	});
 
 	it('USB 전원 기기는 콘센트를 쓰지 않고 전동 책상은 씁니다', () => {

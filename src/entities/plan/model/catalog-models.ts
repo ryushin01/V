@@ -146,6 +146,29 @@ const DECOR: Base = {
 	cable: 0,
 	requiresSupport: true
 };
+const DESK_MOTOR: Base = { ...DESK, cable: 180 };
+/** 책상 위에 놓고 그 위에 다시 화면·스피커를 올리는 선반과 받침대입니다. */
+const SHELF: Base = {
+	category: 'furniture',
+	kind: 'shelf',
+	layer: 'mat',
+	cable: 0,
+	requiresSupport: true
+};
+const POWER_SHELF: Base = { ...SHELF, cable: 180 };
+const DESK_SPEAKER: Base = { category: 'audio', kind: 'speaker', layer: 'surface', cable: 150 };
+const USB_SPEAKER: Base = { ...DESK_SPEAKER, cable: 120 };
+const PASSIVE_SPEAKER: Base = { ...DESK_SPEAKER, cable: 0 };
+const POWERED_LIGHTBAR: Base = { ...LIGHTBAR, cable: 150 };
+/** 책상에도 바닥에도 둘 수 있는 조명입니다. */
+const DESK_LAMP: Base = { category: 'accessory', kind: 'lamp', layer: 'surface', cable: 200 };
+const USB_DESK_LAMP: Base = { ...DESK_LAMP, cable: 0, requiresSupport: true };
+const FLOOR_LAMP: Base = { category: 'accessory', kind: 'lamp', layer: 'floor', cable: 200 };
+const USB_DECOR: Base = { ...DECOR, cable: 150 };
+const USB_INPUT: Base = { ...KEYBOARD, kind: 'hub', cable: 150 };
+/** 책상 아래에 다는 물건은 위의 물건과 겹치지 않습니다. */
+const UNDER_DESK: Base = { ...DECOR, layer: 'mount' };
+const WALL_DECOR: Base = { category: 'accessory', kind: 'decor', layer: 'wall', cable: 0 };
 const EST = { dimsBasis: 'estimate' } as const;
 
 function model(
@@ -942,7 +965,630 @@ const ENTRIES: CatalogEntry[] = [
 		0,
 		undefined,
 		{ ...EST, keywords: ['제네시스', '다이캐스트'] }
-	)
+	),
+	// futureterior 커뮤니티 사진에 태그된 제품 (2026-11-10)
+	model(
+		DESK_MOTOR,
+		'oframe-barco-1600',
+		'오프레임',
+		'BARCO 바르코 모션데스크 1600',
+		160,
+		80,
+		200,
+		'estimate',
+		{ keywords: ['바르코', '모션데스크'] }
+	),
+	model(
+		DESK_MOTOR,
+		'oframe-largo-1600',
+		'오프레임',
+		'LARGO 라르고 모션데스크 1600',
+		160,
+		80,
+		200,
+		'estimate',
+		{ keywords: ['라르고', '모션데스크'] }
+	),
+	model(
+		DESK_MOTOR,
+		'maywood-homage-1600',
+		'메이우드',
+		'Homage 원목 모션데스크 1600',
+		160,
+		80,
+		200,
+		'estimate',
+		{ keywords: ['오마주', '원목', '모션데스크'] }
+	),
+	model(
+		DESK_MOTOR,
+		'breed-fenix-30t-1600',
+		'브리드',
+		'패닉스 스탠딩 데스크 (Fenix30T) 1600',
+		160,
+		78,
+		200,
+		'estimate',
+		{ keywords: ['패닉스', '페닉스', 'Fenix', '스탠딩'] }
+	),
+	model(
+		DESK_MOTOR,
+		'linak-dl6-experience',
+		'LINAK',
+		'DL6 EXPERIENCE 듀얼모터 모션데스크 (상판 1200×700)',
+		120,
+		70,
+		200,
+		'estimate',
+		{ ...EST, keywords: ['리낙', '익스피리언스', 'DPG1C'] }
+	),
+	model(
+		SHELF,
+		'oframe-stilo-1000',
+		'오프레임',
+		'STILO 스틸로 프리미엄 선반 1000',
+		100,
+		24,
+		0,
+		undefined,
+		{ ...EST, keywords: ['스틸로', '데스크선반'] }
+	),
+	model(
+		SHELF,
+		'oframe-feno-1000',
+		'오프레임',
+		'페노 프리미엄 선반 1000 (FENIX)',
+		100,
+		24,
+		0,
+		undefined,
+		{ ...EST, keywords: ['페노', 'Feno', '데스크선반'] }
+	),
+	model(SHELF, 'maywood-prestige-shelf', '메이우드', 'Prestige 데스크선반', 90, 25, 0, undefined, {
+		...EST,
+		keywords: ['프레스티지', '데스크선반']
+	}),
+	model(
+		SHELF,
+		'ilian-modular-monitor-stand',
+		'일리안',
+		'프리미엄 모듈러 모니터 받침대',
+		70,
+		24,
+		0,
+		undefined,
+		{ ...EST, keywords: ['모니터받침대'] }
+	),
+	model(
+		SHELF,
+		'1off-dual-monitor-shelf',
+		'1OFF',
+		'원오프 듀얼 모니터 선반',
+		100,
+		25,
+		0,
+		undefined,
+		{ ...EST, keywords: ['원오프', '모니터선반'] }
+	),
+	model(
+		SHELF,
+		'qdesk-stainless-shelf-750',
+		'큐데스크',
+		'스테인리스 데스크선반 컴팩트 750',
+		75,
+		22,
+		0,
+		undefined,
+		{ keywords: ['큐데스크', '모니터받침대', '자석'] }
+	),
+	model(
+		SHELF,
+		'breathmit-desk-organizer-shelf',
+		'브레스밋',
+		'데스크 오거나이저 쉘프',
+		40,
+		18,
+		0,
+		undefined,
+		{ ...EST, keywords: ['오거나이저'] }
+	),
+	model(
+		SHELF,
+		'breathmit-keyboard-display-2',
+		'브레스밋×버니언스',
+		'키보드 거치대 진열대 2단',
+		46,
+		26,
+		0,
+		undefined,
+		{ ...EST, keywords: ['키보드 진열대'] }
+	),
+	model(
+		POWER_SHELF,
+		'hexcal-studio-plus',
+		'헥스칼',
+		'Hexcal 스튜디오 플러스 모니터 받침대',
+		119,
+		23,
+		0,
+		undefined,
+		{ ...EST, keywords: ['헥스칼', '스튜디오', '모니터받침대'] }
+	),
+	model(
+		SHELF,
+		'kanto-sp6hd',
+		'Kanto Audio',
+		'SP6HD 데스크 스피커 스탠드 (1개)',
+		17.8,
+		21.6,
+		0,
+		undefined,
+		{ keywords: ['칸토', '스피커 스탠드'] }
+	),
+	model(
+		MOUSEPAD,
+		'maywood-linoleum-desk-mat-l',
+		'메이우드',
+		'리놀리움 데스크매트 L',
+		90,
+		43,
+		0,
+		undefined,
+		{ keywords: ['리놀륨', '데스크매트'] }
+	),
+	model(
+		MOUSEPAD,
+		'hexcal-leather-desk-mat',
+		'헥스칼',
+		'프리미엄 가죽 데스크 매트 (마그네틱 홀더)',
+		90,
+		40,
+		0,
+		undefined,
+		{ ...EST, keywords: ['헥스칼', '가죽', '데스크매트'] }
+	),
+	model(
+		MOUSEPAD,
+		'hexcal-felt-desk-mat-1400',
+		'헥스칼',
+		'펠트 마그네틱 풀커버 데스크매트 1400',
+		140,
+		70,
+		0,
+		undefined,
+		{ keywords: ['헥스칼', '펠트', '데스크매트'] }
+	),
+	model(
+		MOUSEPAD,
+		'brixa-leather-desk-mat',
+		'브릭사',
+		'가죽 데스크매트 장패드',
+		90,
+		40,
+		0,
+		undefined,
+		{ ...EST, keywords: ['브릭사', '장패드', '데스크매트'] }
+	),
+	model(
+		MOUSEPAD,
+		'ororot-linoleum-desk-mat-900',
+		'오롯이제작소',
+		'천연 리놀륨 데스크매트 900',
+		90,
+		40,
+		0,
+		undefined,
+		{ keywords: ['오롯이', '리놀륨', '데스크매트'] }
+	),
+	model(
+		ARM,
+		'fellowes-tallo-modular-1fm',
+		'Fellowes',
+		'플렉스 모듈러 1FM 모니터암',
+		50,
+		12,
+		0,
+		undefined,
+		{ ...EST, keywords: ['펠로우즈', 'Tallo', '모니터암'] }
+	),
+	model(
+		ARM,
+		'fellowes-pt-lite-single',
+		'Fellowes',
+		'PT 라이트 싱글 모니터암',
+		45,
+		12,
+		0,
+		undefined,
+		{ ...EST, keywords: ['펠로우즈', '모니터암'] }
+	),
+	model(
+		LIGHTBAR,
+		'benq-screenbar-halo-2',
+		'BenQ',
+		'ScreenBar Halo 2 모니터 조명',
+		50,
+		10.9,
+		0,
+		'usb',
+		{ keywords: ['스크린바', '헤일로'] }
+	),
+	model(
+		POWERED_LIGHTBAR,
+		'philips-hue-play-light-bar',
+		'Philips Hue',
+		'Play 라이트 바 (더블팩 중 1개)',
+		25.3,
+		4.4,
+		6.6,
+		'typical',
+		{ keywords: ['필립스 휴', '휴 플레이', '라이트바'] }
+	),
+	model(
+		DESK_LAMP,
+		'philips-hue-play-wall-washer',
+		'Philips Hue',
+		'Play 월 워셔',
+		9.1,
+		7.6,
+		60,
+		'listed',
+		{ keywords: ['필립스 휴', '월워셔'] }
+	),
+	model(
+		FLOOR_LAMP,
+		'philips-hue-signe-gradient-floor',
+		'Philips Hue',
+		'그라디언트 Signe 플로어 램프',
+		11.1,
+		11.1,
+		29,
+		'listed',
+		{ keywords: ['필립스 휴', '사인', '무드등'] }
+	),
+	model(
+		FLOOR_LAMP,
+		'tangram-ether-floor',
+		'탱그램라이팅',
+		'이더 플로어 장스탠드',
+		30,
+		30,
+		30,
+		'estimate',
+		{ ...EST, keywords: ['탱그램', '이더', '장스탠드'] }
+	),
+	model(
+		FLOOR_LAMP,
+		'moodix-vibepole-pro-floor',
+		'무딕스',
+		'바이브폴 Pro 사이드폴 (플로어)',
+		25,
+		25,
+		20,
+		'estimate',
+		{ ...EST, keywords: ['무딕스', '바이브폴', '사이드폴'] }
+	),
+	model(
+		USB_DESK_LAMP,
+		'huhuru-blooming-coaster',
+		'후후루',
+		'블루밍코스터 무드등',
+		10,
+		10,
+		0,
+		'usb',
+		{ ...EST, keywords: ['후후루', '코스터 조명'] }
+	),
+	model(
+		POWERED_HUB,
+		'philips-hue-bridge-pro',
+		'Philips Hue',
+		'브릿지 프로',
+		9.23,
+		9.23,
+		5,
+		'listed',
+		{ keywords: ['필립스 휴', '브릿지'] }
+	),
+	model(
+		DESK_SPEAKER,
+		'edifier-qr65-active',
+		'Edifier',
+		'QR65 액티브 스피커 (오른쪽)',
+		14.15,
+		21.68,
+		65,
+		'listed',
+		{ keywords: ['에디파이어', 'QR65'] }
+	),
+	model(
+		PASSIVE_SPEAKER,
+		'edifier-qr65-passive',
+		'Edifier',
+		'QR65 패시브 스피커 (왼쪽)',
+		13,
+		21.2,
+		0,
+		undefined,
+		{ keywords: ['에디파이어', 'QR65'] }
+	),
+	model(
+		DESK_SPEAKER,
+		'edifier-qr30-active',
+		'Edifier',
+		'QR30 액티브 스피커 (오른쪽)',
+		12.75,
+		14.2,
+		30,
+		'estimate',
+		{ keywords: ['에디파이어', 'QR30'] }
+	),
+	model(
+		PASSIVE_SPEAKER,
+		'edifier-qr30-passive',
+		'Edifier',
+		'QR30 패시브 스피커 (왼쪽)',
+		11.2,
+		14.2,
+		0,
+		undefined,
+		{ keywords: ['에디파이어', 'QR30'] }
+	),
+	model(
+		DESK_SPEAKER,
+		'kef-lsx-ii-lt-primary',
+		'KEF',
+		'LSX II LT 스피커 (주 스피커)',
+		15.5,
+		18,
+		200,
+		'listed',
+		{ keywords: ['케프', 'LSX'] }
+	),
+	model(
+		PASSIVE_SPEAKER,
+		'kef-lsx-ii-lt-secondary',
+		'KEF',
+		'LSX II LT 스피커 (보조 스피커)',
+		15.5,
+		18,
+		0,
+		undefined,
+		{ keywords: ['케프', 'LSX'] }
+	),
+	model(
+		DESK_SPEAKER,
+		'marshall-acton-iii',
+		'Marshall',
+		'Acton III 블루투스 스피커',
+		26,
+		15,
+		60,
+		'estimate',
+		{ keywords: ['마샬', '액톤'] }
+	),
+	model(
+		USB_SPEAKER,
+		'creative-pebble-v2-right',
+		'Creative',
+		'Pebble V2 스피커 (오른쪽, 전원)',
+		11.6,
+		11.5,
+		0,
+		'usb',
+		{ keywords: ['크리에이티브', '페블'] }
+	),
+	model(
+		PASSIVE_SPEAKER,
+		'creative-pebble-v2-left',
+		'Creative',
+		'Pebble V2 스피커 (왼쪽)',
+		11.6,
+		11.5,
+		0,
+		undefined,
+		{ keywords: ['크리에이티브', '페블'] }
+	),
+	model(
+		MONITOR,
+		'corsair-xeneon-edge',
+		'Corsair',
+		'XENEON EDGE 14.5인치 터치스크린',
+		37.2,
+		12,
+		0,
+		'usb',
+		{ diagonalInch: 14.5, keywords: ['커세어', '제논 엣지', '보조 모니터'] }
+	),
+	model(USB_DECOR, 'divoom-times-frame', 'Divoom', '타임즈 프레임 디지털 액자', 25.6, 8, 0, 'usb', {
+		...EST,
+		keywords: ['디붐', '디지털 액자']
+	}),
+	model(USB_INPUT, 'elgato-stream-deck-plus', 'Elgato', 'Stream Deck +', 14, 13.8, 0, 'usb', {
+		keywords: ['엘가토', '스트림덱']
+	}),
+	model(HANDHELD, '8bitdo-micro', '8BitDo', 'Micro 블루투스 게임패드', 7.2, 4.1, 0, undefined, {
+		keywords: ['컨트롤러', '게임패드']
+	}),
+	model(KEYBOARD, 'varo-v108-pastel', 'VARO', 'V108 PASTEL 기계식 키보드', 44, 14, 0, undefined, {
+		...EST,
+		keywords: ['바로', '풀배열']
+	}),
+	model(
+		KEYBOARD,
+		'lofree-flow2-100',
+		'Lofree',
+		'Flow 2 로우프로파일 키보드 (100키)',
+		39.8,
+		12.6,
+		0,
+		undefined,
+		{ keywords: ['로프리', '플로우'] }
+	),
+	model(
+		KEYBOARD,
+		'lofree-flow2-mac',
+		'Lofree',
+		'Flow 2 for Mac 키보드 (84키, 실버)',
+		34.1,
+		12.6,
+		0,
+		undefined,
+		{ ...EST, keywords: ['로프리', '플로우', '맥'] }
+	),
+	model(
+		KEYBOARD,
+		'logitech-g-pro-x-tkl-rapid',
+		'Logitech',
+		'G PRO X TKL RAPID 래피드 트리거',
+		35.7,
+		15,
+		0,
+		undefined,
+		{ keywords: ['로지텍', '래피드 트리거', '텐키리스'] }
+	),
+	model(
+		PALMREST,
+		'ororot-dumaru-wrist-rest-360',
+		'오롯이제작소',
+		'두마루 원목 손목 받침대 (라운드 360)',
+		36,
+		12.5,
+		0,
+		undefined,
+		{ keywords: ['오롯이', '손목 받침대', '팜레스트'] }
+	),
+	model(CHAIR, 'libernovo-omni', 'LiberNovo', 'Omni 다이나믹 인체공학 의자', 74, 79, 0, undefined, {
+		keywords: ['리버노보', '옴니']
+	}),
+	model(CHAIR, 'lenif-uniback-chair-pro', '레니프', '유니백체어 프로', 65, 65, 0, undefined, {
+		...EST,
+		keywords: ['레니프', '유니백']
+	}),
+	model(
+		FOOTREST,
+		'rowmo-double-step',
+		'로우모',
+		'높이조절 2단 더블스텝 발받침대',
+		48,
+		35,
+		0,
+		undefined,
+		{ ...EST, keywords: ['로우모', '발받침'] }
+	),
+	model(
+		FOOTREST,
+		'rowmo-dualrest-lc99',
+		'로우모',
+		'듀얼레스트 LC99 발받침대',
+		51.2,
+		38,
+		0,
+		undefined,
+		{ ...EST, keywords: ['로우모', '듀얼레스트', '발받침'] }
+	),
+	model(HOLDER, 'maywood-phone-stand', '메이우드', '원목 스마트폰 거치대', 8, 9, 0, undefined, {
+		...EST,
+		keywords: ['메이우드', '거치대']
+	}),
+	model(
+		POWERED_HOLDER,
+		'oa-quickturbo-3in1',
+		'오아',
+		'퀵터보 Qi2.2 3in1 무선 충전기',
+		17,
+		10,
+		30,
+		'estimate',
+		{ ...EST, keywords: ['오아', '맥세이프', '무선 충전기'] }
+	),
+	model(
+		UNDER_DESK,
+		'dextop-mct-05',
+		'덱스탑',
+		'무타공 클램프형 멀티탭 트레이 MCT-05',
+		42,
+		15,
+		0,
+		undefined,
+		{ ...EST, keywords: ['덱스탑', '멀티탭 트레이', '케이블 정리'] }
+	),
+	model(DECOR, 'maywood-cork-tray', '메이우드', '코르크 트레이', 25, 13, 0, undefined, {
+		...EST,
+		keywords: ['트레이']
+	}),
+	model(
+		DECOR,
+		'ororot-pocket-catchall-mini',
+		'오롯이제작소',
+		'포켓 캐치올 미니',
+		12,
+		9,
+		0,
+		undefined,
+		{ ...EST, keywords: ['캐치올', '트레이'] }
+	),
+	model(DECOR, 'ororot-daon-tray', '오롯이제작소', '다온 원목 트레이', 30, 15, 0, undefined, {
+		...EST,
+		keywords: ['다온', '트레이']
+	}),
+	model(
+		DECOR,
+		'ororot-linoleum-coaster-set',
+		'오롯이제작소',
+		'리놀륨 코스터 세트',
+		11,
+		11,
+		0,
+		undefined,
+		{ ...EST, keywords: ['코스터'] }
+	),
+	model(DECOR, 'diolt-diffuser-750', '디올트', '디퓨저 750ml', 9, 9, 0, undefined, {
+		...EST,
+		keywords: ['디퓨저']
+	}),
+	model(DECOR, 'yeniz-stone-diffuser', '예니즈', '스톤 디퓨저 오브제', 15, 15, 0, undefined, {
+		...EST,
+		keywords: ['스톤', '디퓨저']
+	}),
+	model(
+		DECOR,
+		'heriers-lava-ball',
+		'헤리어스',
+		'LAVA BALL 아로마 스톤 세트',
+		14,
+		14,
+		0,
+		undefined,
+		{ ...EST, keywords: ['아로마 스톤'] }
+	),
+	model(
+		DECOR,
+		'huhuru-lheure-bleue',
+		'후후루',
+		'뢰흐블루 블루로즈 오브제 (M)',
+		14,
+		14,
+		0,
+		undefined,
+		{ ...EST, keywords: ['후후루', '블루로즈'] }
+	),
+	model(DECOR, 'miee-frame-clock', 'MIEE', '미이 프레임 시계', 22, 6, 0, undefined, {
+		...EST,
+		keywords: ['시계']
+	}),
+	model(DECOR, 'ulti-flow-timer', '울티', '플로우 디지털 비주얼 타이머', 9, 9, 0, undefined, {
+		...EST,
+		keywords: ['타이머', '시계']
+	}),
+	model(DECOR, 'sosse-thermo-hygrometer', '쏘쓰', '1초스캔 디지털 온습도계', 7, 3, 0, undefined, {
+		...EST,
+		keywords: ['온습도계']
+	}),
+	model(WALL_DECOR, 'bunyans-a2-frame', '버니언스', 'A2 인테리어 액자', 45, 3, 0, undefined, {
+		...EST,
+		keywords: ['액자', '포스터']
+	})
 ];
 
 /** 모델별 일러스트 (entities/plan/ui/model-glyphs.ts) */
@@ -1067,7 +1713,74 @@ const GLYPHS: Record<string, string> = {
 	'caldigit-soho-dock': 'hub',
 	'satechi-8in1-hub': 'hub',
 	'hoverpen-2-interstellar': 'pen',
-	'genesis-g80-diecast-1-18': 'car'
+	'genesis-g80-diecast-1-18': 'car',
+	'oframe-barco-1600': 'desk-motion',
+	'oframe-largo-1600': 'desk-motion',
+	'maywood-homage-1600': 'desk-wood',
+	'breed-fenix-30t-1600': 'desk-motion',
+	'linak-dl6-experience': 'desk-motion',
+	'oframe-stilo-1000': 'shelf-plank',
+	'oframe-feno-1000': 'shelf-plank',
+	'maywood-prestige-shelf': 'shelf-plank',
+	'ilian-modular-monitor-stand': 'shelf-modular',
+	'1off-dual-monitor-shelf': 'shelf-dual',
+	'qdesk-stainless-shelf-750': 'shelf-steel',
+	'breathmit-desk-organizer-shelf': 'shelf-tiered',
+	'breathmit-keyboard-display-2': 'shelf-tiered',
+	'hexcal-studio-plus': 'studio-stand',
+	'kanto-sp6hd': 'speaker-stand',
+	'maywood-linoleum-desk-mat-l': 'mousepad',
+	'hexcal-leather-desk-mat': 'desk-mat-leather',
+	'hexcal-felt-desk-mat-1400': 'desk-mat-felt',
+	'brixa-leather-desk-mat': 'desk-mat-leather',
+	'ororot-linoleum-desk-mat-900': 'mousepad',
+	'fellowes-tallo-modular-1fm': 'monitor-arm',
+	'fellowes-pt-lite-single': 'monitor-arm',
+	'benq-screenbar-halo-2': 'light-bar-halo',
+	'philips-hue-play-light-bar': 'hue-play',
+	'philips-hue-play-wall-washer': 'wall-washer',
+	'philips-hue-signe-gradient-floor': 'floor-lamp',
+	'tangram-ether-floor': 'floor-lamp',
+	'moodix-vibepole-pro-floor': 'pole-lamp',
+	'huhuru-blooming-coaster': 'coaster-light',
+	'philips-hue-bridge-pro': 'hue-bridge',
+	'edifier-qr65-active': 'speaker-knob',
+	'edifier-qr65-passive': 'speaker-bookshelf',
+	'edifier-qr30-active': 'speaker-knob',
+	'edifier-qr30-passive': 'speaker-bookshelf',
+	'kef-lsx-ii-lt-primary': 'speaker-bookshelf',
+	'kef-lsx-ii-lt-secondary': 'speaker-bookshelf',
+	'marshall-acton-iii': 'speaker-acton',
+	'creative-pebble-v2-right': 'speaker-pebble',
+	'creative-pebble-v2-left': 'speaker-pebble',
+	'corsair-xeneon-edge': 'touch-strip',
+	'divoom-times-frame': 'photo-frame',
+	'elgato-stream-deck-plus': 'stream-deck',
+	'8bitdo-micro': 'gamepad-micro',
+	'varo-v108-pastel': 'kb-96',
+	'lofree-flow2-100': 'kb-96',
+	'lofree-flow2-mac': 'kb-75',
+	'logitech-g-pro-x-tkl-rapid': 'kb-tkl',
+	'ororot-dumaru-wrist-rest-360': 'wrist-rest-wave',
+	'libernovo-omni': 'chair-omni',
+	'lenif-uniback-chair-pro': 'chair-uniback',
+	'rowmo-double-step': 'footrest-step',
+	'rowmo-dualrest-lc99': 'footrest-dual',
+	'maywood-phone-stand': 'phone-stand',
+	'oa-quickturbo-3in1': 'charger-stand',
+	'dextop-mct-05': 'cable-tray',
+	'maywood-cork-tray': 'tray',
+	'ororot-pocket-catchall-mini': 'tray',
+	'ororot-daon-tray': 'tray-handle',
+	'ororot-linoleum-coaster-set': 'coaster-set',
+	'diolt-diffuser-750': 'diffuser-reed',
+	'yeniz-stone-diffuser': 'stone-diffuser',
+	'heriers-lava-ball': 'lava-ball',
+	'huhuru-lheure-bleue': 'flower-lamp',
+	'miee-frame-clock': 'clock-frame',
+	'ulti-flow-timer': 'timer-cube',
+	'sosse-thermo-hygrometer': 'thermo-hygro',
+	'bunyans-a2-frame': 'poster-frame'
 };
 
 export const MODEL_ENTRIES: readonly CatalogEntry[] = ENTRIES.map((entry) => ({
