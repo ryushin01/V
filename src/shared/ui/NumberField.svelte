@@ -19,8 +19,19 @@
 	let draft = $derived(String(Math.round(value * 100) / 100));
 	let error = $state('');
 
+	/** type="number"는 '29.'처럼 입력 중인 소수를 비워 버려 글자 입력으로 받고, 위아래 방향키로 증감합니다. */
+	function stepWithArrows(event: KeyboardEvent) {
+		if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+		const current = Number(draft);
+		if (!Number.isFinite(current)) return;
+		event.preventDefault();
+		const next = Math.min(max, Math.max(min, current + (event.key === 'ArrowUp' ? step : -step)));
+		draft = String(Math.round(next * 100) / 100);
+		commit();
+	}
+
 	function commit() {
-		const parsed = Number(draft);
+		const parsed = Number(draft.trim().replace(',', '.'));
 		if (draft.trim() === '' || !Number.isFinite(parsed)) {
 			error = '숫자를 입력해 주세요.';
 			return;
@@ -39,13 +50,14 @@
 	<div class="control">
 		<input
 			{id}
-			type="number"
+			type="text"
 			inputmode="decimal"
-			{min}
-			{max}
-			{step}
-			bind:value={() => draft, (next) => (draft = String(next ?? ''))}
+			autocomplete="off"
+			spellcheck="false"
+			value={draft}
+			oninput={(event) => (draft = event.currentTarget.value)}
 			onchange={commit}
+			onkeydown={stepWithArrows}
 			aria-invalid={error ? 'true' : undefined}
 			aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : '']
 				.filter(Boolean)
