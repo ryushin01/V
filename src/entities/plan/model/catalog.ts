@@ -1,3 +1,4 @@
+import { SvelteMap } from 'svelte/reactivity';
 import { MODEL_ENTRIES } from './catalog-models';
 import type { CatalogCategory, CatalogEntry, ItemData, SpecKey, WattsBasis } from './types';
 
@@ -344,14 +345,28 @@ export const SPEC_LIMITS: Record<SpecKey, { min: number; max: number }> = {
 	ports: { min: 1, max: 20 }
 };
 
+/** 직접 등록한 제품. 고치면 이미 놓은 물건의 그림과 점검에도 바로 반영되도록 반응형 Map을 씁니다. */
+const customById = new SvelteMap<string, CatalogEntry>();
+
+/** 이미 등록된 것은 그대로 둡니다. 배치도에 담긴 옛 사본이 최신 정의를 덮지 않게 합니다. */
+export function registerCustomEntries(entries: readonly CatalogEntry[] = [], override = false) {
+	for (const entry of entries) {
+		if (override || !customById.has(entry.id)) customById.set(entry.id, entry);
+	}
+}
+
+export function unregisterCustomEntry(id: string) {
+	customById.delete(id);
+}
+
 const byId = new Map(CATALOG.map((entry) => [entry.id, entry]));
 
 export function findCatalogEntry(id: string): CatalogEntry | undefined {
-	return byId.get(id);
+	return byId.get(id) ?? customById.get(id);
 }
 
 export function getCatalogEntry(id: string): CatalogEntry {
-	const entry = byId.get(id);
+	const entry = byId.get(id) ?? customById.get(id);
 	if (!entry) throw new Error(`알 수 없는 카탈로그 항목: ${id}`);
 	return entry;
 }

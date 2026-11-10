@@ -18,6 +18,22 @@ describe('NumberField', () => {
 		expect(oncommit).toHaveBeenCalledWith(150);
 	});
 
+	it('소수를 한 글자씩 입력해도 지우지 않습니다', async () => {
+		const { oncommit, input } = setup();
+		await userEvent.clear(input);
+		await userEvent.type(input, '29.4');
+		expect(input.value).toBe('29.4');
+		await userEvent.tab();
+		expect(oncommit).toHaveBeenCalledWith(29.4);
+	});
+
+	it('위아래 방향키로 값을 바꿉니다', async () => {
+		const { oncommit, input } = setup();
+		input.focus();
+		await userEvent.keyboard('{ArrowUp}');
+		expect(oncommit).toHaveBeenCalledWith(101);
+	});
+
 	it('범위를 벗어나면 오류를 연결하고 확정하지 않습니다', async () => {
 		const { oncommit, input } = setup();
 		await userEvent.clear(input);

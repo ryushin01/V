@@ -21,8 +21,11 @@
 
 <dialog bind:this={dialog} aria-labelledby={id} onclose={() => (open = false)}>
 	<h2 {id}>{title}</h2>
-	<div class="body">{@render children()}</div>
-	{#if actions}<div class="actions">{@render actions()}</div>{/if}
+	<!-- 닫혀 있을 때는 내용을 그리지 않아 같은 이름의 입력란이 겹치지 않게 합니다. -->
+	{#if open}
+		<div class="body">{@render children()}</div>
+		{#if actions}<div class="actions">{@render actions()}</div>{/if}
+	{/if}
 </dialog>
 
 <style>

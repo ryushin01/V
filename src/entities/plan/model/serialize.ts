@@ -1,7 +1,9 @@
 import { createId } from '#shared/lib/id';
 import { findCatalogEntry, SPEC_LIMITS } from './catalog';
+import { CUSTOM_LIMITS, parseCustomEntry } from './custom';
 import { cutoutLimits, PLAN_LIMITS, ROOM_LIMITS, wallRange } from './room';
 import type {
+	CatalogEntry,
 	Corner,
 	Cutout,
 	Underlay,
@@ -108,9 +110,9 @@ function parseSpecs(raw: unknown): ItemSpecs | undefined | null {
 	return Object.keys(specs).length > 0 ? specs : undefined;
 }
 
-function parseItem(raw: unknown): ItemData | null {
+function parseItem(raw: unknown, customIds: ReadonlySet<string>): ItemData | null {
 	if (!isRecord(raw) || typeof raw.catalogId !== 'string') return null;
-	if (!findCatalogEntry(raw.catalogId)) return null;
+	if (!findCatalogEntry(raw.catalogId) && !customIds.has(raw.catalogId)) return null;
 	const { x, y, rotation, price, label } = raw;
 	if (!finite(x) || !finite(y) || !finite(rotation)) return null;
 	if (Math.abs(x) > COORDINATE_LIMIT || Math.abs(y) > COORDINATE_LIMIT) return null;
@@ -171,7 +173,16 @@ export function parsePlan(text: string): ParseResult {
 	if (parsedOpenings.some((opening) => opening === null)) {
 		return { ok: false, error: '문이나 창문의 위치가 벽을 벗어났습니다.' };
 	}
-	const items = raw.items.map(parseItem);
+	const rawCustom = raw.customEntries ?? [];
+	if (!Array.isArray(rawCustom) || rawCustom.length > CUSTOM_LIMITS.entries) {
+		return { ok: false, error: '직접 등록한 제품 정보가 올바르지 않습니다.' };
+	}
+	const customEntries = rawCustom.map(parseCustomEntry);
+	if (customEntries.some((entry) => entry === null)) {
+		return { ok: false, error: '직접 등록한 제품 정보가 올바르지 않습니다.' };
+	}
+	const customIds = new Set(customEntries.map((entry) => entry!.id));
+	const items = raw.items.map((item) => parseItem(item, customIds));
 	if (items.some((item) => item === null)) {
 		return { ok: false, error: '알 수 없는 물건이나 잘못된 좌표가 들어 있습니다.' };
 	}
@@ -192,6 +203,7 @@ export function parsePlan(text: string): ParseResult {
 				...(cutouts.length > 0 ? { cutouts } : {})
 			},
 			...(underlay ? { underlay } : {}),
+			...(customEntries.length > 0 ? { customEntries: customEntries as CatalogEntry[] } : {}),
 			items: items as ItemData[]
 		}
 	};

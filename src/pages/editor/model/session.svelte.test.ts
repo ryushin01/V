@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyPlan, createSamplePlan, PLAN_LIMITS } from '#entities/plan';
+import {
+	createCustomEntry,
+	createEmptyPlan,
+	createSamplePlan,
+	PLAN_LIMITS,
+	registerCustomEntries
+} from '#entities/plan';
 import { EditorSession } from './session.svelte';
 
 function sessionWithDesk() {
@@ -208,6 +214,31 @@ describe('EditorSession', () => {
 		for (let index = 0; index < 5; index += 1) session.addCutout();
 		expect(session.room.cutouts).toHaveLength(4);
 		expect(session.freeCorners).toEqual([]);
+	});
+
+	it('직접 등록 제품을 고치면 놓인 물건과 저장 데이터에 반영됩니다', () => {
+		const entry = createCustomEntry({
+			id: 'custom-session-desk',
+			name: '내 책상',
+			brand: '',
+			kind: 'desk',
+			width: 150,
+			depth: 75,
+			watts: 0,
+			cable: 0,
+			glyph: ''
+		});
+		registerCustomEntries([entry], true);
+		const session = new EditorSession(createEmptyPlan());
+		session.addItem(entry.id);
+		expect(session.toData().customEntries?.[0].width).toBe(150);
+		registerCustomEntries([{ ...entry, width: 180 }], true);
+		expect(session.items[0].entry.width).toBe(180);
+		expect(session.toData().customEntries?.[0].width).toBe(180);
+	});
+
+	it('직접 등록 제품을 쓰지 않으면 담지 않습니다', () => {
+		expect(new EditorSession(createEmptyPlan()).toData().customEntries).toBeUndefined();
 	});
 
 	it('저장 데이터로 내보냅니다', () => {
