@@ -26,6 +26,11 @@
 	}
 
 	const parsedDraft = $derived(parseDraft(draft));
+	const draftInRange = $derived(
+		Number.isFinite(parsedDraft) && parsedDraft >= min && parsedDraft <= max
+	);
+	/** 확정 전이라도 범위를 벗어난 숫자는 오류 상태로 알립니다. */
+	const draftOutOfRange = $derived(Number.isFinite(parsedDraft) && !draftInRange);
 
 	/** type="number"는 '29.'처럼 입력 중인 소수를 비워 버려 글자 입력으로 받고, 위아래 방향키로 증감합니다. */
 	function stepWithArrows(event: KeyboardEvent) {
@@ -62,7 +67,7 @@
 			role="spinbutton"
 			aria-valuemin={min}
 			aria-valuemax={max}
-			aria-valuenow={Number.isFinite(parsedDraft) ? parsedDraft : undefined}
+			aria-valuenow={draftInRange ? parsedDraft : undefined}
 			inputmode="decimal"
 			autocomplete="off"
 			spellcheck="false"
@@ -70,7 +75,7 @@
 			oninput={(event) => (draft = event.currentTarget.value)}
 			onchange={commit}
 			onkeydown={stepWithArrows}
-			aria-invalid={error ? 'true' : undefined}
+			aria-invalid={error || draftOutOfRange ? 'true' : undefined}
 			aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : '']
 				.filter(Boolean)
 				.join(' ') || undefined}

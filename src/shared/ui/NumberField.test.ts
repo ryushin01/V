@@ -50,6 +50,18 @@ describe('NumberField', () => {
 		expect(input.getAttribute('aria-valuenow')).toBe('100');
 	});
 
+	it('범위를 벗어난 숫자는 확정 전에도 오류 상태로 알립니다', async () => {
+		const { input } = setup();
+		await userEvent.clear(input);
+		await userEvent.type(input, '201');
+		expect(input.getAttribute('aria-invalid')).toBe('true');
+		expect(input.getAttribute('aria-valuenow')).toBeNull();
+		await userEvent.clear(input);
+		await userEvent.type(input, '150');
+		expect(input.getAttribute('aria-invalid')).toBeNull();
+		expect(input.getAttribute('aria-valuenow')).toBe('150');
+	});
+
 	it('범위를 벗어나면 오류를 연결하고 확정하지 않습니다', async () => {
 		const { oncommit, input } = setup();
 		await userEvent.clear(input);
