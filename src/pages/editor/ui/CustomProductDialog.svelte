@@ -65,17 +65,16 @@
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy) return;
-		busy = true;
-		const form = event.currentTarget as HTMLFormElement;
-		// Enter로 제출하면 change와 submit이 한 번에 일어나므로, 숫자 칸의 오류 표시를 먼저 반영합니다.
-		await tick();
 		saveError = '';
-		nameError = '';
 		if (!input.name.trim()) {
-			busy = false;
 			nameError = '제품 이름을 입력해 주세요.';
 			return;
 		}
+		busy = true;
+		nameError = '';
+		const form = event.currentTarget as HTMLFormElement;
+		// 이름 오류 해제와 숫자 칸의 오류 표시를 화면에 반영한 뒤 오류 칸을 찾습니다.
+		await tick();
 		const invalid = form.querySelector<HTMLElement>('[aria-invalid="true"]');
 		if (invalid) {
 			busy = false;
