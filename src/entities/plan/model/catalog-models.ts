@@ -436,13 +436,16 @@ const ENTRIES: CatalogEntry[] = [
 	model(
 		KEYBOARD,
 		'phoenix-keyboard',
-		'Phoenix',
-		'피닉스 텐키리스 키보드',
-		36.0,
-		13.6,
+		'Cable Car Designs',
+		'Phoenix TKL 키보드 키트 (F13)',
+		36.4,
+		14.0,
 		0,
 		undefined,
-		EST
+		{
+			...EST,
+			keywords: ['피닉스', 'Phoenix', 'F13', '텐키리스']
+		}
 	),
 	model(KEYBOARD, 'apple-magic-keyboard', 'Apple', 'Magic Keyboard', 27.9, 11.5, 0, undefined, {
 		keywords: ['매직 키보드']
@@ -990,7 +993,7 @@ const GLYPHS: Record<string, string> = {
 	'xiaomi-mijia-light-bar': 'light-bar',
 	'luxy-mx1': 'light-bar',
 	'leopold-fc980c': 'kb-96',
-	'phoenix-keyboard': 'kb-tkl',
+	'phoenix-keyboard': 'kb-phoenix',
 	'apple-magic-keyboard': 'kb-magic',
 	'hhkb-hybrid-type-s': 'kb-hhkb',
 	'hansung-gk868b': 'kb-tkl',
