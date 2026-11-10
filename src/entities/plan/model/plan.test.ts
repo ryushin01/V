@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { analyzePlan, viewingRange } from './analysis';
 import { createSamplePlan } from './factory';
 import { findFreeSpot } from './placement';
-import { getCatalogEntry } from './catalog';
+import { CATALOG, getCatalogEntry, matchesCatalogQuery } from './catalog';
 import { openingGeometry, roomOutline, snapToWall, wallRange } from './room';
 import { parsePlan, stringifyPlan } from './serialize';
 import type { ItemData, RoomData } from './types';
@@ -312,6 +312,40 @@ describe('다각형 방', () => {
 		expect(make('data:image/jpeg;base64,AAAA').ok).toBe(true);
 		expect(make('data:image/svg+xml;base64,AAAA').ok).toBe(false);
 		expect(make('https://example.com/a.jpg').ok).toBe(false);
+	});
+});
+
+describe('실제 모델 카탈로그', () => {
+	it('id가 겹치지 않습니다', () => {
+		const ids = CATALOG.map((entry) => entry.id);
+		expect(new Set(ids).size).toBe(ids.length);
+	});
+
+	it('실제 모델은 제조사와 전력 기준을 가집니다', () => {
+		const models = CATALOG.filter((entry) => entry.brand);
+		expect(models.length).toBeGreaterThan(20);
+		for (const entry of models) {
+			expect(entry.width).toBeGreaterThan(0);
+			expect(entry.depth).toBeGreaterThan(0);
+			if (entry.watts > 0) expect(entry.wattsBasis).toBeDefined();
+		}
+	});
+
+	it('49인치 G9는 실제 크기와 화면 크기로 시청 거리를 계산합니다', () => {
+		const g9 = getCatalogEntry('samsung-odyssey-oled-g9');
+		expect(g9).toMatchObject({ width: 119.5, diagonalInch: 49, watts: 220 });
+	});
+
+	it('모델명, 제조사, 분류로 찾습니다', () => {
+		const find = (query: string) =>
+			CATALOG.filter((entry) => matchesCatalogQuery(entry, query)).map((entry) => entry.id);
+		expect(find('g9')).toContain('samsung-odyssey-oled-g9');
+		expect(find('PS5')).toEqual(['sony-ps5-pro', 'sony-ps5-slim']);
+		expect(find('플스')).toEqual(find('playstation'));
+		expect(find('삼성')).toEqual(find('samsung'));
+		expect(find('ps5 pro')).toEqual(['sony-ps5-pro']);
+		expect(find('samsung').length).toBeGreaterThanOrEqual(4);
+		expect(find('')).toHaveLength(CATALOG.length);
 	});
 });
 

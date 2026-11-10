@@ -28,7 +28,35 @@ describe('CatalogPanel', () => {
 	});
 });
 
+describe('CatalogPanel 검색', () => {
+	it('검색어로 거르고 개수를 알립니다', async () => {
+		const session = empty();
+		render(CatalogPanel, { session });
+		await userEvent.type(screen.getByLabelText('모델명이나 제조사로 찾기'), 'G9');
+		const button = screen.getByRole('button', { name: /Odyssey OLED G9/ });
+		expect(screen.getAllByRole('button')).toHaveLength(1);
+		expect(screen.getByText('1개')).toBeInTheDocument();
+		await userEvent.click(button);
+		expect(session.items[0].entry.diagonalInch).toBe(49);
+	});
+
+	it('결과가 없으면 대안을 안내합니다', async () => {
+		render(CatalogPanel, { session: empty() });
+		await userEvent.type(screen.getByLabelText('모델명이나 제조사로 찾기'), '없는모델');
+		expect(screen.getByText(/규격을 직접 입력/)).toBeInTheDocument();
+	});
+});
+
 describe('ItemForm', () => {
+	it('실제 모델의 전력 기준을 보여 줍니다', () => {
+		const session = empty();
+		session.addItem('sony-ps5-pro');
+		render(ItemForm, { session, item: session.items[0] });
+		const watts = screen.getByLabelText('소비 전력');
+		expect(watts).toHaveValue(390);
+		expect(watts).toHaveAccessibleDescription('정격 소비 전력');
+	});
+
 	it('실제 제품에 맞게 규격을 바꿉니다', async () => {
 		const session = empty();
 		session.addItem('tv-55');
