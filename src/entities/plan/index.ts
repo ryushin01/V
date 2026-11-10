@@ -5,6 +5,7 @@ export {
 	listCustomProducts,
 	listPlans,
 	saveCustomProduct,
+	saveCustomProducts,
 	savePlan
 } from './api/plans-db';
 export {
@@ -15,6 +16,12 @@ export {
 	toCustomInput,
 	type CustomProductInput
 } from './model/custom';
+export {
+	CUSTOM_FILE_LIMIT,
+	parseCustomProductsFile,
+	stringifyCustomProducts,
+	type CustomFileResult
+} from './model/custom-file';
 export { analyzePlan, CHAIR_CLEARANCE_CM, viewingRange } from './model/analysis';
 export {
 	CATALOG,
