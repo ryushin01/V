@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { boundsOf, corners, localToWorld, type Point } from '#shared/lib/geometry';
 	import { CHAIR_CLEARANCE_CM, viewingRange } from '../model/analysis';
-	import { getCatalogEntry } from '../model/catalog';
-	import { openingGeometry } from '../model/room';
+	import { resolveEntry } from '../model/catalog';
+	import { openingGeometry, roomOutline } from '../model/room';
 	import type { Connection, ItemData, RoomData } from '../model/types';
 
 	interface Props {
@@ -23,7 +23,7 @@
 
 	const resolved = $derived(
 		items.map((item) => {
-			const entry = getCatalogEntry(item.catalogId);
+			const entry = resolveEntry(item);
 			const rect = {
 				cx: item.x,
 				cy: item.y,
@@ -133,7 +133,7 @@
 </script>
 
 <g class="xray" aria-hidden="true" font-size={fontSize} data-testid="xray-overlay">
-	<clipPath id={clipId}><rect width={room.width} height={room.depth} /></clipPath>
+	<clipPath id={clipId}><polygon points={pointsAttr(roomOutline(room))} /></clipPath>
 
 	<g clip-path={`url(#${clipId})`}>
 		{#each viewing as sector (sector.id)}

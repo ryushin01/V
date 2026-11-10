@@ -133,6 +133,83 @@ describe('EditorSession', () => {
 		expect(session.items).toHaveLength(PLAN_LIMITS.items);
 	});
 
+	it('사용자 규격이 점검과 저장에 반영됩니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addItem('tv-55');
+		const tv = session.items[0];
+		session.setSpec(tv.id, 'width', 170);
+		session.setSpec(tv.id, 'watts', 300);
+		expect(tv.entry.width).toBe(170);
+		expect(session.analysis.power.totalWatts).toBe(300);
+		expect(session.toData().items[0].specs).toEqual({ width: 170, watts: 300 });
+		session.resetSpecs(tv.id);
+		expect(tv.entry.width).toBe(123);
+		expect(session.toData().items[0].specs).toBeUndefined();
+	});
+
+	it('규격은 허용 범위로 맞추고 되돌릴 수 있습니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addItem('chair');
+		const chair = session.items[0];
+		session.setSpec(chair.id, 'width', 9999);
+		expect(chair.entry.width).toBe(500);
+		session.undo();
+		expect(session.items[0].entry.width).toBe(62);
+	});
+
+	const image = { src: 'data:image/jpeg;base64,AAAA', pixelWidth: 400, pixelHeight: 300 };
+
+	it('평면도 이미지를 방 가로에 맞춰 깔고 되돌립니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.setUnderlay(image);
+		expect(session.underlay?.cmPerPixel).toBe(1);
+		expect(session.toData().underlay?.src).toBe(image.src);
+		session.undo();
+		expect(session.underlay).toBeNull();
+	});
+
+	it('두 점과 실제 길이로 축척을 맞춥니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.setUnderlay(image);
+		session.startCalibration();
+		session.addCalibrationPoint({ x: 100, y: 100 });
+		session.addCalibrationPoint({ x: 200, y: 100 });
+		session.applyCalibration(300);
+		expect(session.underlay?.cmPerPixel).toBe(3);
+		expect(session.underlay?.x).toBe(-200);
+		expect(session.calibration).toBeNull();
+	});
+
+	it('되돌리기로 이미지가 사라지면 축척 맞추기도 끝냅니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.setUnderlay(image);
+		session.startCalibration();
+		session.undo();
+		expect(session.underlay).toBeNull();
+		expect(session.calibration).toBeNull();
+	});
+
+	it('모서리를 자르면 문이 남은 벽으로 옮겨 갑니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		session.addOpening('window');
+		session.addCutout();
+		const cutout = session.room.cutouts?.[0];
+		expect(cutout?.corner).toBe('ne');
+		session.updateOpening(session.room.openings[1].id, { offset: 390 });
+		const opening = session.room.openings[1];
+		expect(opening.offset + opening.width).toBeLessThanOrEqual(400 - (cutout?.width ?? 0));
+		session.undo();
+		session.undo();
+		expect(session.room.cutouts ?? []).toHaveLength(0);
+	});
+
+	it('모서리는 네 곳까지만 자릅니다', () => {
+		const session = new EditorSession(createEmptyPlan());
+		for (let index = 0; index < 5; index += 1) session.addCutout();
+		expect(session.room.cutouts).toHaveLength(4);
+		expect(session.freeCorners).toEqual([]);
+	});
+
 	it('저장 데이터로 내보냅니다', () => {
 		const sample = createSamplePlan();
 		const session = new EditorSession(sample);

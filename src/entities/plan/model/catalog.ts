@@ -1,4 +1,4 @@
-import type { CatalogCategory, CatalogEntry } from './types';
+import type { CatalogCategory, CatalogEntry, ItemData, SpecKey } from './types';
 
 /** 치수와 전력은 흔한 제품을 기준으로 잡은 기본값입니다. 특정 제품의 사양이 아닙니다. */
 export const CATALOG: readonly CatalogEntry[] = [
@@ -247,6 +247,16 @@ export const CATEGORY_LABELS: Record<CatalogCategory, string> = {
 	power: '전원'
 };
 
+/** 사용자가 입력할 수 있는 규격의 범위입니다. */
+export const SPEC_LIMITS: Record<SpecKey, { min: number; max: number }> = {
+	width: { min: 1, max: 500 },
+	depth: { min: 1, max: 500 },
+	watts: { min: 0, max: 5000 },
+	cable: { min: 0, max: 2000 },
+	diagonalInch: { min: 10, max: 120 },
+	ports: { min: 1, max: 20 }
+};
+
 const byId = new Map(CATALOG.map((entry) => [entry.id, entry]));
 
 export function findCatalogEntry(id: string): CatalogEntry | undefined {
@@ -257,4 +267,16 @@ export function getCatalogEntry(id: string): CatalogEntry {
 	const entry = byId.get(id);
 	if (!entry) throw new Error(`알 수 없는 카탈로그 항목: ${id}`);
 	return entry;
+}
+
+/** 카탈로그 값에 사용자 규격을 덮어씁니다. 원래 없는 규격(의자의 전력 등)은 무시합니다. */
+export function resolveEntry(item: Pick<ItemData, 'catalogId' | 'specs'>): CatalogEntry {
+	const base = getCatalogEntry(item.catalogId);
+	if (!item.specs) return base;
+	const merged = { ...base };
+	for (const key of Object.keys(SPEC_LIMITS) as SpecKey[]) {
+		const value = item.specs[key];
+		if (value !== undefined && base[key] !== undefined) merged[key] = value;
+	}
+	return merged;
 }

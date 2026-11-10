@@ -1,26 +1,31 @@
 <script lang="ts">
 	import { Button, Icon, NumberField } from '#shared/ui';
+	import { getCatalogEntry, SPEC_LIMITS, type SpecKey } from '#entities/plan';
 	import type { PlacedItem } from '../model/placed-item.svelte';
 	import type { EditorSession } from '../model/session.svelte';
 
 	let { session, item }: { session: EditorSession; item: PlacedItem } = $props();
 
 	const isWall = $derived(item.entry.layer === 'wall');
-	const specs = $derived(
-		[
-			`${item.entry.width}×${item.entry.depth}cm`,
-			item.entry.watts ? `${item.entry.watts}W` : '',
-			item.entry.ports ? `${item.entry.ports}구` : '',
-			item.entry.cable ? `케이블 ${item.entry.cable}cm` : ''
-		]
-			.filter(Boolean)
-			.join(' · ')
+	const SPEC_FIELDS: { key: SpecKey; label: string; unit: string }[] = [
+		{ key: 'width', label: '가로', unit: 'cm' },
+		{ key: 'depth', label: '세로', unit: 'cm' },
+		{ key: 'diagonalInch', label: '화면 크기', unit: '인치' },
+		{ key: 'watts', label: '소비 전력', unit: 'W' },
+		{ key: 'cable', label: '케이블 길이', unit: 'cm' },
+		{ key: 'ports', label: '콘센트 구', unit: '구' }
+	];
+	const specFields = $derived(
+		SPEC_FIELDS.filter(({ key }) => {
+			// 0을 입력해도 입력란이 사라지지 않도록 카탈로그 기준으로 판단합니다.
+			const value = getCatalogEntry(item.catalogId)[key];
+			return value !== undefined && (key === 'width' || key === 'depth' || value > 0);
+		})
 	);
 </script>
 
 <section class="panel" aria-labelledby="item-heading">
 	<h2 id="item-heading">선택한 물건</h2>
-	<p class="measure specs">{specs}</p>
 
 	<div class="field">
 		<label for="item-name">이름</label>
@@ -73,6 +78,25 @@
 		/>
 	</div>
 
+	<fieldset>
+		<legend>규격</legend>
+		<div class="grid">
+			{#each specFields as field (field.key)}
+				<NumberField
+					label={field.label}
+					unit={field.unit}
+					min={SPEC_LIMITS[field.key].min}
+					max={SPEC_LIMITS[field.key].max}
+					value={item.entry[field.key] ?? 0}
+					oncommit={(value) => session.setSpec(item.id, field.key, value)}
+				/>
+			{/each}
+		</div>
+		{#if Object.keys(item.specs).length > 0}
+			<Button size="sm" onclick={() => session.resetSpecs(item.id)}>기본 규격으로</Button>
+		{/if}
+	</fieldset>
+
 	<div class="actions">
 		{#if !isWall}
 			<Button size="sm" onclick={() => session.rotate(item.id, -15)}
@@ -123,6 +147,27 @@
 		font-size: 0.875rem;
 		color: var(--ink);
 		background: var(--paper);
+	}
+
+	fieldset {
+		display: grid;
+		justify-items: start;
+		gap: 0.625rem;
+		min-width: 0;
+		margin: 0;
+		padding: 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius-field);
+	}
+
+	fieldset .grid {
+		width: 100%;
+	}
+
+	legend {
+		padding: 0 0.25rem;
+		font-size: 0.8125rem;
+		font-weight: 600;
 	}
 
 	.grid {
