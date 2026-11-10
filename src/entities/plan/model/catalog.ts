@@ -1,7 +1,8 @@
-import type { CatalogCategory, CatalogEntry, ItemData, SpecKey } from './types';
+import { MODEL_ENTRIES } from './catalog-models';
+import type { CatalogCategory, CatalogEntry, ItemData, SpecKey, WattsBasis } from './types';
 
 /** 치수와 전력은 흔한 제품을 기준으로 잡은 기본값입니다. 특정 제품의 사양이 아닙니다. */
-export const CATALOG: readonly CatalogEntry[] = [
+const GENERIC_ENTRIES: readonly CatalogEntry[] = [
 	{
 		id: 'desk-140',
 		name: '책상 140',
@@ -239,6 +240,9 @@ export const CATALOG: readonly CatalogEntry[] = [
 	}
 ];
 
+/** 크기별 기본 물건 다음에 실제 제품을 둡니다. */
+export const CATALOG: readonly CatalogEntry[] = [...GENERIC_ENTRIES, ...MODEL_ENTRIES];
+
 export const CATEGORY_LABELS: Record<CatalogCategory, string> = {
 	furniture: '가구',
 	display: '화면',
@@ -246,6 +250,51 @@ export const CATEGORY_LABELS: Record<CatalogCategory, string> = {
 	audio: '오디오',
 	power: '전원'
 };
+
+export const WATTS_BASIS_LABELS: Record<WattsBasis, string> = {
+	max: '제조사 표기 최대 소비 전력',
+	typical: '일반 사용 소비 전력 (판매처 표기)',
+	rated: '정격 소비 전력',
+	listed: '판매처 표기 소비 전력',
+	psu: '내장 전원부 정격',
+	adapter: '전원 어댑터 정격',
+	measured: '리뷰 실측값 (제조사 미표기)',
+	estimate: 'PC 구성에 따라 다른 추정값',
+	default: '제조사 미표기, 카탈로그 기본값'
+};
+
+/** 검색어와 비교하기 위해 공백과 대소문자를 없앱니다. */
+const normalize = (text: string) => text.toLowerCase().replace(/[\s·()-]/g, '');
+
+const BRAND_KOREAN: Record<string, string> = {
+	Samsung: '삼성',
+	LG: '엘지',
+	Sony: '소니',
+	Dell: '델',
+	Microsoft: '마이크로소프트',
+	Nintendo: '닌텐도',
+	Apple: '애플',
+	IKEA: '이케아',
+	Secretlab: '시크릿랩',
+	'Herman Miller': '허먼밀러',
+	Sonos: '소노스',
+	Denon: '데논'
+};
+
+export function matchesCatalogQuery(entry: CatalogEntry, query: string): boolean {
+	// 띄어 쓴 낱말이 모두 들어 있으면 찾은 것으로 봅니다. 예: 'ps5 pro'
+	const needles = query.split(/\s+/).map(normalize).filter(Boolean);
+	if (needles.length === 0) return true;
+	const haystack = [
+		entry.brand ?? '',
+		entry.brand ? (BRAND_KOREAN[entry.brand] ?? '') : '',
+		entry.name,
+		CATEGORY_LABELS[entry.category],
+		...(entry.keywords ?? [])
+	].join(' ');
+	const target = normalize(haystack);
+	return needles.every((needle) => target.includes(needle));
+}
 
 /** 사용자가 입력할 수 있는 규격의 범위입니다. */
 export const SPEC_LIMITS: Record<SpecKey, { min: number; max: number }> = {

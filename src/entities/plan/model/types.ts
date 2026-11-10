@@ -104,7 +104,16 @@ export interface CatalogEntry {
 	diagonalInch?: number;
 	/** true면 책상이나 장 위에 있어야 합니다. */
 	requiresSupport?: boolean;
+	/** 실제 제품이면 제조사 이름 */
+	brand?: string;
+	/** 검색할 때 함께 비교하는 별칭 */
+	keywords?: readonly string[];
+	/** 소비 전력 값의 기준. 없으면 카탈로그 기본값입니다. */
+	wattsBasis?: WattsBasis;
 }
+
+export type WattsBasis =
+	'max' | 'typical' | 'rated' | 'listed' | 'psu' | 'adapter' | 'measured' | 'estimate' | 'default';
 
 export type FindingSeverity = 'error' | 'warning' | 'ok';
 

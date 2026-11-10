@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button, Icon, NumberField } from '#shared/ui';
-	import { getCatalogEntry, SPEC_LIMITS, type SpecKey } from '#entities/plan';
+	import { getCatalogEntry, SPEC_LIMITS, WATTS_BASIS_LABELS, type SpecKey } from '#entities/plan';
 	import type { PlacedItem } from '../model/placed-item.svelte';
 	import type { EditorSession } from '../model/session.svelte';
 
@@ -15,6 +15,14 @@
 		{ key: 'cable', label: '케이블 길이', unit: 'cm' },
 		{ key: 'ports', label: '콘센트 구', unit: '구' }
 	];
+	const base = $derived(getCatalogEntry(item.catalogId));
+	const wattsHint = $derived(
+		item.specs.watts !== undefined
+			? '직접 입력한 값'
+			: base.wattsBasis
+				? WATTS_BASIS_LABELS[base.wattsBasis]
+				: '카탈로그 기본값'
+	);
 	const specFields = $derived(
 		SPEC_FIELDS.filter(({ key }) => {
 			// 0을 입력해도 입력란이 사라지지 않도록 카탈로그 기준으로 판단합니다.
@@ -26,6 +34,7 @@
 
 <section class="panel" aria-labelledby="item-heading">
 	<h2 id="item-heading">선택한 물건</h2>
+	{#if base.brand}<p class="brand measure">{base.brand} · {base.name}</p>{/if}
 
 	<div class="field">
 		<label for="item-name">이름</label>
@@ -84,6 +93,7 @@
 			{#each specFields as field (field.key)}
 				<NumberField
 					label={field.label}
+					hint={field.key === 'watts' ? wattsHint : undefined}
 					unit={field.unit}
 					min={SPEC_LIMITS[field.key].min}
 					max={SPEC_LIMITS[field.key].max}
@@ -147,6 +157,10 @@
 		font-size: 0.875rem;
 		color: var(--ink);
 		background: var(--paper);
+	}
+
+	.brand {
+		color: var(--ink-2);
 	}
 
 	fieldset {
