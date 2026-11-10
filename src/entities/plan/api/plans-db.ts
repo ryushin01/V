@@ -65,6 +65,24 @@ export async function saveCustomProduct(entry: CatalogEntry): Promise<void> {
 	registerCustomEntries([entry], true);
 }
 
+/** 여러 제품을 한 번에 저장합니다. 하나라도 실패하면 아무것도 저장하지 않습니다. */
+export async function saveCustomProducts(entries: readonly CatalogEntry[]): Promise<void> {
+	const database = await openDatabase();
+	try {
+		await new Promise<void>((resolve, reject) => {
+			const transaction = database.transaction(CUSTOM_STORE, 'readwrite');
+			const store = transaction.objectStore(CUSTOM_STORE);
+			for (const entry of entries) store.put(entry);
+			transaction.oncomplete = () => resolve();
+			transaction.onerror = () => reject(transaction.error);
+			transaction.onabort = () => reject(transaction.error);
+		});
+	} finally {
+		database.close();
+	}
+	registerCustomEntries([...entries], true);
+}
+
 export async function deleteCustomProduct(id: string): Promise<void> {
 	await run('readwrite', (store) => store.delete(id), CUSTOM_STORE);
 }
