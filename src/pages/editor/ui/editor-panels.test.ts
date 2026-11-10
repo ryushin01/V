@@ -82,6 +82,18 @@ describe('ItemForm', () => {
 		expect(screen.getByLabelText('소비 전력')).toBeInTheDocument();
 	});
 
+	it('추정 치수는 직접 고치면 안내를 거둡니다', async () => {
+		const session = empty();
+		session.addItem('leopold-fc980c');
+		render(ItemForm, { session, item: session.items[0] });
+		const width = screen.getByLabelText('가로');
+		expect(width).toHaveAccessibleDescription(/추정 치수/);
+		await userEvent.clear(width);
+		await userEvent.type(width, '38');
+		await userEvent.tab();
+		expect(screen.getByLabelText('가로')).not.toHaveAccessibleDescription(/추정 치수/);
+	});
+
 	it('해당 없는 규격은 보여 주지 않습니다', () => {
 		const session = empty();
 		session.addItem('chair');

@@ -41,8 +41,8 @@
 | Lian Li O11 Dynamic EVO 케이스         | 28.5×46.5              | 550      | 추정        |
 | NZXT H9 Flow 케이스                    | 29.0×49.5              | 550      | 추정        |
 | Fractal Design North 케이스            | 21.5×46.9              | 550      | 추정        |
-| IKEA UPPSPEL 게이밍 책상 180           | 180×80                 | -        | -           |
-| Secretlab MAGNUS Pro / Pro XL          | 150×70 / 177×80        | -        | -           |
+| IKEA UPPSPEL 게이밍 책상 180           | 180×80                 | 240      | 전원부      |
+| Secretlab MAGNUS Pro / Pro XL          | 150×70 / 177×80        | 200      | 추정        |
 | IKEA BESTÅ TV장 180                    | 180×42                 | -        | -           |
 | Herman Miller Aeron (B 사이즈)         | 68.6×69.8              | -        | -           |
 | Sonos Arc Ultra / Sub 4                | 117.8×11.1 / 40.2×15.8 | 40 / 120 | 기본값      |
