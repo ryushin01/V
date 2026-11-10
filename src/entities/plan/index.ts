@@ -4,8 +4,10 @@ export {
 	CATALOG,
 	CATEGORY_LABELS,
 	getCatalogEntry,
+	matchesCatalogQuery,
 	resolveEntry,
-	SPEC_LIMITS
+	SPEC_LIMITS,
+	WATTS_BASIS_LABELS
 } from './model/catalog';
 export { decodePlan, encodePlan } from './api/share-link';
 export { createEmptyPlan, createSamplePlan } from './model/factory';
@@ -39,6 +41,7 @@ export type {
 	RoomData,
 	SpecKey,
 	Underlay,
+	WattsBasis,
 	Wall
 } from './model/types';
 export { default as ItemGlyph } from './ui/ItemGlyph.svelte';

@@ -1,7 +1,8 @@
-import type { CatalogCategory, CatalogEntry, ItemData, SpecKey } from './types';
+import { MODEL_ENTRIES } from './catalog-models';
+import type { CatalogCategory, CatalogEntry, ItemData, SpecKey, WattsBasis } from './types';
 
 /** 치수와 전력은 흔한 제품을 기준으로 잡은 기본값입니다. 특정 제품의 사양이 아닙니다. */
-export const CATALOG: readonly CatalogEntry[] = [
+const GENERIC_ENTRIES: readonly CatalogEntry[] = [
 	{
 		id: 'desk-140',
 		name: '책상 140',
@@ -153,6 +154,18 @@ export const CATALOG: readonly CatalogEntry[] = [
 		requiresSupport: true
 	},
 	{
+		id: 'laptop-15',
+		name: '노트북 15인치',
+		category: 'computing',
+		kind: 'laptop',
+		width: 34,
+		depth: 24,
+		layer: 'surface',
+		watts: 65,
+		cable: 180,
+		requiresSupport: true
+	},
+	{
 		id: 'speaker',
 		name: '스피커',
 		category: 'audio',
@@ -239,13 +252,87 @@ export const CATALOG: readonly CatalogEntry[] = [
 	}
 ];
 
+/** 크기별 기본 물건 다음에 실제 제품을 둡니다. */
+export const CATALOG: readonly CatalogEntry[] = [...GENERIC_ENTRIES, ...MODEL_ENTRIES];
+
 export const CATEGORY_LABELS: Record<CatalogCategory, string> = {
 	furniture: '가구',
 	display: '화면',
 	computing: 'PC·게임기',
+	input: '키보드·마우스',
 	audio: '오디오',
+	personal: '휴대 기기·음향',
+	accessory: '조명·거치·소품',
 	power: '전원'
 };
+
+export const WATTS_BASIS_LABELS: Record<WattsBasis, string> = {
+	max: '제조사 표기 최대 소비 전력',
+	typical: '일반 사용 소비 전력 (판매처 표기)',
+	rated: '정격 소비 전력',
+	listed: '판매처 표기 소비 전력',
+	psu: '내장 전원부 정격',
+	adapter: '전원 어댑터 정격',
+	measured: '리뷰 실측값 (제조사 미표기)',
+	estimate: '추정값 (제조사 미표기, 실제 제품 확인 필요)',
+	default: '제조사 미표기, 카탈로그 기본값',
+	usb: 'USB 전원이라 콘센트를 쓰지 않음'
+};
+
+/** 검색어와 비교하기 위해 공백과 대소문자를 없앱니다. */
+const normalize = (text: string) => text.toLowerCase().replace(/[\s·()-]/g, '');
+
+const BRAND_KOREAN: Record<string, string> = {
+	Samsung: '삼성',
+	LG: '엘지',
+	Sony: '소니',
+	Dell: '델',
+	Microsoft: '마이크로소프트',
+	Nintendo: '닌텐도',
+	Apple: '애플',
+	IKEA: '이케아',
+	Secretlab: '시크릿랩',
+	'Herman Miller': '허먼밀러',
+	Sonos: '소노스',
+	Denon: '데논',
+	Antec: '안텍',
+	Logitech: '로지텍',
+	Razer: '레이저',
+	Leopold: '레오폴드',
+	Realforce: '리얼포스',
+	Creative: '크리에이티브',
+	BenQ: '벤큐',
+	Xiaomi: '샤오미',
+	Ergotron: '어고트론',
+	Kensington: '켄싱턴',
+	Bose: '보스',
+	Shure: '슈어',
+	Sennheiser: '젠하이저',
+	'Astell&Kern': '아스텔앤컨',
+	Cowon: '코원',
+	Moondrop: '수월우',
+	FiiO: '피오',
+	Nothing: '낫씽',
+	Lenovo: '레노버',
+	Hansung: '한성',
+	Bestpiece: '베스트피스',
+	Gigabyte: '기가바이트'
+};
+
+export function matchesCatalogQuery(entry: CatalogEntry, query: string): boolean {
+	// 띄어 쓴 낱말이 모두 들어 있으면 찾은 것으로 봅니다. 예: 'ps5 pro'
+	const needles = query.split(/\s+/).map(normalize).filter(Boolean);
+	if (needles.length === 0) return true;
+	const haystack = [
+		entry.brand ?? '',
+		entry.brand ? (BRAND_KOREAN[entry.brand] ?? '') : '',
+		entry.name,
+		CATEGORY_LABELS[entry.category],
+		...(entry.keywords ?? [])
+	].join(' ');
+	const target = normalize(haystack);
+	return needles.every((needle) => target.includes(needle));
+}
 
 /** 사용자가 입력할 수 있는 규격의 범위입니다. */
 export const SPEC_LIMITS: Record<SpecKey, { min: number; max: number }> = {

@@ -5,7 +5,16 @@ import globals from 'globals';
 import ts from 'typescript-eslint';
 
 export default ts.config(
-	{ ignores: ['.svelte-kit', 'build', 'storybook-static', 'playwright-report', 'test-results'] },
+	{
+		ignores: [
+			'.svelte-kit',
+			'.vercel',
+			'build',
+			'storybook-static',
+			'playwright-report',
+			'test-results'
+		]
+	},
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,

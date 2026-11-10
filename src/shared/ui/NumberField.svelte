@@ -7,11 +7,13 @@
 		step?: number;
 		unit?: string;
 		id?: string;
+		/** 입력란 아래에 늘 보이는 설명 */
+		hint?: string;
 		oncommit: (value: number) => void;
 	}
 
 	const uid = $props.id();
-	let { label, value, min, max, step = 1, unit = '', id = uid, oncommit }: Props = $props();
+	let { label, value, min, max, step = 1, unit = '', id = uid, hint, oncommit }: Props = $props();
 
 	// 외부 값이 바뀌면 다시 계산되고, 입력 중에는 덮어쓸 수 있는 파생 상태입니다.
 	let draft = $derived(String(Math.round(value * 100) / 100));
@@ -45,10 +47,13 @@
 			bind:value={() => draft, (next) => (draft = String(next ?? ''))}
 			onchange={commit}
 			aria-invalid={error ? 'true' : undefined}
-			aria-describedby={error ? `${id}-error` : undefined}
+			aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : '']
+				.filter(Boolean)
+				.join(' ') || undefined}
 		/>
 		{#if unit}<span class="unit" aria-hidden="true">{unit}</span>{/if}
 	</div>
+	{#if hint}<p id={`${id}-hint`} class="hint">{hint}</p>{/if}
 	{#if error}<p id={`${id}-error`} class="error">{error}</p>{/if}
 </div>
 
@@ -94,6 +99,12 @@
 		font-size: 0.75rem;
 		color: var(--steel);
 		pointer-events: none;
+	}
+
+	.hint {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--ink-2);
 	}
 
 	.error {

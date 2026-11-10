@@ -45,7 +45,7 @@
 		});
 	});
 
-	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, surface: 3 } as const;
+	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, mat: 3, surface: 4, mount: 5 } as const;
 	const orderedItems = $derived(
 		[...session.items].sort((a, b) => LAYER_ORDER[a.entry.layer] - LAYER_ORDER[b.entry.layer])
 	);
