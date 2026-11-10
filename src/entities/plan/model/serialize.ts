@@ -1,6 +1,6 @@
 import { createId } from '#shared/lib/id';
 import { findCatalogEntry, SPEC_LIMITS } from './catalog';
-import { CUSTOM_LIMITS, parseCustomEntry } from './custom';
+import { parseCustomEntry } from './custom';
 import { cutoutLimits, PLAN_LIMITS, ROOM_LIMITS, wallRange } from './room';
 import type {
 	CatalogEntry,
@@ -176,7 +176,8 @@ export function parsePlan(text: string): ParseResult {
 		return { ok: false, error: '문이나 창문의 위치가 벽을 벗어났습니다.' };
 	}
 	const rawCustom = raw.customEntries ?? [];
-	if (!Array.isArray(rawCustom) || rawCustom.length > CUSTOM_LIMITS.entries) {
+	// 서로 다른 내 제품은 배치 항목 수를 넘을 수 없으므로 같은 한도를 씁니다.
+	if (!Array.isArray(rawCustom) || rawCustom.length > PLAN_LIMITS.items) {
 		return { ok: false, error: '직접 등록한 제품 정보가 올바르지 않습니다.' };
 	}
 	const customEntries = rawCustom.map(parseCustomEntry);

@@ -288,7 +288,7 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 export const DEFAULT_SCREEN_INCH = 27;
 
 export const CUSTOM_KINDS = Object.keys(KIND_PRESETS) as ItemKind[];
-export const CUSTOM_LIMITS = { name: 40, brand: 30, entries: 100 } as const;
+export const CUSTOM_LIMITS = { name: 40, brand: 30 } as const;
 const ID_PATTERN = /^custom-[\w-]{1,64}$/;
 
 export interface CustomProductInput {
