@@ -103,6 +103,17 @@ describe('직접 등록 제품', () => {
 		expect(parsePlan(stringifyPlan(plan)).ok).toBe(false);
 	});
 
+	it('이 브라우저에 등록된 제품이라도 파일에 정의가 없으면 거절합니다', () => {
+		const entry = createCustomEntry({ ...input, id: 'custom-local-only' });
+		registerCustomEntries([entry]);
+		const plan = {
+			...createEmptyPlan(),
+			items: [{ id: 'i', catalogId: entry.id, label: '', x: 100, y: 100, rotation: 0, price: 0 }]
+		};
+		expect(parsePlan(stringifyPlan(plan)).ok).toBe(false);
+		expect(parsePlan(stringifyPlan({ ...plan, customEntries: [entry] })).ok).toBe(true);
+	});
+
 	it('이미 있는 정의는 배치도의 옛 사본으로 덮지 않습니다', () => {
 		const current = createCustomEntry({ ...input, id: 'custom-keep', width: 160 });
 		registerCustomEntries([current], true);

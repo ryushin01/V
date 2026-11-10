@@ -112,7 +112,9 @@ function parseSpecs(raw: unknown): ItemSpecs | undefined | null {
 
 function parseItem(raw: unknown, customIds: ReadonlySet<string>): ItemData | null {
 	if (!isRecord(raw) || typeof raw.catalogId !== 'string') return null;
-	if (!findCatalogEntry(raw.catalogId) && !customIds.has(raw.catalogId)) return null;
+	// 이 브라우저에 등록된 내 제품이라도 파일에 정의가 없으면 다른 곳에서 열 수 없으므로 거절합니다.
+	const known = findCatalogEntry(raw.catalogId);
+	if (!customIds.has(raw.catalogId) && (!known || known.custom)) return null;
 	const { x, y, rotation, price, label } = raw;
 	if (!finite(x) || !finite(y) || !finite(rotation)) return null;
 	if (Math.abs(x) > COORDINATE_LIMIT || Math.abs(y) > COORDINATE_LIMIT) return null;
