@@ -23,7 +23,7 @@
 	);
 	const connections = $derived(xray ? analyzePlan(plan.room, plan.items).connections : []);
 
-	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, surface: 3 } as const;
+	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, mat: 3, surface: 4, mount: 5 } as const;
 	const items = $derived(
 		plan.items
 			.map((item) => ({ item, entry: resolveEntry(item) }))

@@ -259,7 +259,10 @@ export const CATEGORY_LABELS: Record<CatalogCategory, string> = {
 	furniture: '가구',
 	display: '화면',
 	computing: 'PC·게임기',
+	input: '키보드·마우스',
 	audio: '오디오',
+	personal: '휴대 기기·음향',
+	accessory: '조명·거치·소품',
 	power: '전원'
 };
 
@@ -272,7 +275,8 @@ export const WATTS_BASIS_LABELS: Record<WattsBasis, string> = {
 	adapter: '전원 어댑터 정격',
 	measured: '리뷰 실측값 (제조사 미표기)',
 	estimate: 'PC 구성에 따라 다른 추정값',
-	default: '제조사 미표기, 카탈로그 기본값'
+	default: '제조사 미표기, 카탈로그 기본값',
+	usb: 'USB 전원이라 콘센트를 쓰지 않음'
 };
 
 /** 검색어와 비교하기 위해 공백과 대소문자를 없앱니다. */
@@ -291,7 +295,28 @@ const BRAND_KOREAN: Record<string, string> = {
 	'Herman Miller': '허먼밀러',
 	Sonos: '소노스',
 	Denon: '데논',
-	Antec: '안텍'
+	Antec: '안텍',
+	Logitech: '로지텍',
+	Razer: '레이저',
+	Leopold: '레오폴드',
+	Realforce: '리얼포스',
+	Creative: '크리에이티브',
+	BenQ: '벤큐',
+	Xiaomi: '샤오미',
+	Ergotron: '어고트론',
+	Kensington: '켄싱턴',
+	Bose: '보스',
+	Shure: '슈어',
+	Sennheiser: '젠하이저',
+	'Astell&Kern': '아스텔앤컨',
+	Cowon: '코원',
+	Moondrop: '수월우',
+	FiiO: '피오',
+	Nothing: '낫씽',
+	Lenovo: '레노버',
+	Hansung: '한성',
+	Bestpiece: '베스트피스',
+	Gigabyte: '기가바이트'
 };
 
 export function matchesCatalogQuery(entry: CatalogEntry, query: string): boolean {

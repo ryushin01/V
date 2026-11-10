@@ -56,6 +56,17 @@
 | Apple Studio Display 27인치            | 62.3×16.8              | 21       | 일반 사용   |
 | Antec Torque 오픈 프레임 케이스        | 28.5×62.1              | 550      | 추정        |
 
+## 추가 모델 (2026-11-10)
+
+사용자 보유·구매 후보 목록과 [futureterior](https://futureterior.com/) 커뮤니티를 참고해 추가했습니다. futureterior는 게시판 9개의 게시글 1,494개를 확인했고, 사진에 태그된 쇼핑몰 제품 76종의 상세 페이지 중 본문에 치수가 적힌 것은 8종뿐이었습니다.
+
+- **추정 치수:** 편집 화면과 물건 목록에 '추정'으로 표시합니다. 제조사·판매처 치수를 찾지 못해 같은 종류의 비슷한 제품을 기준으로 잡은 값입니다. 실제 제품을 재서 규격 입력으로 고쳐 주세요.
+- **확인한 치수:** G PRO X SUPERLIGHT 2 6.35×12.5, DeathAdder V2 Pro 6.2×12.7, Magic Mouse 5.71×11.35, Magic Keyboard 27.9×11.5, Kensington Pro Fit Ergo 버티컬 트랙볼 8.6×13.6, Wooting 80HE 34.6×14.2, Razer Strider Large 45×40, Katana V2 사운드바 60×9.5와 서브우퍼 15×36.7(어댑터 72W), Dell UP3216Q 75.0×21.4(최대 130W), BenQ ScreenBar Plus 45×9(USB 5W)
+- **USB 전원:** 모니터 조명, DAC 등 USB로 전원을 받는 기기는 콘센트 점검에서 뺍니다.
+- **대표 모델로 정한 항목:** SONY 라디오 → ICF-506, 마그네틱 거치대 → ESR HaloLock, 아스텔앤컨 신제품 → A&ultima SP3000, 소니 신제품 → NW-WM1ZM2, 피닉스 키보드 → 텐키리스(My-First-Gear 상품 정보 기준), 화이트 최고 사양 PC → Lian Li O11 Vision 케이스 구성, 로지텍 G 최상위 파워플레이 호환 → G PRO X SUPERLIGHT 2, 칼디짓 독 → SOHO
+- **넣지 않은 것:** 이어폰 케이블과 이어팁(바닥 배치에서 면적이 의미 없음), 이미 있는 모델(Odyssey OLED G9, PS5 Pro, Aeron B, Antec Torque, MacBook Pro 14·16, MacBook Air 13)
+- **출처:** [Logitech G PRO X SUPERLIGHT 2(mousespecs)](https://mousespecs.org/logitech-g-pro-x-superlight-2), [DeathAdder V2 Pro(TechPowerUp)](https://techpowerup.com/review/razer-deathadder-v2-pro), [Magic Mouse(Apple)](https://support.apple.com/en-gb/111885), [Magic Keyboard(Dimensions)](https://dimensions.com/element/apple-magic-keyboard), [Kensington 트랙볼 리뷰](https://www.trackballmouse.org/?p=3154), [Wooting 80HE(Digital Trends)](https://digitaltrends.com/computing/wooting-80he-review), [Razer Strider(Review Geek)](https://www.reviewgeek.com/94785/razer-strider-mousepad-review-large-and-subdued/), [Katana V2(PCPer)](https://pcper.com/2022/09/creative-sound-blaster-katana-v2-gaming-soundbar-review/), [Dell UP3216Q 사용 설명서](https://dl.dell.com/manuals/all-products/esuprt_electronics/esuprt_display_projector/esuprt_display/dell-up3216q-monitor_User's%20Guide_en-us.pdf), [DisplayDB UP3216Q](https://displaydb.com/monitor/dell-ultrasharp-up3216q), [BenQ ScreenBar Plus](https://www.benq.eu/en-uk/lighting/monitor-light/screenbar-plus/spec.html), [IKEA UPPSPEL 설명서](https://www.ikea.com/us/en/manuals/uppspel-sit-stand-underframe-for-table-top-black__AA-2301012-3-100.pdf)
+
 ## 일러스트
 
 실제 모델은 `src/entities/plan/ui/model-glyphs.ts`에서 위에서 본 모습을 따로 그립니다. 곡면 화면의 곡률(G9 1000R, 45인치 800R, AW3423DWF 1800R), 스탠드와 받침 모양, 통풍구, 패널 분할처럼 위에서 알아볼 수 있는 특징을 선으로 옮겼고, 제조사 로고는 그리지 않습니다. 사용자가 치수를 바꿔도 비율대로 늘어납니다.

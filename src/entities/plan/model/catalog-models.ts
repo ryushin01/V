@@ -45,6 +45,109 @@ const RECEIVER: Base = {
 	requiresSupport: true
 };
 
+const KEYBOARD: Base = {
+	category: 'input',
+	kind: 'keyboard',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const MOUSE: Base = {
+	category: 'input',
+	kind: 'mouse',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const MOUSEPAD: Base = {
+	category: 'input',
+	kind: 'mousepad',
+	layer: 'mat',
+	cable: 0,
+	requiresSupport: true
+};
+const PALMREST: Base = {
+	category: 'input',
+	kind: 'palmrest',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const LIGHTBAR: Base = {
+	category: 'accessory',
+	kind: 'lightbar',
+	layer: 'mount',
+	cable: 0,
+	requiresSupport: true
+};
+const ARM: Base = {
+	category: 'accessory',
+	kind: 'arm',
+	layer: 'mount',
+	cable: 0,
+	requiresSupport: true
+};
+const FOOTREST: Base = { category: 'furniture', kind: 'footrest', layer: 'floor', cable: 0 };
+const HEADPHONES: Base = {
+	category: 'personal',
+	kind: 'headphones',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const EARPHONES: Base = {
+	category: 'personal',
+	kind: 'earphones',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const AUDIO_DEVICE: Base = {
+	category: 'personal',
+	kind: 'audio-device',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const DESK_AUDIO: Base = {
+	category: 'audio',
+	kind: 'audio-device',
+	layer: 'surface',
+	cable: 150,
+	requiresSupport: true
+};
+const HANDHELD: Base = {
+	category: 'personal',
+	kind: 'handheld',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const HOLDER: Base = {
+	category: 'accessory',
+	kind: 'holder',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const POWERED_HOLDER: Base = { ...HOLDER, cable: 150 };
+const HUB: Base = {
+	category: 'accessory',
+	kind: 'hub',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const POWERED_HUB: Base = { ...HUB, cable: 150 };
+const DECOR: Base = {
+	category: 'accessory',
+	kind: 'decor',
+	layer: 'surface',
+	cable: 0,
+	requiresSupport: true
+};
+const EST = { dimsBasis: 'estimate' } as const;
+
 function model(
 	base: Base,
 	id: string,
@@ -174,9 +277,23 @@ const ENTRIES: CatalogEntry[] = [
 	),
 	model(PC, 'nzxt-h9-flow', 'NZXT', 'H9 Flow 케이스', 29.0, 49.5, 550, 'estimate'),
 	model(PC, 'fractal-north', 'Fractal Design', 'North 케이스', 21.5, 46.9, 550, 'estimate'),
-	model(DESK, 'ikea-uppspel-180', 'IKEA', 'UPPSPEL 게이밍 책상 180', 180, 80, 0, undefined),
-	model(DESK, 'secretlab-magnus-pro', 'Secretlab', 'MAGNUS Pro 책상', 150, 70, 0, undefined),
-	model(DESK, 'secretlab-magnus-pro-xl', 'Secretlab', 'MAGNUS Pro XL 책상', 177, 80, 0, undefined),
+	model(DESK, 'ikea-uppspel-180', 'IKEA', 'UPPSPEL 게이밍 책상 180', 180, 80, 240, 'psu', {
+		cable: 180
+	}),
+	model(DESK, 'secretlab-magnus-pro', 'Secretlab', 'MAGNUS Pro 책상', 150, 70, 200, 'estimate', {
+		cable: 180
+	}),
+	model(
+		DESK,
+		'secretlab-magnus-pro-xl',
+		'Secretlab',
+		'MAGNUS Pro XL 책상',
+		177,
+		80,
+		200,
+		'estimate',
+		{ cable: 180 }
+	),
 	model(STAND, 'ikea-besta-180', 'IKEA', 'BESTÅ TV장 180', 180, 42, 0, undefined),
 	model(
 		CHAIR,
@@ -247,7 +364,582 @@ const ENTRIES: CatalogEntry[] = [
 	),
 	model(PC, 'antec-torque', 'Antec', 'Torque 오픈 프레임 케이스', 28.5, 62.1, 550, 'estimate', {
 		keywords: ['토크']
-	})
+	}),
+	// 사용자 요청 목록 (2026-11-10). 치수를 찾지 못한 제품은 dimsBasis: 'estimate'입니다.
+	model(
+		DESK,
+		'bestpiece-mattz-1800',
+		'Bestpiece',
+		'모션데스크 매츠 1800 (블랙 스왈로우)',
+		180,
+		80,
+		200,
+		'estimate',
+		{ ...EST, cable: 180, keywords: ['Mattz', '매츠'] }
+	),
+	model(FOOTREST, 'sizeof-footrest', 'SIZE OF', '사이즈오브 발받침대', 45, 35, 0, undefined, {
+		...EST,
+		keywords: ['발받침']
+	}),
+	model(FOOTREST, 'pullizio-footrest', 'Pullizio', '풀리지오 풋레스트', 45, 33, 0, undefined, {
+		...EST,
+		keywords: ['발받침', '풋레스트']
+	}),
+	model(MONITOR, 'dell-up3216q', 'Dell', 'UltraSharp 32 4K (UP3216Q)', 75.0, 21.4, 130, 'max', {
+		diagonalInch: 31.5
+	}),
+	model(
+		PC,
+		'white-highend-pc',
+		'Lian Li',
+		'화이트 하이엔드 PC (O11 Vision 케이스)',
+		30.4,
+		46.5,
+		850,
+		'estimate',
+		{ ...EST, keywords: ['화이트', '조립 PC', 'AERO'] }
+	),
+	model(ARM, 'ergotron-hx', 'Ergotron', 'HX 데스크 모니터암', 46, 15, 0, undefined, {
+		...EST,
+		keywords: ['모니터암']
+	}),
+	model(ARM, 'dell-msa20', 'Dell', '싱글 모니터암 (MSA20)', 40, 12, 0, undefined, {
+		...EST,
+		keywords: ['모니터암']
+	}),
+	model(LIGHTBAR, 'benq-screenbar-plus', 'BenQ', 'ScreenBar Plus 모니터 조명', 45, 9, 0, 'usb', {
+		keywords: ['스크린바']
+	}),
+	model(
+		LIGHTBAR,
+		'xiaomi-mijia-light-bar',
+		'Xiaomi',
+		'미지아 모니터 조명 (27인치용)',
+		44.8,
+		9,
+		0,
+		'usb',
+		{ ...EST, keywords: ['미지아'] }
+	),
+	model(LIGHTBAR, 'luxy-mx1', 'Luxy', '럭시 MX1 노트북 모니터 조명', 30, 4, 0, 'usb', EST),
+	model(
+		KEYBOARD,
+		'leopold-fc980c',
+		'Leopold',
+		'FC980C 무접점 (한글 블랙)',
+		38.2,
+		13.6,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		KEYBOARD,
+		'phoenix-keyboard',
+		'Phoenix',
+		'피닉스 텐키리스 키보드',
+		36.0,
+		13.6,
+		0,
+		undefined,
+		EST
+	),
+	model(KEYBOARD, 'apple-magic-keyboard', 'Apple', 'Magic Keyboard', 27.9, 11.5, 0, undefined, {
+		keywords: ['매직 키보드']
+	}),
+	model(
+		KEYBOARD,
+		'hhkb-hybrid-type-s',
+		'PFU',
+		'HHKB Professional HYBRID Type-S (스노우)',
+		29.4,
+		11.0,
+		0,
+		undefined,
+		{ ...EST, keywords: ['해피해킹'] }
+	),
+	model(KEYBOARD, 'hansung-gk868b', 'Hansung', 'GK868B TICO 무접점', 36.0, 13.5, 0, undefined, EST),
+	model(
+		KEYBOARD,
+		'leopold-fc660mbt',
+		'Leopold',
+		'FC660MBT PD 화이트 (저소음 적축)',
+		32.5,
+		11.0,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		KEYBOARD,
+		'realforce-r3tl',
+		'Realforce',
+		'R3TL BT 저소음 45g',
+		36.9,
+		14.2,
+		0,
+		undefined,
+		EST
+	),
+	model(KEYBOARD, 'vgn-vxe75', 'VGN', 'VXE75 (실버, 아니아축)', 32.3, 13.6, 0, undefined, EST),
+	model(KEYBOARD, 'wooting-80he', 'Wooting', '80HE 래피드 트리거', 34.6, 14.2, 0, undefined, {
+		keywords: ['우팅', '래피드 트리거']
+	}),
+	model(
+		KEYBOARD,
+		'glorious-gmmk3-pro-he',
+		'Glorious',
+		'GMMK 3 PRO HE 75%',
+		33.2,
+		14.3,
+		0,
+		undefined,
+		{ ...EST, keywords: ['래피드 트리거'] }
+	),
+	model(
+		KEYBOARD,
+		'asus-rog-falchion-ace-hfx',
+		'ASUS',
+		'ROG Falchion Ace HFX',
+		31.3,
+		10.5,
+		0,
+		undefined,
+		{ ...EST, keywords: ['래피드 트리거', '팔시온'] }
+	),
+	model(
+		KEYBOARD,
+		'razer-huntsman-v3-pro-mini',
+		'Razer',
+		'Huntsman V3 Pro Mini',
+		29.4,
+		10.3,
+		0,
+		undefined,
+		{ ...EST, keywords: ['헌츠맨', '래피드 트리거'] }
+	),
+	model(
+		PALMREST,
+		'joseph-palm-rest-fc980c',
+		'죠셉공방',
+		'키보드 팜레스트 파덕 원목 (FC980C용)',
+		38,
+		9,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		PALMREST,
+		'deltahub-carpio-g2',
+		'Deltahub',
+		'카르피오 G2.0 마우스 팜레스트 (스몰)',
+		9,
+		7.5,
+		0,
+		undefined,
+		EST
+	),
+	model(PALMREST, 'zerosun-mouse-palm-rest', '제로썬', '마우스 팜레스트', 8, 7, 0, undefined, EST),
+	model(
+		MOUSE,
+		'logitech-g-pro-x-superlight-2',
+		'Logitech',
+		'G PRO X SUPERLIGHT 2',
+		6.35,
+		12.5,
+		0,
+		undefined,
+		{ keywords: ['지슈라', '파워플레이'] }
+	),
+	model(MOUSE, 'logitech-mx-master-3s', 'Logitech', 'MX Master 3S', 8.4, 12.5, 0, undefined, EST),
+	model(MOUSE, 'apple-magic-mouse', 'Apple', 'Magic Mouse', 5.71, 11.35, 0, undefined, {
+		keywords: ['매직 마우스']
+	}),
+	model(MOUSE, 'logitech-lift', 'Logitech', 'Lift 버티컬 마우스', 7.1, 10.8, 0, undefined, {
+		...EST,
+		keywords: ['리프트']
+	}),
+	model(MOUSE, 'razer-deathadder-v2-pro', 'Razer', 'DeathAdder V2 Pro', 6.2, 12.7, 0, undefined, {
+		keywords: ['데스에더']
+	}),
+	model(
+		MOUSE,
+		'kensington-pro-fit-ergo-vertical',
+		'Kensington',
+		'Pro Fit Ergo 버티컬 무선 트랙볼',
+		8.6,
+		13.6,
+		0,
+		undefined,
+		{ keywords: ['트랙볼'] }
+	),
+	model(HOLDER, 'razer-mouse-dock-chroma', 'Razer', '마우스 충전독 크로마', 8, 8, 0, 'usb', EST),
+	model(
+		MOUSEPAD,
+		'logitech-g-powerplay',
+		'Logitech',
+		'G POWERPLAY 무선 충전 패드',
+		34.4,
+		32.1,
+		0,
+		'usb',
+		EST
+	),
+	model(MOUSEPAD, 'razer-strider-l', 'Razer', 'Strider 마우스패드 (Large)', 45, 40, 0, undefined),
+	model(MOUSEPAD, 'lgg-venus-xl', 'LGG', 'Venus 마우스패드 (XL)', 49, 42, 0, undefined, EST),
+	model(
+		MOUSEPAD,
+		'lgg-venus-pro-xl',
+		'LGG',
+		'Venus Pro 마우스패드 (XL)',
+		49,
+		42,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		MOUSEPAD,
+		'artisan-fx-zero-s',
+		'Artisan',
+		'FX 제로 마우스패드 (S)',
+		24,
+		21,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		MOUSEPAD,
+		'artisan-fx-hien-m',
+		'Artisan',
+		'FX 히엔 마우스패드 (M)',
+		42,
+		24,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		MOUSEPAD,
+		'pulsar-paracontrol-v2-xxl',
+		'Pulsar',
+		'ParaControl V2 장패드 (XXL)',
+		90,
+		40,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		SOUNDBAR,
+		'creative-katana-v2',
+		'Creative',
+		'Sound Blaster Katana V2 사운드바',
+		60,
+		9.5,
+		72,
+		'adapter',
+		{ keywords: ['카타나'] }
+	),
+	model(
+		SUBWOOFER,
+		'creative-katana-v2-sub',
+		'Creative',
+		'Sound Blaster Katana V2 서브우퍼',
+		15,
+		36.7,
+		0,
+		undefined,
+		{ keywords: ['카타나'] }
+	),
+	model(
+		DESK_AUDIO,
+		'jds-labs-element-iii',
+		'JDS Labs',
+		'Element III 앰프·DAC (레드 링)',
+		22,
+		18,
+		10,
+		'estimate',
+		EST
+	),
+	model(
+		AUDIO_DEVICE,
+		'creative-soundblasterx-g1',
+		'Creative',
+		'Sound BlasterX G1 사운드카드',
+		6.4,
+		3.0,
+		0,
+		'usb',
+		EST
+	),
+	model(
+		AUDIO_DEVICE,
+		'ifi-xdsd-gryphon',
+		'iFi audio',
+		'xDSD Gryphon 포터블 DAC',
+		7.5,
+		12.5,
+		0,
+		'usb',
+		EST
+	),
+	model(AUDIO_DEVICE, 'astell-kern-hc3', 'Astell&Kern', 'AK HC3 듀얼 DAC', 2.0, 5.0, 0, 'usb', EST),
+	model(AUDIO_DEVICE, 'qudelix-5k', 'Qudelix', '5K 블루투스 리시버 DAC', 2.5, 6.0, 0, 'usb', EST),
+	model(
+		AUDIO_DEVICE,
+		'astell-kern-hb1',
+		'Astell&Kern',
+		'AK HB1 블루투스 DAC/AMP',
+		3.6,
+		7.0,
+		0,
+		'usb',
+		EST
+	),
+	model(AUDIO_DEVICE, 'astell-kern-ak120', 'Astell&Kern', 'AK120 DAP', 5.9, 10.7, 0, undefined, {
+		...EST,
+		keywords: ['DAP']
+	}),
+	model(
+		AUDIO_DEVICE,
+		'cowon-plenue-v',
+		'Cowon',
+		'플레뉴 V 레드 (PV-64G)',
+		5.8,
+		10.1,
+		0,
+		undefined,
+		{ ...EST, keywords: ['DAP'] }
+	),
+	model(
+		AUDIO_DEVICE,
+		'astell-kern-sp3000',
+		'Astell&Kern',
+		'A&ultima SP3000 DAP',
+		7.6,
+		13.9,
+		0,
+		undefined,
+		{ ...EST, keywords: ['DAP', '신제품'] }
+	),
+	model(AUDIO_DEVICE, 'sony-nw-wm1zm2', 'Sony', '워크맨 NW-WM1ZM2', 7.3, 12.3, 0, undefined, {
+		...EST,
+		keywords: ['DAP', '신제품']
+	}),
+	model(AUDIO_DEVICE, 'sony-icf-506', 'Sony', '포터블 라디오 ICF-506', 25, 9, 5, 'estimate', {
+		...EST,
+		keywords: ['라디오']
+	}),
+	model(HEADPHONES, 'sony-mdr-1a', 'Sony', 'MDR-1A 헤드폰', 17, 22, 0, undefined, EST),
+	model(HEADPHONES, 'bose-qc45', 'Bose', 'QuietComfort 45 헤드폰', 16, 19, 0, undefined, EST),
+	model(
+		HEADPHONES,
+		'gigabyte-aorus-h1',
+		'Gigabyte',
+		'AORUS H1 RGB FUSION 헤드셋',
+		18,
+		21,
+		0,
+		undefined,
+		EST
+	),
+	model(EARPHONES, 'shure-se846', 'Shure', 'SE846 이어폰', 6, 4, 0, undefined, EST),
+	model(
+		EARPHONES,
+		'astell-kern-zero1',
+		'Astell&Kern',
+		'AK ZERO1 블랙 에디션',
+		6,
+		4,
+		0,
+		undefined,
+		EST
+	),
+	model(EARPHONES, 'moondrop-starfield', 'Moondrop', '스타필드 이어폰', 6, 4, 0, undefined, EST),
+	model(
+		EARPHONES,
+		'moondrop-starfield-2',
+		'Moondrop',
+		'스타필드 2 이어폰',
+		6,
+		4,
+		0,
+		undefined,
+		EST
+	),
+	model(EARPHONES, 'fiio-ff5', 'FiiO', 'FF5 이어버드', 6, 4, 0, undefined, EST),
+	model(EARPHONES, '7hz-salnotes-zero', '7Hz', 'Salnotes Zero 이어폰', 6, 4, 0, undefined, EST),
+	model(
+		EARPHONES,
+		'7hz-crinacle-zero-2',
+		'7Hz',
+		'x Crinacle Zero 2 이어폰',
+		6,
+		4,
+		0,
+		undefined,
+		EST
+	),
+	model(EARPHONES, 'bang-olufsen-a8', 'Bang & Olufsen', 'A8 이어폰', 7, 5, 0, undefined, EST),
+	model(EARPHONES, 'nothing-ear-2', 'Nothing', 'Ear (2) (케이스)', 5.6, 5.6, 0, undefined, EST),
+	model(
+		EARPHONES,
+		'nothing-ear-stick',
+		'Nothing',
+		'Ear (stick) 화이트 (케이스)',
+		8.7,
+		2.9,
+		0,
+		undefined,
+		EST
+	),
+	model(EARPHONES, 'sennheiser-mx375', 'Sennheiser', 'MX375 이어버드', 6, 4, 0, undefined, EST),
+	model(EARPHONES, 'final-e1000', 'final', 'E1000 이어폰', 6, 4, 0, undefined, EST),
+	model(EARPHONES, 'apple-airpods-pro', 'Apple', 'AirPods Pro (케이스)', 6.1, 4.5, 0, undefined, {
+		...EST,
+		keywords: ['에어팟']
+	}),
+	model(EARPHONES, 'dunu-alpha-3', 'DUNU', 'Alpha 3 이어버드', 6, 4, 0, undefined, EST),
+	model(EARPHONES, 'akg-n5005', 'AKG', 'N5005 이어폰', 6, 4, 0, undefined, EST),
+	model(EARPHONES, 'musehifi-the-east-6', 'MuseHiFi', 'The East 6 이어폰', 6, 4, 0, undefined, EST),
+	model(
+		EARPHONES,
+		'tangzu-waner-studio',
+		'TANGZU',
+		"Wan'er Studio 이어폰",
+		6,
+		4,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		EARPHONES,
+		'creative-aurvana-air',
+		'Creative',
+		'Aurvana Air (케이스)',
+		6.5,
+		4.8,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		DOCK,
+		'nintendo-switch-oled',
+		'Nintendo',
+		'Nintendo Switch OLED (독에 꽂은 상태)',
+		24.2,
+		5.4,
+		39,
+		'estimate',
+		{ ...EST, keywords: ['스위치'] }
+	),
+	model(
+		LAPTOP,
+		'samsung-notebook-odyssey',
+		'Samsung',
+		'노트북 오디세이 15.6인치',
+		35.9,
+		23.9,
+		180,
+		'estimate',
+		{ ...EST, keywords: ['노트북'] }
+	),
+	model(
+		HOLDER,
+		'twelve-south-bookarc',
+		'Twelve South',
+		'BookArc 노트북 거치대 (스페이스 그레이)',
+		9,
+		11,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		HANDHELD,
+		'lenovo-legion-y700',
+		'Lenovo',
+		'LEGION Y700 태블릿',
+		20.5,
+		12.9,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		HANDHELD,
+		'samsung-galaxy-tab-s7-fe',
+		'Samsung',
+		'갤럭시 탭 S7 FE',
+		28.5,
+		18.5,
+		0,
+		undefined,
+		EST
+	),
+	model(HANDHELD, 'samsung-galaxy-s23', 'Samsung', '갤럭시 S23', 7.1, 14.6, 0, undefined, EST),
+	model(HOLDER, 'esr-halolock-stand', 'ESR', 'HaloLock 마그네틱 거치대', 7, 10, 0, undefined, {
+		...EST,
+		keywords: ['마그네틱', '거치대']
+	}),
+	model(
+		POWERED_HOLDER,
+		'requem-5in1-wireless-charger',
+		'리큐엠',
+		'5in1 무선 충전기',
+		18,
+		10,
+		30,
+		'estimate',
+		{ ...EST, keywords: ['무선 충전'] }
+	),
+	model(
+		POWERED_HUB,
+		'nextu-8122sp8k60',
+		'NEXT',
+		'HDMI 양방향 선택 분배기 8K (8122SP8K60)',
+		9.5,
+		6,
+		10,
+		'estimate',
+		{ ...EST, keywords: ['넥스트유', '셀렉터'] }
+	),
+	model(HUB, 'caldigit-soho-dock', 'CalDigit', 'SOHO 독', 11, 4.7, 0, undefined, {
+		...EST,
+		keywords: ['칼디짓']
+	}),
+	model(HUB, 'satechi-8in1-hub', 'Satechi', '8in1 맥북 프로 멀티 허브', 11.5, 3.5, 0, undefined, {
+		...EST,
+		keywords: ['사테치']
+	}),
+	model(
+		DECOR,
+		'hoverpen-2-interstellar',
+		'Hoverpen',
+		'호버펜 2.0 인터스텔라 (스페이스 블랙)',
+		15,
+		1.4,
+		0,
+		undefined,
+		EST
+	),
+	model(
+		DECOR,
+		'genesis-g80-diecast-1-18',
+		'Genesis',
+		'G80 1:18 다이캐스트',
+		27.8,
+		10.7,
+		0,
+		undefined,
+		{ ...EST, keywords: ['제네시스', '다이캐스트'] }
+	)
 ];
 
 /** 모델별 일러스트 (entities/plan/ui/model-glyphs.ts) */
@@ -286,7 +978,93 @@ const GLYPHS: Record<string, string> = {
 	'apple-macbook-pro-16': 'macbook',
 	'apple-imac-24': 'imac-24',
 	'apple-studio-display': 'studio-display',
-	'antec-torque': 'torque'
+	'antec-torque': 'torque',
+	'bestpiece-mattz-1800': 'mattz',
+	'sizeof-footrest': 'footrest',
+	'pullizio-footrest': 'footrest-wave',
+	'dell-up3216q': 'dell-ultrasharp',
+	'white-highend-pc': 'o11-evo',
+	'ergotron-hx': 'monitor-arm',
+	'dell-msa20': 'monitor-arm',
+	'benq-screenbar-plus': 'light-bar',
+	'xiaomi-mijia-light-bar': 'light-bar',
+	'luxy-mx1': 'light-bar',
+	'leopold-fc980c': 'kb-96',
+	'phoenix-keyboard': 'kb-tkl',
+	'apple-magic-keyboard': 'kb-magic',
+	'hhkb-hybrid-type-s': 'kb-hhkb',
+	'hansung-gk868b': 'kb-tkl',
+	'leopold-fc660mbt': 'kb-65',
+	'realforce-r3tl': 'kb-tkl',
+	'vgn-vxe75': 'kb-75',
+	'wooting-80he': 'kb-tkl',
+	'glorious-gmmk3-pro-he': 'kb-75',
+	'asus-rog-falchion-ace-hfx': 'kb-65',
+	'razer-huntsman-v3-pro-mini': 'kb-60',
+	'joseph-palm-rest-fc980c': 'palm-rest',
+	'deltahub-carpio-g2': 'mouse-palm',
+	'zerosun-mouse-palm-rest': 'mouse-palm',
+	'logitech-g-pro-x-superlight-2': 'mouse-symmetric',
+	'logitech-mx-master-3s': 'mouse-ergo',
+	'apple-magic-mouse': 'mouse-magic',
+	'logitech-lift': 'mouse-vertical',
+	'razer-deathadder-v2-pro': 'mouse-ergo',
+	'kensington-pro-fit-ergo-vertical': 'trackball',
+	'razer-mouse-dock-chroma': 'mouse-dock',
+	'logitech-g-powerplay': 'powerplay',
+	'razer-strider-l': 'mousepad',
+	'lgg-venus-xl': 'mousepad',
+	'lgg-venus-pro-xl': 'mousepad',
+	'artisan-fx-zero-s': 'mousepad',
+	'artisan-fx-hien-m': 'mousepad',
+	'pulsar-paracontrol-v2-xxl': 'mousepad',
+	'creative-katana-v2': 'katana',
+	'creative-katana-v2-sub': 'katana-sub',
+	'jds-labs-element-iii': 'amp-knob',
+	'creative-soundblasterx-g1': 'dongle',
+	'ifi-xdsd-gryphon': 'dac-portable',
+	'astell-kern-hc3': 'dongle',
+	'qudelix-5k': 'dongle',
+	'astell-kern-hb1': 'dongle',
+	'astell-kern-ak120': 'dap',
+	'cowon-plenue-v': 'dap',
+	'astell-kern-sp3000': 'dap',
+	'sony-nw-wm1zm2': 'dap',
+	'sony-icf-506': 'radio',
+	'sony-mdr-1a': 'headphones',
+	'bose-qc45': 'headphones',
+	'gigabyte-aorus-h1': 'headphones',
+	'shure-se846': 'iem',
+	'astell-kern-zero1': 'iem',
+	'moondrop-starfield': 'iem',
+	'moondrop-starfield-2': 'iem',
+	'fiio-ff5': 'earbud-round',
+	'7hz-salnotes-zero': 'iem',
+	'7hz-crinacle-zero-2': 'iem',
+	'bang-olufsen-a8': 'earhook',
+	'nothing-ear-2': 'earbuds-case',
+	'nothing-ear-stick': 'stick-case',
+	'sennheiser-mx375': 'earbud-round',
+	'final-e1000': 'iem-bullet',
+	'apple-airpods-pro': 'earbuds-case',
+	'dunu-alpha-3': 'earbud-round',
+	'akg-n5005': 'iem',
+	'musehifi-the-east-6': 'iem',
+	'tangzu-waner-studio': 'iem',
+	'creative-aurvana-air': 'earbuds-case',
+	'nintendo-switch-oled': 'switch-oled',
+	'samsung-notebook-odyssey': 'laptop-numpad',
+	'twelve-south-bookarc': 'bookarc',
+	'lenovo-legion-y700': 'tablet',
+	'samsung-galaxy-tab-s7-fe': 'tablet',
+	'samsung-galaxy-s23': 'phone',
+	'esr-halolock-stand': 'phone-stand',
+	'requem-5in1-wireless-charger': 'charger-multi',
+	'nextu-8122sp8k60': 'hdmi-switch',
+	'caldigit-soho-dock': 'hub',
+	'satechi-8in1-hub': 'hub',
+	'hoverpen-2-interstellar': 'pen',
+	'genesis-g80-diecast-1-18': 'car'
 };
 
 export const MODEL_ENTRIES: readonly CatalogEntry[] = ENTRIES.map((entry) => ({
