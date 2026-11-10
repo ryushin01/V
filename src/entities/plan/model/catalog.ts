@@ -154,6 +154,18 @@ const GENERIC_ENTRIES: readonly CatalogEntry[] = [
 		requiresSupport: true
 	},
 	{
+		id: 'laptop-15',
+		name: '노트북 15인치',
+		category: 'computing',
+		kind: 'laptop',
+		width: 34,
+		depth: 24,
+		layer: 'surface',
+		watts: 65,
+		cable: 180,
+		requiresSupport: true
+	},
+	{
 		id: 'speaker',
 		name: '스피커',
 		category: 'audio',
@@ -278,7 +290,8 @@ const BRAND_KOREAN: Record<string, string> = {
 	Secretlab: '시크릿랩',
 	'Herman Miller': '허먼밀러',
 	Sonos: '소노스',
-	Denon: '데논'
+	Denon: '데논',
+	Antec: '안텍'
 };
 
 export function matchesCatalogQuery(entry: CatalogEntry, query: string): boolean {

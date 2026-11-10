@@ -328,6 +328,7 @@ describe('실제 모델 카탈로그', () => {
 			expect(entry.width).toBeGreaterThan(0);
 			expect(entry.depth).toBeGreaterThan(0);
 			if (entry.watts > 0) expect(entry.wattsBasis).toBeDefined();
+			expect(entry.glyph, entry.id).toBeDefined();
 		}
 	});
 
