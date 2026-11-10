@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { analyzePlan, viewingRange } from './analysis';
 import { createSamplePlan } from './factory';
 import { findFreeSpot } from './placement';
-import { getCatalogEntry } from './catalog';
+import { CATALOG, getCatalogEntry, matchesCatalogQuery } from './catalog';
 import { openingGeometry, roomOutline, snapToWall, wallRange } from './room';
 import { parsePlan, stringifyPlan } from './serialize';
 import type { ItemData, RoomData } from './types';
@@ -315,12 +315,118 @@ describe('다각형 방', () => {
 	});
 });
 
+describe('실제 모델 카탈로그', () => {
+	it('id가 겹치지 않습니다', () => {
+		const ids = CATALOG.map((entry) => entry.id);
+		expect(new Set(ids).size).toBe(ids.length);
+	});
+
+	it('실제 모델은 제조사와 전력 기준을 가집니다', () => {
+		const models = CATALOG.filter((entry) => entry.brand);
+		expect(models.length).toBeGreaterThan(20);
+		for (const entry of models) {
+			expect(entry.width).toBeGreaterThan(0);
+			expect(entry.depth).toBeGreaterThan(0);
+			if (entry.watts > 0) expect(entry.wattsBasis).toBeDefined();
+			expect(entry.glyph, entry.id).toBeDefined();
+		}
+	});
+
+	it('49인치 G9는 실제 크기와 화면 크기로 시청 거리를 계산합니다', () => {
+		const g9 = getCatalogEntry('samsung-odyssey-oled-g9');
+		expect(g9).toMatchObject({ width: 119.5, diagonalInch: 49, watts: 220 });
+	});
+
+	it('모델명, 제조사, 분류로 찾습니다', () => {
+		const find = (query: string) =>
+			CATALOG.filter((entry) => matchesCatalogQuery(entry, query)).map((entry) => entry.id);
+		expect(find('g9')).toContain('samsung-odyssey-oled-g9');
+		expect(find('PS5')).toEqual(['sony-ps5-pro', 'sony-ps5-slim']);
+		expect(find('플스')).toEqual(find('playstation'));
+		expect(find('삼성')).toEqual(find('samsung'));
+		expect(find('ps5 pro')).toEqual(['sony-ps5-pro']);
+		expect(find('samsung').length).toBeGreaterThanOrEqual(4);
+		expect(find('')).toHaveLength(CATALOG.length);
+	});
+});
+
+describe('책상 위 소품의 겹침', () => {
+	const onDesk = (...ids: [string, number, number][]) => [
+		item('desk-160', 200, 100),
+		...ids.map(([id, x, y]) => item(id, x, y))
+	];
+
+	it('마우스패드 위의 키보드와 마우스는 겹침이 아닙니다', () => {
+		const items = onDesk(
+			['pulsar-paracontrol-v2-xxl', 200, 100],
+			['wooting-80he', 180, 100],
+			['logitech-g-pro-x-superlight-2', 240, 100]
+		);
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('키보드끼리 겹치면 오류입니다', () => {
+		expect(
+			codes(room(), onDesk(['wooting-80he', 200, 100], ['apple-magic-keyboard', 205, 100]))
+		).toContain('overlap');
+	});
+
+	it('충전기 위의 휴대폰과 거치대의 노트북은 겹침이 아닙니다', () => {
+		const items = onDesk(
+			['requem-5in1-wireless-charger', 180, 100],
+			['samsung-galaxy-s23', 180, 100],
+			['twelve-south-bookarc', 240, 100],
+			['apple-macbook-pro-14', 240, 100]
+		);
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('모니터 조명과 모니터암은 모니터와 겹쳐도 됩니다', () => {
+		const items = onDesk(
+			['dell-up3216q', 200, 80],
+			['benq-screenbar-plus', 200, 72],
+			['ergotron-hx', 200, 70]
+		);
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('발받침대는 책상과 의자 아래에 들어갑니다', () => {
+		const items = [
+			item('desk-160', 200, 100),
+			item('chair', 200, 150),
+			item('sizeof-footrest', 200, 120)
+		];
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('책상 없이 놓은 소품은 받침 경고가 나옵니다', () => {
+		expect(codes(room(), [item('razer-strider-l', 200, 300)])).toContain('no-support');
+	});
+
+	it('USB 전원 기기는 콘센트를 쓰지 않고 전동 책상은 씁니다', () => {
+		const result = analyzePlan(room(), [
+			item('benq-screenbar-plus', 100, 100),
+			item('ikea-uppspel-180', 200, 300)
+		]);
+		expect(result.power.devices).toBe(1);
+		expect(result.power.totalWatts).toBe(240);
+	});
+});
+
 describe('자동 배치', () => {
 	it('모니터를 책상 위에 놓습니다', () => {
 		const desk = item('desk-140', 100, 100);
 		const spot = findFreeSpot(room(), [desk], getCatalogEntry('monitor-27'));
 		expect(Math.abs(spot.x - 100)).toBeLessThanOrEqual(39);
 		expect(Math.abs(spot.y - 100)).toBeLessThanOrEqual(25);
+	});
+
+	it('마우스패드와 모니터 조명도 책상 위에 놓습니다', () => {
+		const desk = item('desk-160', 200, 100);
+		for (const id of ['razer-strider-l', 'benq-screenbar-plus', 'ergotron-hx']) {
+			const spot = findFreeSpot(room(), [desk], getCatalogEntry(id));
+			expect(codes(room(), [desk, item(id, spot.x, spot.y)]), id).not.toContain('no-support');
+		}
 	});
 
 	it('이미 놓인 물건과 겹치지 않게 놓습니다', () => {

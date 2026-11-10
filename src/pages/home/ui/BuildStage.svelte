@@ -33,6 +33,7 @@
 		tv: 4,
 		pc: 4,
 		console: 4,
+		laptop: 4,
 		soundbar: 4,
 		speaker: 4,
 		receiver: 4,

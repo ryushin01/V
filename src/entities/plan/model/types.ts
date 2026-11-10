@@ -75,6 +75,21 @@ export type ItemKind =
 	| 'tv'
 	| 'pc'
 	| 'console'
+	| 'laptop'
+	| 'keyboard'
+	| 'mouse'
+	| 'mousepad'
+	| 'palmrest'
+	| 'lightbar'
+	| 'arm'
+	| 'footrest'
+	| 'headphones'
+	| 'earphones'
+	| 'audio-device'
+	| 'handheld'
+	| 'holder'
+	| 'hub'
+	| 'decor'
 	| 'speaker'
 	| 'subwoofer'
 	| 'soundbar'
@@ -83,9 +98,11 @@ export type ItemKind =
 	| 'strip';
 
 /** floor: 바닥, surface: 책상·장 위, cable: 바닥 배선, wall: 벽 */
-export type ItemLayer = 'floor' | 'surface' | 'cable' | 'wall';
+/** mat: 위에 다른 물건을 올리는 패드, mount: 모니터·책상에 붙이는 조명과 암 */
+export type ItemLayer = 'floor' | 'surface' | 'cable' | 'wall' | 'mat' | 'mount';
 
-export type CatalogCategory = 'furniture' | 'display' | 'computing' | 'audio' | 'power';
+export type CatalogCategory =
+	'furniture' | 'display' | 'computing' | 'input' | 'audio' | 'personal' | 'accessory' | 'power';
 
 export interface CatalogEntry {
 	id: string;
@@ -104,7 +121,29 @@ export interface CatalogEntry {
 	diagonalInch?: number;
 	/** true면 책상이나 장 위에 있어야 합니다. */
 	requiresSupport?: boolean;
+	/** 'estimate'면 제조사 치수를 찾지 못해 비슷한 제품으로 추정한 값입니다. */
+	dimsBasis?: 'estimate';
+	/** 실제 제품이면 제조사 이름 */
+	brand?: string;
+	/** 실물을 닮은 모델별 일러스트 (entities/plan/ui/model-glyphs.ts) */
+	glyph?: string;
+	/** 검색할 때 함께 비교하는 별칭 */
+	keywords?: readonly string[];
+	/** 소비 전력 값의 기준. 없으면 카탈로그 기본값입니다. */
+	wattsBasis?: WattsBasis;
 }
+
+export type WattsBasis =
+	| 'max'
+	| 'typical'
+	| 'rated'
+	| 'listed'
+	| 'psu'
+	| 'adapter'
+	| 'measured'
+	| 'estimate'
+	| 'usb'
+	| 'default';
 
 export type FindingSeverity = 'error' | 'warning' | 'ok';
 
