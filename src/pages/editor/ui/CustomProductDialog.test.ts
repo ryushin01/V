@@ -31,6 +31,14 @@ describe('CustomProductDialog', () => {
 		expect(onsaved).not.toHaveBeenCalled();
 	});
 
+	it('이름 오류를 고친 뒤 다시 누르면 저장합니다', async () => {
+		const { onsaved } = setup();
+		await userEvent.click(screen.getByRole('button', { name: '등록' }));
+		await userEvent.type(screen.getByLabelText('제품 이름 (필수)'), '고친 이름');
+		await userEvent.click(screen.getByRole('button', { name: '등록' }));
+		await waitFor(() => expect(onsaved).toHaveBeenCalledOnce());
+	});
+
 	it('입력한 치수와 그림으로 등록하고 더블 클릭해도 한 번만 저장합니다', async () => {
 		const before = (await listCustomProducts()).length;
 		const { onsaved } = setup();
