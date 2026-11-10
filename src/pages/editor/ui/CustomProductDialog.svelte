@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { Button, Dialog, NumberField } from '#shared/ui';
 	import {
 		createCustomEntry,
@@ -64,12 +65,24 @@
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy) return;
+		busy = true;
+		const form = event.currentTarget as HTMLFormElement;
+		// Enter로 제출하면 change와 submit이 한 번에 일어나므로, 숫자 칸의 오류 표시를 먼저 반영합니다.
+		await tick();
+		saveError = '';
+		nameError = '';
 		if (!input.name.trim()) {
+			busy = false;
 			nameError = '제품 이름을 입력해 주세요.';
 			return;
 		}
-		busy = true;
-		saveError = '';
+		const invalid = form.querySelector<HTMLElement>('[aria-invalid="true"]');
+		if (invalid) {
+			busy = false;
+			saveError = '잘못 입력한 값을 고친 뒤 저장해 주세요.';
+			invalid.focus();
+			return;
+		}
 		try {
 			const entry = createCustomEntry(input);
 			await saveCustomProduct(entry);

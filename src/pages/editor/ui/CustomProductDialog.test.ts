@@ -54,6 +54,19 @@ describe('CustomProductDialog', () => {
 		expect(await listCustomProducts()).toHaveLength(before + 1);
 	});
 
+	it('잘못 입력한 치수가 있으면 저장하지 않고 그 칸으로 초점을 옮깁니다', async () => {
+		const { onsaved } = setup();
+		await userEvent.type(screen.getByLabelText('제품 이름 (필수)'), '잘못된 책상');
+		const width = screen.getByLabelText('가로');
+		await userEvent.clear(width);
+		await userEvent.type(width, 'abc');
+		expect(width).toHaveAttribute('aria-invalid', 'true');
+		await userEvent.click(screen.getByRole('button', { name: '등록' }));
+		expect(await screen.findByRole('alert')).toHaveTextContent('잘못 입력한 값을 고친 뒤');
+		expect(width).toHaveFocus();
+		expect(onsaved).not.toHaveBeenCalled();
+	});
+
 	it('그림을 미리 보여 줍니다', () => {
 		setup();
 		expect(screen.getByRole('img', { name: /그림 미리보기/ })).toBeInTheDocument();
