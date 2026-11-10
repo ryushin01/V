@@ -3,6 +3,7 @@
 	import {
 		createCustomEntry,
 		CUSTOM_KINDS,
+		DEFAULT_SCREEN_INCH,
 		deleteCustomProduct,
 		ItemGlyph,
 		KIND_PRESETS,
@@ -188,7 +189,7 @@
 					unit="인치"
 					min={SPEC_LIMITS.diagonalInch.min}
 					max={SPEC_LIMITS.diagonalInch.max}
-					value={input.diagonalInch ?? 27}
+					value={input.diagonalInch ?? DEFAULT_SCREEN_INCH}
 					oncommit={(value) => (input.diagonalInch = value)}
 				/>
 			{/if}

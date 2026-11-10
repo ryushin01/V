@@ -10,6 +10,7 @@ export {
 export {
 	createCustomEntry,
 	CUSTOM_KINDS,
+	DEFAULT_SCREEN_INCH,
 	KIND_PRESETS,
 	toCustomInput,
 	type CustomProductInput
