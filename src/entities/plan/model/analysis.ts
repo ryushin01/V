@@ -62,6 +62,21 @@ export function resolvedPolygon(data: ItemData): Point[] {
 	return resolveItem(data).polygon;
 }
 
+/** 서로 겹쳐 놓는 것이 자연스러운 조합입니다. 의자·발받침대는 책상 아래로, 휴대 기기는 거치대 위로 갑니다. */
+const RESTS_ON_HOLDER = new Set([
+	'handheld',
+	'laptop',
+	'mouse',
+	'earphones',
+	'headphones',
+	'audio-device'
+]);
+function canShareSpace(a: string, b: string): boolean {
+	const pair = (x: string, y: string) => (a === x && b === y) || (a === y && b === x);
+	if (pair('chair', 'desk') || pair('footrest', 'desk') || pair('footrest', 'chair')) return true;
+	return (a === 'holder' && RESTS_ON_HOLDER.has(b)) || (b === 'holder' && RESTS_ON_HOLDER.has(a));
+}
+
 const isSeat = (item: Resolved) => item.entry.kind === 'chair' || item.entry.kind === 'sofa';
 const isSupport = (item: Resolved) => item.entry.kind === 'desk' || item.entry.kind === 'stand';
 const isPowerSource = (item: Resolved) =>
@@ -345,7 +360,9 @@ export function analyzePlan(room: RoomData, data: readonly ItemData[]): Analysis
 		items
 			.filter(
 				(item) =>
-					item.entry.layer === 'surface' &&
+					(item.entry.layer === 'surface' ||
+						item.entry.layer === 'mat' ||
+						item.entry.layer === 'mount') &&
 					supports.some((support) => pointInConvex(item.center, support.polygon))
 			)
 			.map((item) => item.data.id)
@@ -382,9 +399,7 @@ export function analyzePlan(room: RoomData, data: readonly ItemData[]): Analysis
 		for (let i = 0; i < group.length; i += 1) {
 			for (let j = i + 1; j < group.length; j += 1) {
 				const [a, b] = [group[i], group[j]];
-				const tucked =
-					(a.entry.kind === 'chair' && b.entry.kind === 'desk') ||
-					(a.entry.kind === 'desk' && b.entry.kind === 'chair');
+				const tucked = canShareSpace(a.entry.kind, b.entry.kind);
 				if (!tucked && polygonsOverlap(a.polygon, b.polygon)) {
 					push({
 						code: 'overlap',

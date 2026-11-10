@@ -350,6 +350,69 @@ describe('실제 모델 카탈로그', () => {
 	});
 });
 
+describe('책상 위 소품의 겹침', () => {
+	const onDesk = (...ids: [string, number, number][]) => [
+		item('desk-160', 200, 100),
+		...ids.map(([id, x, y]) => item(id, x, y))
+	];
+
+	it('마우스패드 위의 키보드와 마우스는 겹침이 아닙니다', () => {
+		const items = onDesk(
+			['pulsar-paracontrol-v2-xxl', 200, 100],
+			['wooting-80he', 180, 100],
+			['logitech-g-pro-x-superlight-2', 240, 100]
+		);
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('키보드끼리 겹치면 오류입니다', () => {
+		expect(
+			codes(room(), onDesk(['wooting-80he', 200, 100], ['apple-magic-keyboard', 205, 100]))
+		).toContain('overlap');
+	});
+
+	it('충전기 위의 휴대폰과 거치대의 노트북은 겹침이 아닙니다', () => {
+		const items = onDesk(
+			['requem-5in1-wireless-charger', 180, 100],
+			['samsung-galaxy-s23', 180, 100],
+			['twelve-south-bookarc', 240, 100],
+			['apple-macbook-pro-14', 240, 100]
+		);
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('모니터 조명과 모니터암은 모니터와 겹쳐도 됩니다', () => {
+		const items = onDesk(
+			['dell-up3216q', 200, 80],
+			['benq-screenbar-plus', 200, 72],
+			['ergotron-hx', 200, 70]
+		);
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('발받침대는 책상과 의자 아래에 들어갑니다', () => {
+		const items = [
+			item('desk-160', 200, 100),
+			item('chair', 200, 150),
+			item('sizeof-footrest', 200, 120)
+		];
+		expect(codes(room(), items)).not.toContain('overlap');
+	});
+
+	it('책상 없이 놓은 소품은 받침 경고가 나옵니다', () => {
+		expect(codes(room(), [item('razer-strider-l', 200, 300)])).toContain('no-support');
+	});
+
+	it('USB 전원 기기는 콘센트를 쓰지 않고 전동 책상은 씁니다', () => {
+		const result = analyzePlan(room(), [
+			item('benq-screenbar-plus', 100, 100),
+			item('ikea-uppspel-180', 200, 300)
+		]);
+		expect(result.power.devices).toBe(1);
+		expect(result.power.totalWatts).toBe(240);
+	});
+});
+
 describe('자동 배치', () => {
 	it('모니터를 책상 위에 놓습니다', () => {
 		const desk = item('desk-140', 100, 100);

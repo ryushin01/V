@@ -64,7 +64,13 @@
 								{#if entry.brand}<span class="brand">{entry.brand}</span>{/if}
 								{entry.name}
 							</span>
-							<span class="measure">{entry.width}×{entry.depth}</span>
+							<span class="measure"
+								>{entry.width}×{entry.depth}{#if entry.dimsBasis === 'estimate'}<span
+										class="estimate"
+									>
+										추정</span
+									>{/if}</span
+							>
 							<Icon name="plus" size={16} />
 							<span class="sr-only">배치도에 추가</span>
 						</button>
@@ -168,6 +174,11 @@
 	.name {
 		display: grid;
 		line-height: 1.3;
+	}
+
+	.estimate {
+		margin-left: 0.25rem;
+		color: var(--accent-deep);
 	}
 
 	.brand {

@@ -93,7 +93,11 @@
 			{#each specFields as field (field.key)}
 				<NumberField
 					label={field.label}
-					hint={field.key === 'watts' ? wattsHint : undefined}
+					hint={field.key === 'watts'
+						? wattsHint
+						: field.key === 'width' && base.dimsBasis === 'estimate'
+							? '추정 치수입니다. 실제 제품을 확인해 주세요.'
+							: undefined}
 					unit={field.unit}
 					min={SPEC_LIMITS[field.key].min}
 					max={SPEC_LIMITS[field.key].max}
