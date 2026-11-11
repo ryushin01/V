@@ -315,10 +315,11 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 			{ id: 'speaker-stand', label: '스피커 스탠드' }
 		]
 	},
+	// 받침 없이 두면 바닥 물건으로, 책상 위에 두면 책상 위 물건으로 판정합니다.
 	lamp: {
 		label: '조명',
 		category: 'accessory',
-		layer: 'floor',
+		layer: 'surface',
 		glyphs: [
 			{ id: 'floor-lamp', label: '장스탠드' },
 			{ id: 'pole-lamp', label: '막대 조명' },
