@@ -82,4 +82,13 @@ describe('CatalogPanel 최근 추가한 물건', { timeout: 20_000 }, () => {
 		expect(document.querySelector('details.recent')).toBeNull();
 		expect(screen.getByRole('heading', { name: '물건 추가' })).toBeInTheDocument();
 	});
+
+	it('한도에 걸려 놓지 못한 물건은 기록하지 않습니다', async () => {
+		localStorage.clear();
+		const { session } = setup();
+		Object.defineProperty(session, 'canAddItem', { get: () => false });
+		await userEvent.click(screen.getAllByRole('button', { name: /^책상 140/ })[0]);
+		expect(session.items).toHaveLength(0);
+		expect(localStorage.getItem('v-recent-items')).toBeNull();
+	});
 });
