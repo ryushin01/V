@@ -64,3 +64,22 @@ describe('CatalogPanel 내 제품 파일', { timeout: 20_000 }, () => {
 		await waitFor(() => expect(opened).toBe(true));
 	});
 });
+
+describe('CatalogPanel 최근 추가한 물건', { timeout: 20_000 }, () => {
+	it('놓은 물건을 맨 위에 모으고 다시 열어도 기억합니다', async () => {
+		localStorage.clear();
+		const first = setup();
+		await userEvent.click(screen.getAllByRole('button', { name: /^책상 140/ })[0]);
+		expect(first.session.items).toHaveLength(1);
+		const recent = document.querySelector('details.recent');
+		expect(recent?.textContent).toContain('책상 140');
+		expect(JSON.parse(localStorage.getItem('v-recent-items') ?? '[]')).toEqual(['desk-140']);
+	});
+
+	it('저장된 값이 깨져 있어도 목록 없이 동작합니다', () => {
+		localStorage.setItem('v-recent-items', '{깨짐');
+		setup();
+		expect(document.querySelector('details.recent')).toBeNull();
+		expect(screen.getByRole('heading', { name: '물건 추가' })).toBeInTheDocument();
+	});
+});
