@@ -1,6 +1,6 @@
 {
 	"name": "v",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -51,9 +51,11 @@
 		"vitest": "^5.1.0"
 	},
 	"dependencies": {
-		"@fontsource-variable/bricolage-grotesque": "^5.3.0",
-		"@fontsource-variable/space-grotesk": "^5.3.0",
-		"@fontsource/ibm-plex-mono": "^5.3.0"
+		"@fontsource-variable/roboto-condensed": "^5.3.0",
+		"@fontsource/gothic-a1": "^5.3.0",
+		"@fontsource/ibm-plex-mono": "^5.3.0",
+		"@fontsource/nanum-gothic-coding": "^5.3.0",
+		"@fontsource/sunflower": "^5.3.1"
 	},
 	"packageManager": "pnpm@12.16.1",
 	"imports": {
