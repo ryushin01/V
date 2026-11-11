@@ -169,13 +169,7 @@ importers:
       '@fontsource-variable/roboto-condensed':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/gothic-a1':
-        specifier: ^5.3.0
-        version: 5.3.0
       '@fontsource/ibm-plex-mono':
-        specifier: ^5.3.0
-        version: 5.3.0
-      '@fontsource/nanum-gothic-coding':
         specifier: ^5.3.0
         version: 5.3.0
       '@fontsource/sunflower':
@@ -539,14 +533,8 @@ packages:
   '@fontsource-variable/roboto-condensed@5.3.0':
     resolution: {integrity: sha512-RpYyF6G0h0nsVcCDLRIbZbK+l8cVDoe1PVbzvzVhtLzCiPqIEEGDs9xB9ZWPJawKS4bJzpKn42KgZFISF/AOuQ==}
 
-  '@fontsource/gothic-a1@5.3.0':
-    resolution: {integrity: sha512-0HmmE3YQgdcXkVZd/pRTw7MOc9PffY7tNrR/dovEGO00cno/4ImiHxEXdJoq80Bs2jC52wuvuFRcepJ38mksEw==}
-
   '@fontsource/ibm-plex-mono@5.3.0':
     resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
-
-  '@fontsource/nanum-gothic-coding@5.3.0':
-    resolution: {integrity: sha512-1xUOE+ro+F1J5lYw+0WwMbhesK85JCjbAP3/rOGHB3DbZI2/s0dR4WHSuTcag1uJAfT8ozH9B50L88tMn4eFkw==}
 
   '@fontsource/sunflower@5.3.1':
     resolution: {integrity: sha512-tFgwZGfY9NGj58jcUCwToDT+3Hs8LO/8sd5LnJ+4ZTxBg8Lw1WvSHjRjyH1m3mpUUH66Z5i/dWG7/LzP0ovlBQ==}
@@ -2679,11 +2667,7 @@ snapshots:
 
   '@fontsource-variable/roboto-condensed@5.3.0': {}
 
-  '@fontsource/gothic-a1@5.3.0': {}
-
   '@fontsource/ibm-plex-mono@5.3.0': {}
-
-  '@fontsource/nanum-gothic-coding@5.3.0': {}
 
   '@fontsource/sunflower@5.3.1': {}
 
