@@ -11,10 +11,13 @@
 	--accent-deep: #c62828;
 	--ok: #1b6e3c;
 
+	/* 글꼴을 받기 전이나 받지 못하면 운영체제의 한글 고딕으로 */
 	--font-korean: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
-	--font-sans: 'Space Grotesk Variable', var(--font-korean);
-	--font-display: 'Bricolage Grotesque Variable', var(--font-korean);
-	--font-mono: 'IBM Plex Mono', ui-monospace, 'Apple SD Gothic Neo', 'Malgun Gothic', monospace;
+	--font-sans: 'Gothic A1', var(--font-korean);
+	--font-display: 'Roboto Condensed Variable', 'Sunflower', var(--font-korean);
+	--font-mono:
+		'IBM Plex Mono', 'Nanum Gothic Coding', ui-monospace, 'Apple SD Gothic Neo', 'Malgun Gothic',
+		monospace;
 
 	--ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--radius-media: 12px;
