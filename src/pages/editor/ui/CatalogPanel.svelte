@@ -4,8 +4,12 @@
 	import {
 		CATALOG,
 		CATEGORY_LABELS,
+		CustomProductLimitError,
 		matchesCatalogQuery,
 		listCustomProducts,
+		parseCustomProductsFile,
+		saveCustomProducts,
+		stringifyCustomProducts,
 		PLAN_LIMITS,
 		type CatalogEntry,
 		type CatalogCategory
@@ -19,6 +23,10 @@
 	let mine = $state.raw<CatalogEntry[]>([]);
 	let dialogOpen = $state(false);
 	let editing = $state.raw<CatalogEntry | null>(null);
+	let fileInput = $state<HTMLInputElement>();
+	let fileError = $state('');
+	let fileNote = $state('');
+	let importing = false;
 
 	async function refresh() {
 		try {
@@ -44,6 +52,53 @@
 	async function handleDeleted() {
 		await refresh();
 		session.announcement = '내 제품에서 삭제했습니다.';
+	}
+
+	function exportMine() {
+		fileError = '';
+		const blob = new Blob([stringifyCustomProducts(mine)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = 'v-custom-products.json';
+		link.click();
+		// 다운로드가 비동기로 시작하는 브라우저를 위해 주소 해제를 미룹니다.
+		setTimeout(() => URL.revokeObjectURL(url), 0);
+		fileNote = `내 제품 ${mine.length}개를 파일로 내보냈습니다.`;
+		session.announcement = fileNote;
+	}
+
+	async function importMine(event: Event & { currentTarget: HTMLInputElement }) {
+		const input = event.currentTarget;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file || importing) return;
+		importing = true;
+		fileError = '';
+		fileNote = '';
+		try {
+			const parsed = parseCustomProductsFile(await file.text());
+			if (!parsed.ok) {
+				fileError = parsed.error;
+				return;
+			}
+			const known = new Set(mine.map((entry) => entry.id));
+			const updated = parsed.entries.filter((entry) => known.has(entry.id)).length;
+			await saveCustomProducts(parsed.entries);
+			await refresh();
+			const parts = [`새 제품 ${parsed.entries.length - updated}개`];
+			if (updated > 0) parts.push(`바뀐 제품 ${updated}개`);
+			if (parsed.skipped > 0) parts.push(`읽을 수 없어 건너뛴 항목 ${parsed.skipped}개`);
+			fileNote = `내 제품을 가져왔습니다. ${parts.join(', ')}.`;
+			session.announcement = fileNote;
+		} catch (error) {
+			fileError =
+				error instanceof CustomProductLimitError
+					? `${error.message} 가져오면 ${error.total}개가 되어 가져오지 않았습니다.`
+					: '저장하지 못했습니다. 비공개 창이라면 일반 창에서 열어 주세요.';
+		} finally {
+			importing = false;
+		}
 	}
 
 	const mineFiltered = $derived(mine.filter((entry) => matchesCatalogQuery(entry, query)));
@@ -83,7 +138,10 @@
 	</div>
 	<details open class="mine">
 		<summary>내 제품 <span class="measure">{mine.length}</span></summary>
-		<p class="hint">카탈로그에 없는 제품은 직접 등록해 치수와 전력을 마음대로 정할 수 있습니다.</p>
+		<p class="hint">
+			카탈로그에 없는 제품은 직접 등록해 치수와 전력을 마음대로 정할 수 있습니다. 파일로 내보내 다른
+			기기에서 가져올 수 있고, 배치도 파일에 담긴 제품도 가져올 수 있습니다.
+		</p>
 		{#if mineFiltered.length > 0}
 			<ul>
 				{#each mineFiltered as entry (entry.id)}
@@ -112,7 +170,24 @@
 			<Button size="sm" onclick={() => openDialog(null)}
 				><Icon name="plus" size={16} /> 제품 등록</Button
 			>
+			{#if mine.length > 0}
+				<Button size="sm" onclick={exportMine}
+					><Icon name="download" size={16} /> 파일로 내보내기</Button
+				>
+			{/if}
+			<input
+				bind:this={fileInput}
+				type="file"
+				accept="application/json,.json"
+				hidden
+				onchange={importMine}
+			/>
+			<Button size="sm" onclick={() => fileInput?.click()}
+				><Icon name="upload" size={16} /> 파일에서 가져오기</Button
+			>
 		</div>
+		{#if fileError}<p class="file-error" role="alert">{fileError}</p>{/if}
+		{#if fileNote}<p class="hint">{fileNote}</p>{/if}
 	</details>
 	{#if count === 0}
 		<p class="empty">
@@ -220,7 +295,17 @@
 	}
 
 	.register {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
 		padding-bottom: 0.75rem;
+	}
+
+	.file-error {
+		margin-bottom: 0.75rem;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: var(--accent-deep);
 	}
 
 	details {

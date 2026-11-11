@@ -92,6 +92,8 @@ export type ItemKind =
 	| 'holder'
 	| 'hub'
 	| 'decor'
+	| 'shelf'
+	| 'lamp'
 	| 'speaker'
 	| 'subwoofer'
 	| 'soundbar'

@@ -3,6 +3,7 @@
 	import { Button, Dialog, NumberField } from '#shared/ui';
 	import {
 		createCustomEntry,
+		CustomProductLimitError,
 		CUSTOM_KINDS,
 		DEFAULT_SCREEN_INCH,
 		deleteCustomProduct,
@@ -87,9 +88,12 @@
 			await saveCustomProduct(entry);
 			onsaved(entry, !editing && place);
 			open = false;
-		} catch {
+		} catch (error) {
 			busy = false;
-			saveError = '저장하지 못했습니다. 비공개 창이라면 일반 창에서 열어 주세요.';
+			saveError =
+				error instanceof CustomProductLimitError
+					? `${error.message} 쓰지 않는 제품을 지운 뒤 등록해 주세요.`
+					: '저장하지 못했습니다. 비공개 창이라면 일반 창에서 열어 주세요.';
 		}
 	}
 

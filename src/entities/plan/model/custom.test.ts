@@ -50,6 +50,35 @@ describe('직접 등록 제품', () => {
 		expect(createCustomEntry({ ...input, kind: 'monitor', glyph: '' }).diagonalInch).toBe(27);
 	});
 
+	it('직접 등록한 조명은 책상 위에도 바닥에도 둘 수 있습니다', () => {
+		const lamp = createCustomEntry({
+			...input,
+			id: 'custom-desk-lamp',
+			kind: 'lamp',
+			width: 10,
+			depth: 10,
+			glyph: 'wall-washer'
+		});
+		registerCustomEntries([lamp], true);
+		const place = (catalogId: string, x: number, y: number) => ({
+			id: catalogId,
+			catalogId,
+			x,
+			y,
+			rotation: 0,
+			price: 0,
+			label: ''
+		});
+		const room = createEmptyPlan().room;
+		const onDesk = analyzePlan(room, [place('desk-160', 200, 100), place(lamp.id, 230, 100)]);
+		expect(onDesk.findings.map((f) => f.code)).not.toContain('overlap');
+		const onFloor = analyzePlan(room, [place(lamp.id, 100, 250)]);
+		expect(onFloor.findings.map((f) => f.code)).not.toContain('no-support');
+		// 받침이 없으면 바닥 물건이라 의자와 겹치면 오류입니다.
+		const withChair = analyzePlan(room, [place(lamp.id, 100, 250), place('chair', 100, 250)]);
+		expect(withChair.findings.map((f) => f.code)).toContain('overlap');
+	});
+
 	it('멀티탭은 구 수와 정격을 가집니다', () => {
 		expect(createCustomEntry({ ...input, kind: 'strip', ports: 8 })).toMatchObject({
 			ports: 8,
