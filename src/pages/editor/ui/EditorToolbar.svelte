@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button, Dialog, Icon } from '#shared/ui';
+	import { BrandMark, Button, Dialog, Icon } from '#shared/ui';
 	import { encodePlan, stringifyPlan } from '#entities/plan';
 	import { ThemeToggle } from '#features/toggle-theme';
 	import { XrayToggle } from '#features/toggle-xray';
@@ -71,9 +71,7 @@
 </script>
 
 <header class="toolbar">
-	<a class="mark" href={resolve('/')} aria-label="V 배치도 목록으로"
-		>V<span class="tick" aria-hidden="true"></span></a
-	>
+	<a class="mark" href={resolve('/')} aria-label="V 배치도 목록으로"><BrandMark /></a>
 	<div class="name">
 		<label class="sr-only" for="plan-name">배치도 이름</label>
 		<input id="plan-name" type="text" maxlength="60" autocomplete="off" bind:value={session.name} />
@@ -168,13 +166,6 @@
 		line-height: 1.1;
 		color: inherit;
 		text-decoration: none;
-	}
-
-	.tick {
-		width: 2px;
-		height: 0.5rem;
-		margin-bottom: 0.25rem;
-		background: var(--accent);
 	}
 
 	.name {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { BrandMark } from '#shared/ui';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -39,9 +40,7 @@
 </svelte:head>
 
 <header class="top">
-	<a class="mark" href={resolve('/')} aria-label="V 처음으로"
-		>V<span class="tick" aria-hidden="true"></span></a
-	>
+	<a class="mark" href={resolve('/')} aria-label="V 처음으로"><BrandMark /></a>
 	<ThemeToggle />
 </header>
 
@@ -83,13 +82,6 @@
 		line-height: 1.6;
 		color: inherit;
 		text-decoration: none;
-	}
-
-	.tick {
-		width: 2px;
-		height: 0.5rem;
-		margin-bottom: 0.5rem;
-		background: var(--accent);
 	}
 
 	.page {
