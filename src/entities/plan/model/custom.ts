@@ -25,7 +25,9 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 			BASIC,
 			{ id: 'mattz', label: '모션데스크' },
 			{ id: 'uppspel', label: '케이블 구멍' },
-			{ id: 'magnus-pro', label: '케이블 덮개' }
+			{ id: 'magnus-pro', label: '케이블 덮개' },
+			{ id: 'desk-motion', label: '2단 기둥 모션데스크' },
+			{ id: 'desk-wood', label: '원목 상판' }
 		]
 	},
 	stand: {
@@ -38,7 +40,12 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 		label: '의자',
 		category: 'furniture',
 		layer: 'floor',
-		glyphs: [BASIC, { id: 'aeron', label: '다섯 갈래 다리' }]
+		glyphs: [
+			BASIC,
+			{ id: 'aeron', label: '다섯 갈래 다리' },
+			{ id: 'chair-omni', label: '나뉜 등받이' },
+			{ id: 'chair-uniback', label: '곡면 좌판' }
+		]
 	},
 	sofa: { label: '소파', category: 'furniture', layer: 'floor', glyphs: [BASIC] },
 	footrest: {
@@ -152,7 +159,9 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 		requiresSupport: true,
 		glyphs: [
 			{ id: 'mousepad', label: '기본' },
-			{ id: 'powerplay', label: '충전 패드' }
+			{ id: 'powerplay', label: '충전 패드' },
+			{ id: 'desk-mat-leather', label: '가죽 데스크매트' },
+			{ id: 'desk-mat-felt', label: '펠트 데스크매트' }
 		]
 	},
 	palmrest: {
@@ -165,7 +174,17 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 			{ id: 'mouse-palm', label: '마우스용' }
 		]
 	},
-	speaker: { label: '스피커', category: 'audio', layer: 'surface', glyphs: [BASIC] },
+	speaker: {
+		label: '스피커',
+		category: 'audio',
+		layer: 'surface',
+		glyphs: [
+			BASIC,
+			{ id: 'speaker-bookshelf', label: '북셀프' },
+			{ id: 'speaker-acton', label: '손잡이가 위에 있는 스피커' },
+			{ id: 'speaker-pebble', label: '둥근 스피커' }
+		]
+	},
 	subwoofer: {
 		label: '서브우퍼',
 		category: 'audio',
@@ -277,7 +296,34 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 		requiresSupport: true,
 		glyphs: [
 			{ id: 'pen', label: '펜' },
-			{ id: 'car', label: '자동차 모형' }
+			{ id: 'car', label: '자동차 모형' },
+			{ id: 'tray', label: '트레이' },
+			{ id: 'diffuser-reed', label: '디퓨저' },
+			{ id: 'clock-frame', label: '탁상 시계·액자' },
+			{ id: 'flower-lamp', label: '꽃 오브제' }
+		]
+	},
+	shelf: {
+		label: '데스크 선반·받침대',
+		category: 'furniture',
+		layer: 'mat',
+		requiresSupport: true,
+		glyphs: [
+			{ id: 'shelf-plank', label: '원목 선반' },
+			{ id: 'shelf-steel', label: '금속판 선반' },
+			{ id: 'shelf-tiered', label: '2단 진열대' },
+			{ id: 'speaker-stand', label: '스피커 스탠드' }
+		]
+	},
+	// 받침 없이 두면 바닥 물건으로, 책상 위에 두면 책상 위 물건으로 판정합니다.
+	lamp: {
+		label: '조명',
+		category: 'accessory',
+		layer: 'surface',
+		glyphs: [
+			{ id: 'floor-lamp', label: '장스탠드' },
+			{ id: 'pole-lamp', label: '막대 조명' },
+			{ id: 'wall-washer', label: '벽 비춤 조명' }
 		]
 	},
 	outlet: { label: '벽 콘센트', category: 'power', layer: 'wall', hasPorts: true, glyphs: [BASIC] },

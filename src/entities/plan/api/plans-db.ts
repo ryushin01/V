@@ -1,4 +1,5 @@
 import { registerCustomEntries } from '../model/catalog';
+import { CUSTOM_PRODUCT_LIMIT } from '../model/custom-file';
 import type { CatalogEntry, PlanData } from '../model/types';
 
 const DB_NAME = 'v-setup-planner';
@@ -60,9 +61,47 @@ export async function listCustomProducts(): Promise<CatalogEntry[]> {
 	return entries.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 }
 
+/** 저장하면 내 제품이 한도를 넘을 때 던집니다. 아무것도 저장하지 않습니다. */
+export class CustomProductLimitError extends Error {
+	constructor(readonly total: number) {
+		super(`내 제품은 ${CUSTOM_PRODUCT_LIMIT}개까지 둘 수 있습니다.`);
+		this.name = 'CustomProductLimitError';
+	}
+}
+
 export async function saveCustomProduct(entry: CatalogEntry): Promise<void> {
-	await run('readwrite', (store) => store.put(entry), CUSTOM_STORE);
-	registerCustomEntries([entry], true);
+	await saveCustomProducts([entry]);
+}
+
+/**
+ * 여러 제품을 한 트랜잭션으로 저장합니다. 하나라도 실패하거나 합계가 한도를 넘으면
+ * 아무것도 저장하지 않습니다.
+ */
+export async function saveCustomProducts(entries: readonly CatalogEntry[]): Promise<void> {
+	const database = await openDatabase();
+	try {
+		await new Promise<void>((resolve, reject) => {
+			const transaction = database.transaction(CUSTOM_STORE, 'readwrite');
+			const store = transaction.objectStore(CUSTOM_STORE);
+			let limitError: CustomProductLimitError | null = null;
+			const keys = store.getAllKeys();
+			keys.onsuccess = () => {
+				const ids = new Set([...keys.result.map(String), ...entries.map((entry) => entry.id)]);
+				if (ids.size > CUSTOM_PRODUCT_LIMIT) {
+					limitError = new CustomProductLimitError(ids.size);
+					transaction.abort();
+					return;
+				}
+				for (const entry of entries) store.put(entry);
+			};
+			transaction.oncomplete = () => resolve();
+			transaction.onerror = () => reject(limitError ?? transaction.error);
+			transaction.onabort = () => reject(limitError ?? transaction.error);
+		});
+	} finally {
+		database.close();
+	}
+	registerCustomEntries(entries, true);
 }
 
 export async function deleteCustomProduct(id: string): Promise<void> {

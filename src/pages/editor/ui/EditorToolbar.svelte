@@ -64,7 +64,8 @@
 		link.href = url;
 		link.download = `${session.name.replace(/[\\/:*?"<>|]/g, '_') || 'plan'}.json`;
 		link.click();
-		URL.revokeObjectURL(url);
+		// 다운로드가 비동기로 시작하는 브라우저를 위해 주소 해제를 미룹니다.
+		setTimeout(() => URL.revokeObjectURL(url), 0);
 		session.announcement = 'JSON 파일로 내보냈습니다.';
 	}
 </script>
