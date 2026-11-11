@@ -17,13 +17,13 @@
 	 * 치수는 고정폭(맥 SF Mono·Menlo, 윈도 Consolas, 설치돼 있으면 D2Coding)입니다.
 	 */
 	--font-korean: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', system-ui, sans-serif;
-	--font-sans: 'Gothic A1', var(--font-korean);
+	--font-sans: var(--font-korean);
 	--font-display:
 		'Roboto Condensed Variable', 'Sunflower', 'Avenir Next Condensed', 'Arial Narrow',
 		var(--font-korean);
 	--font-mono:
-		'IBM Plex Mono', 'Nanum Gothic Coding', ui-monospace, 'SF Mono', Menlo, Consolas, 'D2Coding',
-		monospace;
+		'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, 'D2Coding', 'Apple SD Gothic Neo',
+		'Malgun Gothic', 'Noto Sans CJK KR', monospace;
 
 	--ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--radius-media: 12px;
