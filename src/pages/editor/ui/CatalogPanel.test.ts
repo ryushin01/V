@@ -91,4 +91,11 @@ describe('CatalogPanel 최근 추가한 물건', { timeout: 20_000 }, () => {
 		expect(session.items).toHaveLength(0);
 		expect(localStorage.getItem('v-recent-items')).toBeNull();
 	});
+
+	it('저장값에 같은 물건이 여러 번 있어도 한 번만 보여 줍니다', () => {
+		localStorage.setItem('v-recent-items', JSON.stringify(['desk-140', 'desk-140', 'tv-stand']));
+		setup();
+		const recent = document.querySelector('details.recent');
+		expect(recent?.querySelectorAll('li')).toHaveLength(2);
+	});
 });
