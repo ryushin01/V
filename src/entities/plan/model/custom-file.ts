@@ -5,8 +5,11 @@ import type { CatalogEntry } from './types';
 /** 내 제품만 담은 파일의 형식 이름입니다. 배치도 파일과 구분합니다. */
 export const CUSTOM_FILE_FORMAT = 'v-custom-products';
 const CUSTOM_FILE_VERSION = 1;
-/** 한 파일에 담을 수 있는 내 제품 수. 배치도 한 장의 항목 한도와 같습니다. */
-export const CUSTOM_FILE_LIMIT = PLAN_LIMITS.items;
+/**
+ * 한 브라우저에 둘 수 있는 내 제품 수이자 한 파일의 한도입니다. 저장할 때 이 수를 넘지 않게 막아,
+ * 내보낸 파일은 언제나 다시 가져올 수 있습니다. 배치도 한 장의 항목 한도와 같습니다.
+ */
+export const CUSTOM_PRODUCT_LIMIT = PLAN_LIMITS.items;
 
 export type CustomFileResult =
 	| { ok: true; entries: CatalogEntry[]; skipped: number; source: 'products' | 'plan' }
@@ -57,8 +60,8 @@ export function parseCustomProductsFile(text: string): CustomFileResult {
 		return { ok: false, error: '내 제품 파일이나 배치도 파일이 아닙니다.' };
 	}
 	if (!Array.isArray(list)) return { ok: false, error: '제품 목록을 읽을 수 없습니다.' };
-	if (list.length > CUSTOM_FILE_LIMIT) {
-		return { ok: false, error: `한 파일에 ${CUSTOM_FILE_LIMIT}개까지 가져올 수 있습니다.` };
+	if (list.length > CUSTOM_PRODUCT_LIMIT) {
+		return { ok: false, error: `한 파일에 ${CUSTOM_PRODUCT_LIMIT}개까지 가져올 수 있습니다.` };
 	}
 
 	// 파일의 같은 id는 마지막 것만 남깁니다.

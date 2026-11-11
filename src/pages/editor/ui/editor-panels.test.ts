@@ -25,7 +25,8 @@ describe('CatalogPanel', () => {
 		}
 		await userEvent.click(screen.getByRole('button', { name: /^PC 타워/ }));
 		expect(session.items[0].entry.kind).toBe('pc');
-	});
+		// 버튼 200여 개의 이름을 계산하므로 병렬 실행에서는 기본 5초를 넘길 수 있습니다.
+	}, 20_000);
 });
 
 describe('CatalogPanel 검색', () => {

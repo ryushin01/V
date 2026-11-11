@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createCustomEntry, type CustomProductInput } from './custom';
-import { CUSTOM_FILE_LIMIT, parseCustomProductsFile, stringifyCustomProducts } from './custom-file';
+import {
+	CUSTOM_PRODUCT_LIMIT,
+	parseCustomProductsFile,
+	stringifyCustomProducts
+} from './custom-file';
 import { createEmptyPlan } from './factory';
 import { stringifyPlan } from './serialize';
 
@@ -76,14 +80,14 @@ describe('내 제품 파일', () => {
 				JSON.stringify({ format: 'v-custom-products', version: 2, products: [] })
 			)
 		).toMatchObject({ ok: false });
-		const many = Array.from({ length: CUSTOM_FILE_LIMIT + 1 }, () => ({}));
+		const many = Array.from({ length: CUSTOM_PRODUCT_LIMIT + 1 }, () => ({}));
 		expect(
 			parseCustomProductsFile(
 				JSON.stringify({ format: 'v-custom-products', version: 1, products: many })
 			)
 		).toMatchObject({
 			ok: false,
-			error: `한 파일에 ${CUSTOM_FILE_LIMIT}개까지 가져올 수 있습니다.`
+			error: `한 파일에 ${CUSTOM_PRODUCT_LIMIT}개까지 가져올 수 있습니다.`
 		});
 	});
 });

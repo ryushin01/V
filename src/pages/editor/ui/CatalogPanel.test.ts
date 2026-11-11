@@ -22,7 +22,10 @@ function setup() {
 	return { session, input };
 }
 
-describe('CatalogPanel 내 제품 파일', () => {
+// 카탈로그 200여 항목을 그리고 IndexedDB에 저장하므로, 병렬 실행에서도 넉넉히 기다립니다.
+const SLOW = { timeout: 5_000 };
+
+describe('CatalogPanel 내 제품 파일', { timeout: 20_000 }, () => {
 	it('파일에서 내 제품을 가져와 목록과 카탈로그에 넣습니다', async () => {
 		const { session, input } = setup();
 		const entry = createCustomEntry({
@@ -37,7 +40,7 @@ describe('CatalogPanel 내 제품 파일', () => {
 			glyph: ''
 		});
 		await userEvent.upload(input, jsonFile(stringifyCustomProducts([entry])));
-		expect(await screen.findByText('가져온 조명')).toBeInTheDocument();
+		expect(await screen.findByText('가져온 조명', {}, SLOW)).toBeInTheDocument();
 		expect(session.announcement).toBe('내 제품을 가져왔습니다. 새 제품 1개.');
 		expect(getCatalogEntry('custom-imported-lamp').name).toBe('가져온 조명');
 		expect((await listCustomProducts()).some((item) => item.id === entry.id)).toBe(true);
@@ -48,7 +51,7 @@ describe('CatalogPanel 내 제품 파일', () => {
 	it('읽을 수 없는 파일은 이유를 알립니다', async () => {
 		const { input } = setup();
 		await userEvent.upload(input, jsonFile('{"hello":1}'));
-		expect(await screen.findByRole('alert')).toHaveTextContent(
+		expect(await screen.findByRole('alert', {}, SLOW)).toHaveTextContent(
 			'내 제품 파일이나 배치도 파일이 아닙니다.'
 		);
 	});
