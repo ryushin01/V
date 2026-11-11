@@ -12,6 +12,7 @@ import {
 	SPEC_LIMITS,
 	snapToWall,
 	wallRange,
+	type CatalogEntry,
 	type ItemData,
 	type Opening,
 	type PlanData,
@@ -105,8 +106,21 @@ export class EditorSession {
 			room,
 			items,
 			updatedAt: Date.now(),
-			...(underlay ? { underlay } : {})
+			...(underlay ? { underlay } : {}),
+			...this.#customEntries()
 		};
+	}
+
+	/** 배치도에 놓인 직접 등록 제품의 정의를 함께 담습니다. */
+	#customEntries(): { customEntries?: CatalogEntry[] } {
+		// 저장할 값을 모으는 임시 Map이라 반응형일 필요가 없습니다.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const used = new Map<string, CatalogEntry>();
+		for (const item of this.items) {
+			const entry = getCatalogEntry(item.catalogId);
+			if (entry.custom) used.set(entry.id, $state.snapshot(entry) as CatalogEntry);
+		}
+		return used.size > 0 ? { customEntries: [...used.values()] } : {};
 	}
 
 	#capture(): Snapshot {

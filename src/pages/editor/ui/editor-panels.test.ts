@@ -34,7 +34,7 @@ describe('CatalogPanel 검색', () => {
 		render(CatalogPanel, { session });
 		await userEvent.type(screen.getByLabelText('모델명이나 제조사로 찾기'), 'G9');
 		const button = screen.getByRole('button', { name: /Odyssey OLED G9/ });
-		expect(screen.getAllByRole('button')).toHaveLength(1);
+		expect(screen.getAllByRole('button', { name: /배치도에 추가/ })).toHaveLength(1);
 		expect(screen.getByText('1개')).toBeInTheDocument();
 		await userEvent.click(button);
 		expect(session.items[0].entry.diagonalInch).toBe(49);
@@ -53,7 +53,7 @@ describe('ItemForm', () => {
 		session.addItem('sony-ps5-pro');
 		render(ItemForm, { session, item: session.items[0] });
 		const watts = screen.getByLabelText('소비 전력');
-		expect(watts).toHaveValue(390);
+		expect(watts).toHaveValue('390');
 		expect(watts).toHaveAccessibleDescription('정격 소비 전력');
 	});
 

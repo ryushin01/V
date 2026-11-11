@@ -57,6 +57,12 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 - 공유 링크는 배치도를 `deflate-raw`로 압축해 주소의 해시에 넣습니다. 해시는 서버로 전송되지 않으며, 받을 때 파일 불러오기와 같은 검사를 거칩니다. 금액과 평면도 이미지는 넣지 않습니다.
 - 평면도 이미지는 긴 변 2000px의 JPEG로 줄여 배치도와 함께 IndexedDB에 저장하고, JSON 내보내기에 포함합니다.
 
+## 내 제품 등록
+
+- 직접 등록한 제품은 IndexedDB의 `custom-products` 저장소에 두고, 카탈로그 조회(`getCatalogEntry`)는 내장 카탈로그 다음에 등록 제품을 찾습니다. 등록 제품은 `SvelteMap`에 있어 고치면 이미 놓은 물건의 그림과 점검이 바로 바뀝니다.
+- 배치도를 저장할 때 쓰인 등록 제품의 정의를 `customEntries`로 함께 담습니다. 파일과 공유 링크를 받은 쪽은 이 정의로 제품을 등록해 엽니다. 이미 같은 id의 정의가 있으면 덮지 않아, 내가 고친 최신 정의가 옛 사본에 밀리지 않습니다.
+- 층·분류·받침 여부는 사용자가 아니라 종류(`KIND_PRESETS`)가 정하고, 파일에서 온 값도 종류에서 다시 계산합니다.
+
 ## CI
 
 `.github/workflows/ci.yml`이 포맷, ESLint, Steiger, 타입, 단위 테스트, 빌드, Storybook 빌드, E2E를 차례로 실행합니다.
