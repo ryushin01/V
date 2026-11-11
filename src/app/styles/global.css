@@ -11,12 +11,18 @@
 	--accent-deep: #c62828;
 	--ok: #1b6e3c;
 
-	/* 글꼴을 받기 전이나 받지 못하면 운영체제의 한글 고딕으로 */
-	--font-korean: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+	/*
+	 * 대체 글꼴: 웹 글꼴을 받기 전이나 받지 못할 때 같은 분위기로 보이도록 운영체제마다 있는 글꼴로 잇습니다.
+	 * 제목은 도면 글씨처럼 좁은 글꼴(맥 Avenir Next Condensed, 윈도 Arial Narrow), 본문은 각 운영체제의 한글 고딕,
+	 * 치수는 고정폭(맥 SF Mono·Menlo, 윈도 Consolas, 설치돼 있으면 D2Coding)입니다.
+	 */
+	--font-korean: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', system-ui, sans-serif;
 	--font-sans: 'Gothic A1', var(--font-korean);
-	--font-display: 'Roboto Condensed Variable', 'Sunflower', var(--font-korean);
+	--font-display:
+		'Roboto Condensed Variable', 'Sunflower', 'Avenir Next Condensed', 'Arial Narrow',
+		var(--font-korean);
 	--font-mono:
-		'IBM Plex Mono', 'Nanum Gothic Coding', ui-monospace, 'Apple SD Gothic Neo', 'Malgun Gothic',
+		'IBM Plex Mono', 'Nanum Gothic Coding', ui-monospace, 'SF Mono', Menlo, Consolas, 'D2Coding',
 		monospace;
 
 	--ease: cubic-bezier(0.23, 1, 0.32, 1);
