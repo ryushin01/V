@@ -46,6 +46,8 @@
 	}
 
 	function add(id: string) {
+		// 한도에 걸려 놓지 못한 물건은 최근 목록에 넣지 않습니다.
+		if (!session.canAddItem) return;
 		session.addItem(id);
 		recentIds = [id, ...recentIds.filter((other) => other !== id)].slice(0, RECENT_LIMIT);
 		try {
