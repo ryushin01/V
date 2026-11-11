@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { getCatalogEntry } from '../model/catalog';
 import { createCustomEntry } from '../model/custom';
 import { createEmptyPlan } from '../model/factory';
+import { CUSTOM_PRODUCT_LIMIT } from '../model/custom-file';
 import {
+	CustomProductLimitError,
 	deletePlan,
 	getPlan,
 	listCustomProducts,
@@ -48,5 +50,27 @@ describe('IndexedDB 저장소', () => {
 		const ids = (await listCustomProducts()).map((entry) => entry.id);
 		expect(ids).toEqual(expect.arrayContaining(['custom-batch-a', 'custom-batch-b']));
 		expect(getCatalogEntry('custom-batch-b').name).toBe('둘째');
+	});
+
+	it('합계가 한도를 넘으면 하나도 저장하지 않습니다', async () => {
+		const before = (await listCustomProducts()).length;
+		const many = Array.from({ length: CUSTOM_PRODUCT_LIMIT - before + 1 }, (_, index) =>
+			createCustomEntry({
+				brand: '',
+				kind: 'decor',
+				width: 10,
+				depth: 10,
+				watts: 0,
+				cable: 0,
+				glyph: '',
+				id: `custom-over-${index}`,
+				name: `넘침 ${index}`
+			})
+		);
+		await expect(saveCustomProducts(many)).rejects.toBeInstanceOf(CustomProductLimitError);
+		expect(await listCustomProducts()).toHaveLength(before);
+		// 한도 안이면 저장합니다.
+		await saveCustomProducts(many.slice(1));
+		expect(await listCustomProducts()).toHaveLength(CUSTOM_PRODUCT_LIMIT);
 	});
 });

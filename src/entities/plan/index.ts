@@ -1,4 +1,5 @@
 export {
+	CustomProductLimitError,
 	deleteCustomProduct,
 	deletePlan,
 	getPlan,
@@ -17,7 +18,7 @@ export {
 	type CustomProductInput
 } from './model/custom';
 export {
-	CUSTOM_FILE_LIMIT,
+	CUSTOM_PRODUCT_LIMIT,
 	parseCustomProductsFile,
 	stringifyCustomProducts,
 	type CustomFileResult

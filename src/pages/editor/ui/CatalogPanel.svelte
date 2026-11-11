@@ -4,6 +4,7 @@
 	import {
 		CATALOG,
 		CATEGORY_LABELS,
+		CustomProductLimitError,
 		matchesCatalogQuery,
 		listCustomProducts,
 		parseCustomProductsFile,
@@ -90,8 +91,11 @@
 			if (parsed.skipped > 0) parts.push(`읽을 수 없어 건너뛴 항목 ${parsed.skipped}개`);
 			fileNote = `내 제품을 가져왔습니다. ${parts.join(', ')}.`;
 			session.announcement = fileNote;
-		} catch {
-			fileError = '저장하지 못했습니다. 비공개 창이라면 일반 창에서 열어 주세요.';
+		} catch (error) {
+			fileError =
+				error instanceof CustomProductLimitError
+					? `${error.message} 가져오면 ${error.total}개가 되어 가져오지 않았습니다.`
+					: '저장하지 못했습니다. 비공개 창이라면 일반 창에서 열어 주세요.';
 		} finally {
 			importing = false;
 		}
