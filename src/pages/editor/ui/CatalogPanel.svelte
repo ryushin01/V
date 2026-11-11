@@ -28,6 +28,33 @@
 	let fileNote = $state('');
 	let importing = false;
 
+	// 최근에 놓은 물건은 이 브라우저에만 기억하는 편의 기능입니다. 저장소를 못 쓰면 없이 동작합니다.
+	const RECENT_KEY = 'v-recent-items';
+	const RECENT_LIMIT = 6;
+	let recentIds = $state<string[]>([]);
+	let opened = $state<Record<string, boolean>>({});
+
+	function readRecent(): string[] {
+		try {
+			const value: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+			return Array.isArray(value)
+				? value.filter((id): id is string => typeof id === 'string').slice(0, RECENT_LIMIT)
+				: [];
+		} catch {
+			return [];
+		}
+	}
+
+	function add(id: string) {
+		session.addItem(id);
+		recentIds = [id, ...recentIds.filter((other) => other !== id)].slice(0, RECENT_LIMIT);
+		try {
+			localStorage.setItem(RECENT_KEY, JSON.stringify(recentIds));
+		} catch {
+			// 비공개 창 등에서는 기억하지 않습니다.
+		}
+	}
+
 	async function refresh() {
 		try {
 			mine = await listCustomProducts();
@@ -36,7 +63,10 @@
 		}
 	}
 
-	onMount(refresh);
+	onMount(() => {
+		recentIds = readRecent();
+		void refresh();
+	});
 
 	function openDialog(entry: CatalogEntry | null) {
 		editing = entry;
@@ -45,7 +75,7 @@
 
 	async function handleSaved(entry: CatalogEntry, place: boolean) {
 		await refresh();
-		if (place) session.addItem(entry.id);
+		if (place) add(entry.id);
 		else session.announcement = `${entry.name} 정보를 저장했습니다.`;
 	}
 
@@ -101,6 +131,15 @@
 		}
 	}
 
+	const searching = $derived(query.trim() !== '');
+	const recent = $derived(
+		recentIds
+			.map(
+				(id) => CATALOG.find((entry) => entry.id === id) ?? mine.find((entry) => entry.id === id)
+			)
+			.filter((entry): entry is CatalogEntry => entry !== undefined)
+	);
+
 	const mineFiltered = $derived(mine.filter((entry) => matchesCatalogQuery(entry, query)));
 
 	const groups = $derived(
@@ -118,6 +157,24 @@
 		groups.reduce((sum, group) => sum + group.entries.length, 0) + mineFiltered.length
 	);
 </script>
+
+{#snippet row(entry: CatalogEntry)}
+	<li>
+		<button type="button" disabled={!session.canAddItem} onclick={() => add(entry.id)}>
+			<span class="name">
+				{#if entry.brand}<span class="brand">{entry.brand}</span>{/if}
+				{entry.name}
+			</span>
+			<span class="measure"
+				>{entry.width}×{entry.depth}{#if entry.dimsBasis === 'estimate'}<span class="estimate">
+						추정</span
+					>{/if}</span
+			>
+			<Icon name="plus" size={16} />
+			<span class="sr-only">배치도에 추가</span>
+		</button>
+	</li>
+{/snippet}
 
 <section class="panel" aria-labelledby="catalog-heading">
 	<h2 id="catalog-heading" tabindex="-1">물건 추가</h2>
@@ -146,11 +203,7 @@
 			<ul>
 				{#each mineFiltered as entry (entry.id)}
 					<li class="mine-row">
-						<button
-							type="button"
-							disabled={!session.canAddItem}
-							onclick={() => session.addItem(entry.id)}
-						>
+						<button type="button" disabled={!session.canAddItem} onclick={() => add(entry.id)}>
 							<span class="name">
 								{#if entry.brand}<span class="brand">{entry.brand}</span>{/if}
 								{entry.name}
@@ -194,32 +247,30 @@
 			찾는 물건이 없습니다. 비슷한 크기의 기본 물건을 놓고 규격을 직접 입력해 주세요.
 		</p>
 	{/if}
+	{#if !searching && recent.length > 0}
+		<details open class="recent">
+			<summary>최근 추가한 물건 <span class="measure">{recent.length}</span></summary>
+			<ul>
+				{#each recent as entry (entry.id)}
+					{@render row(entry)}
+				{/each}
+			</ul>
+		</details>
+	{/if}
 	{#each groups as group (group.category)}
-		<details open>
-			<summary>{group.label}</summary>
+		<!-- 목록이 길어 분류는 접어 두고, 검색하면 결과가 있는 분류를 모두 펼칩니다. -->
+		<details
+			bind:open={
+				() => searching || (opened[group.category] ?? false),
+				(value) => {
+					if (!searching) opened[group.category] = value;
+				}
+			}
+		>
+			<summary>{group.label} <span class="measure">{group.entries.length}</span></summary>
 			<ul>
 				{#each group.entries as entry (entry.id)}
-					<li>
-						<button
-							type="button"
-							disabled={!session.canAddItem}
-							onclick={() => session.addItem(entry.id)}
-						>
-							<span class="name">
-								{#if entry.brand}<span class="brand">{entry.brand}</span>{/if}
-								{entry.name}
-							</span>
-							<span class="measure"
-								>{entry.width}×{entry.depth}{#if entry.dimsBasis === 'estimate'}<span
-										class="estimate"
-									>
-										추정</span
-									>{/if}</span
-							>
-							<Icon name="plus" size={16} />
-							<span class="sr-only">배치도에 추가</span>
-						</button>
-					</li>
+					{@render row(entry)}
 				{/each}
 			</ul>
 		</details>

@@ -15,6 +15,12 @@ async function openEmpty(page: Page) {
 	await expect(page.getByRole('heading', { name: '물건 추가' })).toBeVisible();
 }
 
+/** 분류가 접혀 있으므로 검색해서 물건을 놓습니다. 놓은 뒤 초점은 놓은 물건으로 갑니다. */
+async function addFromCatalog(page: Page, name: string) {
+	await page.getByLabel('모델명이나 제조사로 찾기').fill(name);
+	await page.getByRole('button', { name: new RegExp(`^${name}`) }).click();
+}
+
 async function expectNoAxeViolations(page: Page) {
 	// 스크롤하면 나타나는 요소도 나타난 뒤의 대비로 검사합니다.
 	await page.evaluate(() => {
@@ -116,7 +122,7 @@ test.describe('룰러', () => {
 test.describe('키보드만으로 배치', () => {
 	test('추가, 이동, 회전, 되돌리기', async ({ page }) => {
 		await openEmpty(page);
-		await page.getByRole('button', { name: /^책상 140/ }).click();
+		await addFromCatalog(page, '책상 140');
 
 		const desk = page.locator('[data-item-id]').first();
 		await expect(desk).toBeFocused();
@@ -141,7 +147,7 @@ test.describe('키보드만으로 배치', () => {
 
 	test('삭제하면 초점을 잃지 않습니다', async ({ page }) => {
 		await openEmpty(page);
-		await page.getByRole('button', { name: /^책상 140/ }).click();
+		await addFromCatalog(page, '책상 140');
 		await expect(page.locator('[data-item-id]').first()).toBeFocused();
 		await page.keyboard.press('Delete');
 		await expect(page.getByRole('heading', { name: '물건 추가' })).toBeFocused();
@@ -151,7 +157,7 @@ test.describe('키보드만으로 배치', () => {
 test.describe('포인터 조작', () => {
 	test('끌어서 옮기고 Esc로 취소합니다', async ({ page }) => {
 		await openEmpty(page);
-		await page.getByRole('button', { name: /^책상 140/ }).click();
+		await addFromCatalog(page, '책상 140');
 		const desk = page.locator('[data-item-id]').first();
 		const start = await desk.getAttribute('aria-label');
 		const box = await desk.boundingBox();
@@ -178,8 +184,8 @@ test.describe('포인터 조작', () => {
 test.describe('점검과 저장', () => {
 	test('겹치면 글자와 아이콘으로 알립니다', async ({ page }) => {
 		await openEmpty(page);
-		await page.getByRole('button', { name: /^책상 140/ }).click();
-		await page.getByRole('button', { name: /^TV장/ }).click();
+		await addFromCatalog(page, '책상 140');
+		await addFromCatalog(page, 'TV장');
 		await page.getByLabel('X', { exact: true }).fill('90');
 		await page.getByLabel('X', { exact: true }).press('Tab');
 		await page.getByLabel('Y', { exact: true }).fill('35');
@@ -190,7 +196,7 @@ test.describe('점검과 저장', () => {
 
 	test('새로 고쳐도 배치가 남습니다', async ({ page }) => {
 		await openEmpty(page);
-		await page.getByRole('button', { name: /^사무용 의자/ }).click();
+		await addFromCatalog(page, '사무용 의자');
 		await expect(page.getByText('저장됨')).toBeVisible();
 		await expect(page.locator('[data-item-id]')).toHaveCount(1);
 		await page.waitForTimeout(500);
@@ -298,7 +304,7 @@ test.describe('공유와 오류 화면', () => {
 
 	test('치수를 바꾸면 도면과 안내가 함께 바뀝니다', async ({ page }) => {
 		await openEmpty(page);
-		await page.getByRole('button', { name: /^책상 140/ }).click();
+		await addFromCatalog(page, '책상 140');
 		await page.getByLabel('가로', { exact: true }).fill('200');
 		await page.getByLabel('가로', { exact: true }).press('Tab');
 		await expect(page.locator('[data-item-id]').first()).toHaveAttribute('aria-label', /가로 200/);
@@ -370,6 +376,28 @@ test.describe('다각형 방과 평면도 이미지', () => {
 		await page.getByRole('button', { name: '두 점으로 축척 맞추기' }).click();
 		await page.keyboard.press('Escape');
 		await expect(page.getByRole('button', { name: '두 점으로 축척 맞추기' })).toBeVisible();
+	});
+});
+
+test.describe('물건 목록', () => {
+	test('분류는 접혀 있고, 검색하면 펼치고, 최근 놓은 물건을 위에 보여 줍니다', async ({ page }) => {
+		await openEmpty(page);
+		const panel = page.locator('section[aria-labelledby="catalog-heading"]');
+		await expect(panel.getByRole('button', { name: /^책상 140/ })).toBeHidden();
+		await expect(panel.locator('summary', { hasText: '가구' })).toContainText(/\d+/);
+
+		await page.getByLabel('모델명이나 제조사로 찾기').fill('액톤');
+		await expect(panel.getByRole('button', { name: /Acton III/ })).toBeVisible();
+		await panel.getByRole('button', { name: /Acton III/ }).click();
+		await page.getByLabel('모델명이나 제조사로 찾기').fill('');
+
+		const recent = panel.locator('details.recent');
+		await expect(recent.getByRole('button', { name: /Acton III/ })).toBeVisible();
+		await page.reload();
+		await expect(
+			page.locator('details.recent').getByRole('button', { name: /Acton III/ })
+		).toBeVisible();
+		await expectNoAxeViolations(page);
 	});
 });
 

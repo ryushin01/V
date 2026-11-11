@@ -276,6 +276,7 @@
 
 	.field {
 		display: grid;
+		align-content: start;
 		gap: 0.25rem;
 		min-width: 0;
 	}
