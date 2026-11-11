@@ -37,9 +37,10 @@
 	function readRecent(): string[] {
 		try {
 			const value: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
-			return Array.isArray(value)
-				? value.filter((id): id is string => typeof id === 'string').slice(0, RECENT_LIMIT)
-				: [];
+			if (!Array.isArray(value)) return [];
+			// 목록의 키가 겹치지 않도록 같은 id는 한 번만 씁니다.
+			const ids = value.filter((id): id is string => typeof id === 'string');
+			return [...new Set(ids)].slice(0, RECENT_LIMIT);
 		} catch {
 			return [];
 		}
