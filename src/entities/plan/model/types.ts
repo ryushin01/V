@@ -64,6 +64,8 @@ export interface PlanData {
 	items: ItemData[];
 	updatedAt: number;
 	underlay?: Underlay;
+	/** 이 배치도에 쓴 직접 등록 제품. 파일과 공유 링크로 옮겨도 열리도록 함께 담습니다. */
+	customEntries?: CatalogEntry[];
 }
 
 export type ItemKind =
@@ -121,6 +123,8 @@ export interface CatalogEntry {
 	diagonalInch?: number;
 	/** true면 책상이나 장 위에 있어야 합니다. */
 	requiresSupport?: boolean;
+	/** 사용자가 직접 등록한 제품 */
+	custom?: boolean;
 	/** 'estimate'면 제조사 치수를 찾지 못해 비슷한 제품으로 추정한 값입니다. */
 	dimsBasis?: 'estimate';
 	/** 실제 제품이면 제조사 이름 */

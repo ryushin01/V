@@ -373,6 +373,46 @@ test.describe('다각형 방과 평면도 이미지', () => {
 	});
 });
 
+test.describe('내 제품 등록', () => {
+	test('등록해 놓고, 새로 고쳐도 남고, 공유 링크로도 열립니다', async ({ page }) => {
+		await openEmpty(page);
+		await page.getByRole('button', { name: '제품 등록' }).click();
+		const dialog = page.getByRole('dialog', { name: '제품 등록' });
+		await dialog.getByLabel('제품 이름 (필수)').fill('우리 집 원목 책상');
+		await dialog.getByLabel('가로', { exact: true }).fill('170');
+		await dialog.getByLabel('가로', { exact: true }).press('Tab');
+		await dialog.getByLabel('그림', { exact: true }).selectOption({ label: '모션데스크' });
+		await expectNoAxeViolations(page);
+		await dialog.getByRole('button', { name: '등록' }).click();
+		await expect(dialog).toBeHidden();
+		const item = page.locator('[data-item-id]').first();
+		await expect(item).toHaveAttribute('aria-label', /우리 집 원목 책상, 가로 170/);
+		await expect(page.locator('[data-glyph="mattz"]')).toBeAttached();
+
+		await page.waitForTimeout(500);
+		await page.reload();
+		await expect(page.locator('[data-item-id]').first()).toHaveAttribute(
+			'aria-label',
+			/우리 집 원목 책상/
+		);
+		await expect(page.getByRole('button', { name: '우리 집 원목 책상 고치기' })).toBeVisible();
+
+		await page.getByRole('button', { name: '공유' }).click();
+		const url = await page.getByLabel('주소').inputValue();
+		const fresh = await page.context().browser()!.newContext();
+		const other = await fresh.newPage();
+		await other.goto(url);
+		await expect(other.getByRole('img', { name: /물건 1개/ })).toBeVisible();
+		await other.getByRole('button', { name: /내 배치도로 복사/ }).click();
+		await other.waitForURL(/\/plans\//);
+		await expect(other.locator('[data-item-id]').first()).toHaveAttribute(
+			'aria-label',
+			/우리 집 원목 책상/
+		);
+		await fresh.close();
+	});
+});
+
 test.describe('화면 폭과 접근성', () => {
 	for (const width of [320, 390, 768, 1024, 1440]) {
 		test(`${width}px에서 가로로 넘치지 않습니다`, async ({ page }) => {

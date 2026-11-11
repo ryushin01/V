@@ -1,12 +1,30 @@
-export { deletePlan, getPlan, listPlans, savePlan } from './api/plans-db';
+export {
+	deleteCustomProduct,
+	deletePlan,
+	getPlan,
+	listCustomProducts,
+	listPlans,
+	saveCustomProduct,
+	savePlan
+} from './api/plans-db';
+export {
+	createCustomEntry,
+	CUSTOM_KINDS,
+	DEFAULT_SCREEN_INCH,
+	KIND_PRESETS,
+	toCustomInput,
+	type CustomProductInput
+} from './model/custom';
 export { analyzePlan, CHAIR_CLEARANCE_CM, viewingRange } from './model/analysis';
 export {
 	CATALOG,
 	CATEGORY_LABELS,
 	getCatalogEntry,
 	matchesCatalogQuery,
+	registerCustomEntries,
 	resolveEntry,
 	SPEC_LIMITS,
+	unregisterCustomEntry,
 	WATTS_BASIS_LABELS
 } from './model/catalog';
 export { decodePlan, encodePlan } from './api/share-link';
@@ -35,6 +53,7 @@ export type {
 	Cutout,
 	Finding,
 	ItemData,
+	ItemKind,
 	ItemSpecs,
 	Opening,
 	PlanData,

@@ -1,3 +1,4 @@
+import { registerCustomEntries } from '../model/catalog';
 import { parsePlan, stringifyPlan, type ParseResult } from '../model/serialize';
 import type { PlanData } from '../model/types';
 
@@ -68,7 +69,10 @@ export async function decodePlan(token: string): Promise<ParseResult> {
 		const decoded = await readLimited(
 			pipe(fromBase64Url(token), new DecompressionStream('deflate-raw'))
 		);
-		return decoded ? parsePlan(new TextDecoder().decode(decoded)) : INVALID;
+		if (!decoded) return INVALID;
+		const result = parsePlan(new TextDecoder().decode(decoded));
+		if (result.ok) registerCustomEntries(result.plan.customEntries);
+		return result;
 	} catch {
 		return INVALID;
 	}
