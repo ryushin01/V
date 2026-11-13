@@ -1,7 +1,7 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.6.3-121214)
+![version](https://img.shields.io/badge/version-0.6.4-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
