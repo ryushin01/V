@@ -1,5 +1,22 @@
 # 변경 기록
 
+## 0.6.4 - 2026-11-13
+
+- 모니터링: load가 10초 전에 오면 기한을 거두고 한가할 때를 기다림. 전에는 load가 9초에 와도 10초 기한이 먼저 Sentry를 받기 시작해 한가할 때를 기다리지 않을 수 있었음(+테스트)
+
+## 0.6.3 - 2026-11-13
+
+- 모니터링: Sentry를 페이지를 다 받은 뒤(load) 한가할 때 받음. load가 10초 안에 오지 않으면 그때 바로 받음. Error가 아닌 일반 객체로 거부된 Promise의 필드 값(`extra.__serialized__`)도 보내기 전에 지움(+테스트)
+- 정리: 쓰지 않는 `resolvedPolygon`, 파일 안에서만 쓰는 상수(`PASSAGE_WIDTH_CM`, `MONITOR_RANGE_CM`, `CUSTOM_LIMITS`, `CUSTOM_FILE_FORMAT`, `DEFAULT_ROOM_SIZE`)와 `FindingCode` 타입의 export
+
+## 0.6.2 - 2026-11-12
+
+- 모니터링: `VITE_SENTRY_DSN`이 있으면 처리하지 못한 오류와 나쁜 Web Vitals를 Sentry로 보냄. 오류 내용만 보내고, Sentry(약 31 kB gzip)와 web-vitals는 첫 화면 뒤에 따로 받음
+- 성능 예산: CI에서 size-limit(전체 JS 115 kB, CSS 42 kB)과 Lighthouse CI(첫 화면과 공유 화면이 데스크톱 기준 성능 90·접근성 100·권장 사항 95·SEO 90점(공유 화면은 noindex라 SEO 제외), LCP 2.5초·TBT 200ms·CLS 0.1 이하)로 검사
+- Dependabot: npm 매주, GitHub Actions 매월 업데이트 PR
+- 글꼴을 data: 주소로 CSS에 넣지 않고 파일로 내보냄: 글자 묶음별 조각 269개가 기본 CSS에 모두 들어가 첫 화면에서 565 kB(gzip)를 받던 것을 39 kB로 줄이고, 첫 화면 LCP가 0.88초에서 0.42초로 빨라짐
+- 모니터링: SvelteKit이 오류 화면으로 바꾼 오류도 `hooks.client.ts`의 `handleError`에서 보냄
+
 ## 0.6.1 - 2026-11-11
 
 - 글꼴 교체: 제목은 도면 글씨 같은 Roboto Condensed(영문)와 해바라기(한글), 본문은 Gothic A1, 치수 숫자는 IBM Plex Mono(영문·숫자)와 나눔고딕코딩(한글). Bricolage Grotesque·Space Grotesk는 뺌

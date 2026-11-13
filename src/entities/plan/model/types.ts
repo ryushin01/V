@@ -153,7 +153,7 @@ export type WattsBasis =
 
 export type FindingSeverity = 'error' | 'warning' | 'ok';
 
-export type FindingCode =
+type FindingCode =
 	| 'out-of-room'
 	| 'overlap'
 	| 'door-swing'
