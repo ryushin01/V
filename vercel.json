@@ -27,5 +27,11 @@
 			"status": 404,
 			"dest": "/404.html"
 		}
-	]
+	],
+	"git": {
+		"deploymentEnabled": {
+			"**": false,
+			"main": true
+		}
+	}
 }
