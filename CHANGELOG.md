@@ -1,5 +1,13 @@
 # 변경 기록
 
+## 0.6.2 - 2026-11-12
+
+- 모니터링: `VITE_SENTRY_DSN`이 있으면 처리하지 못한 오류와 나쁜 Web Vitals를 Sentry로 보냄. 오류 내용만 보내고, Sentry(약 31 kB gzip)와 web-vitals는 첫 화면 뒤에 따로 받음
+- 성능 예산: CI에서 size-limit(전체 JS 115 kB, CSS 42 kB)과 Lighthouse CI(첫 화면과 공유 화면이 데스크톱 기준 성능 90·접근성 100·권장 사항 95·SEO 90점(공유 화면은 noindex라 SEO 제외), LCP 2.5초·TBT 200ms·CLS 0.1 이하)로 검사
+- Dependabot: npm 매주, GitHub Actions 매월 업데이트 PR
+- 글꼴을 data: 주소로 CSS에 넣지 않고 파일로 내보냄: 글자 묶음별 조각 269개가 기본 CSS에 모두 들어가 첫 화면에서 565 kB(gzip)를 받던 것을 39 kB로 줄이고, 첫 화면 LCP가 0.88초에서 0.42초로 빨라짐
+- 모니터링: SvelteKit이 오류 화면으로 바꾼 오류도 `hooks.client.ts`의 `handleError`에서 보냄
+
 ## 0.6.1 - 2026-11-11
 
 - 글꼴 교체: 제목은 도면 글씨 같은 Roboto Condensed(영문)와 해바라기(한글), 본문은 Gothic A1, 치수 숫자는 IBM Plex Mono(영문·숫자)와 나눔고딕코딩(한글). Bricolage Grotesque·Space Grotesk는 뺌
