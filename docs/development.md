@@ -71,3 +71,28 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 ## 배포
 
 Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에, PR을 열면 미리보기에 배포됩니다. 배치도 편집 주소는 `vercel.json`의 `routes`로 `spa.html`을 내려 주고, 없는 주소는 같은 내용의 `404.html`을 404 상태로 내려 줘 앱의 오류 화면이 뜹니다. Vercel이 Svelte를 감지하면 없는 주소에 `index.html`을 내려 주므로, `rewrites` 대신 끝에 404를 명시한 `routes`를 씁니다.
+
+## 품질 예산
+
+- **번들 크기:** `pnpm size`가 전체 JS 115 kB, CSS 42 kB(gzip)를 넘으면 실패합니다. 기준은 `.size-limit.json`에 있습니다.
+- **Lighthouse:** `pnpm lhci`가 첫 화면과 공유 화면이 데스크톱 기준 성능 90·접근성 100·권장 사항 95·SEO 90점(공유 화면은 noindex라 SEO 제외), LCP 2.5초·TBT 200ms·CLS 0.1 이하인지 3번씩 재서 확인합니다. 기준은 `lighthouserc.json`에 있습니다.
+
+Svelte 컴파일러의 접근성 경고는 `eslint-plugin-svelte`의 `svelte/valid-compile`과 `svelte-check`가 이미 검사합니다.
+
+두 검사 모두 프로덕션 빌드가 먼저 있어야 하며, CI는 빌드 뒤에 돌립니다.
+
+## 모니터링
+
+`src/hooks.client.ts`가 화면을 그리기 전에 `app/monitoring`을 켜고(SvelteKit이 오류 화면으로 바꾼 오류는 `handleError`에서 보냄), Sentry와 web-vitals는 나중에 따로 받습니다.
+
+| 환경 변수         | 내용                                                                                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_SENTRY_DSN` | 있으면 처리하지 못한 오류와 나쁜(poor) Web Vitals를 Sentry로 보냅니다. 없으면 Sentry를 번들에 넣지 않고, 개발 모드에서 Web Vitals를 콘솔에만 찍습니다 |
+
+- Sentry에는 오류 내용만 보내고 사용자 정보·쿠키·헤더·쿼리 문자열, 방문 기록(세션), 이동·클릭 기록(브레드크럼), 콘솔 기록은 모으지 않습니다. Sentry를 받기 전에 난 오류는 모아 두었다가 처리되지 않은 오류로 보냅니다.
+- 쓰는 함수만 `sentry.ts`에서 다시 내보내 약 31 kB(gzip)로 받습니다. 모듈 전체를 불러오면 리플레이·피드백까지 들어가 140 kB가 됩니다.
+- 브라우저 오류만 모읍니다. 서버에서 난 오류는 호스팅(Vercel 등)의 로그로 확인합니다.
+
+## 의존성 갱신 (Dependabot)
+
+`.github/dependabot.yml`이 npm 패키지는 매주 부 버전·패치를 한 PR로 묶어 올리고, GitHub Actions는 매달 올립니다. 주 버전은 따로 PR이 열리므로 변경 내역을 확인하고 CI가 통과할 때만 병합합니다.
