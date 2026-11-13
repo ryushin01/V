@@ -3,7 +3,7 @@ import { PLAN_LIMITS } from './room';
 import type { CatalogEntry } from './types';
 
 /** 내 제품만 담은 파일의 형식 이름입니다. 배치도 파일과 구분합니다. */
-export const CUSTOM_FILE_FORMAT = 'v-custom-products';
+const CUSTOM_FILE_FORMAT = 'v-custom-products';
 const CUSTOM_FILE_VERSION = 1;
 /**
  * 한 브라우저에 둘 수 있는 내 제품 수이자 한 파일의 한도입니다. 저장할 때 이 수를 넘지 않게 막아,

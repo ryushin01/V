@@ -1,7 +1,7 @@
 import { createId } from '#shared/lib/id';
 import type { ItemData, PlanData } from './types';
 
-export const DEFAULT_ROOM_SIZE = { width: 400, depth: 320 } as const;
+const DEFAULT_ROOM_SIZE = { width: 400, depth: 320 } as const;
 
 export function createEmptyPlan(name = '새 배치도'): PlanData {
 	return {
