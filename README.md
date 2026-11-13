@@ -1,7 +1,7 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.6.1-121214)
+![version](https://img.shields.io/badge/version-0.6.2-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
@@ -48,14 +48,15 @@
 
 ![Svelte, TypeScript, Vite, Vitest, pnpm, GitHub Actions](https://skillicons.dev/icons?i=svelte,ts,vite,vitest,pnpm,githubactions)
 
-| 구분       | 사용 기술                                                                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
-| 프레임워크 | Svelte 5 (runes mode), SvelteKit 3, adapter-static, TypeScript                                           |
-| 상태       | class 기반 `$state`·`$derived`, `$state.raw`, `$state.snapshot`(되돌리기), `svelte/motion`, `{@attach}`  |
-| 그리기     | SVG 2D, Scoped CSS와 CSS 변수                                                                            |
-| 저장       | IndexedDB, JSON 파일                                                                                     |
-| 품질       | Feature-Sliced Design(Steiger), ESLint, Prettier, svelte-check, Vitest, Testing Library, Playwright, axe |
-| 문서·배포  | Storybook 10, GitHub Actions, Vercel(정적 배포)                                                          |
+| 구분       | 사용 기술                                                                                                                           |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 프레임워크 | Svelte 5 (runes mode), SvelteKit 3, adapter-static, TypeScript                                                                      |
+| 상태       | class 기반 `$state`·`$derived`, `$state.raw`, `$state.snapshot`(되돌리기), `svelte/motion`, `{@attach}`                             |
+| 그리기     | SVG 2D, Scoped CSS와 CSS 변수                                                                                                       |
+| 저장       | IndexedDB, JSON 파일                                                                                                                |
+| 품질       | Feature-Sliced Design(Steiger), ESLint, Prettier, svelte-check, Vitest, Testing Library, Playwright, axe, size-limit, Lighthouse CI |
+| 모니터링   | Sentry(DSN이 있을 때만), web-vitals                                                                                                 |
+| 문서·배포  | Storybook 10, GitHub Actions, Vercel(정적 배포)                                                                                     |
 
 ## 시작하기
 
@@ -67,13 +68,14 @@ pnpm install
 pnpm dev        # http://localhost:5173
 ```
 
-| 명령                                         | 설명                                                     |
-| -------------------------------------------- | -------------------------------------------------------- |
-| `pnpm build` / `pnpm preview`                | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`) |
-| `pnpm lint` / `pnpm lint:fsd` / `pnpm check` | ESLint / FSD 구조 / 타입 검사                            |
-| `pnpm test`                                  | 단위·컴포넌트 테스트                                     |
-| `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)       |
-| `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)            |
+| 명령                                         | 설명                                                           |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| `pnpm build` / `pnpm preview`                | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`)       |
+| `pnpm lint` / `pnpm lint:fsd` / `pnpm check` | ESLint / FSD 구조 / 타입 검사                                  |
+| `pnpm test`                                  | 단위·컴포넌트 테스트                                           |
+| `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)             |
+| `pnpm size` / `pnpm lhci`                    | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요) |
+| `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)                  |
 
 ## 프로젝트 구조
 
