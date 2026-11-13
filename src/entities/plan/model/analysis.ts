@@ -23,8 +23,8 @@ import type {
 } from './types';
 
 export const CHAIR_CLEARANCE_CM = 60;
-export const PASSAGE_WIDTH_CM = 60;
-export const MONITOR_RANGE_CM = { min: 50, max: 100 } as const;
+const PASSAGE_WIDTH_CM = 60;
+const MONITOR_RANGE_CM = { min: 50, max: 100 } as const;
 const ROUTE_GRID_CM = 10;
 const INCH_TO_CM = 2.54;
 /** 16:9 화면의 대각선 대비 가로 길이 */
@@ -56,10 +56,6 @@ function resolveItem(data: ItemData): Resolved {
 		polygon: corners(rect),
 		center: { x: data.x, y: data.y }
 	};
-}
-
-export function resolvedPolygon(data: ItemData): Point[] {
-	return resolveItem(data).polygon;
 }
 
 /** 서로 겹쳐 놓는 것이 자연스러운 조합입니다. 의자·발받침대는 책상 아래로, 휴대 기기는 거치대 위로 갑니다. */
