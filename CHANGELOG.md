@@ -1,5 +1,10 @@
 # 변경 기록
 
+## 0.6.3 - 2026-11-13
+
+- 모니터링: Sentry를 페이지를 다 받은 뒤(load) 한가할 때 받음. load가 10초 안에 오지 않으면 그때 바로 받음. Error가 아닌 일반 객체로 거부된 Promise의 필드 값(`extra.__serialized__`)도 보내기 전에 지움(+테스트)
+- 정리: 쓰지 않는 `resolvedPolygon`, 파일 안에서만 쓰는 상수(`PASSAGE_WIDTH_CM`, `MONITOR_RANGE_CM`, `CUSTOM_LIMITS`, `CUSTOM_FILE_FORMAT`, `DEFAULT_ROOM_SIZE`)와 `FindingCode` 타입의 export
+
 ## 0.6.2 - 2026-11-12
 
 - 모니터링: `VITE_SENTRY_DSN`이 있으면 처리하지 못한 오류와 나쁜 Web Vitals를 Sentry로 보냄. 오류 내용만 보내고, Sentry(약 31 kB gzip)와 web-vitals는 첫 화면 뒤에 따로 받음
