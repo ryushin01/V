@@ -401,6 +401,26 @@ test.describe('물건 목록', () => {
 	});
 });
 
+test.describe('셀렉트', () => {
+	test('화살표 오른쪽 간격이 왼쪽 글자 간격과 같습니다', async ({ page }) => {
+		await openEmpty(page);
+		await page.getByRole('button', { name: '제품 등록' }).click();
+		const dialog = page.getByRole('dialog', { name: '제품 등록' });
+		for (const label of ['종류', '그림']) {
+			const gaps = await dialog.getByLabel(label, { exact: true }).evaluate((select) => {
+				const style = getComputedStyle(select);
+				const box = select.getBoundingClientRect();
+				const arrow = select.parentElement!.querySelector('.arrow svg')!.getBoundingClientRect();
+				return {
+					left: parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft),
+					right: box.right - arrow.right
+				};
+			});
+			expect(Math.abs(gaps.left - gaps.right), label).toBeLessThan(0.5);
+		}
+	});
+});
+
 test.describe('내 제품 등록', () => {
 	test('등록해 놓고, 새로 고쳐도 남고, 공유 링크로도 열립니다', async ({ page }) => {
 		await openEmpty(page);

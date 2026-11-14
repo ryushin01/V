@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Icon, NumberField } from '#shared/ui';
+	import { Button, Icon, NumberField, Select } from '#shared/ui';
 	import {
 		CORNER_LABELS,
 		cutoutLimits,
@@ -50,22 +50,20 @@
 					<fieldset>
 						<legend>{name}</legend>
 						<div class="grid">
-							<div class="select">
-								<label for={`corner-${cutout.id}`}>위치</label>
-								<select
-									id={`corner-${cutout.id}`}
-									value={cutout.corner}
-									onchange={(event) =>
-										session.updateCutout(cutout.id, {
-											corner: event.currentTarget.value as Corner
-										})}
-								>
-									<option value={cutout.corner}>{CORNER_LABELS[cutout.corner]}</option>
-									{#each session.freeCorners as corner (corner)}
-										<option value={corner}>{CORNER_LABELS[corner]}</option>
-									{/each}
-								</select>
-							</div>
+							<Select
+								label="위치"
+								id={`corner-${cutout.id}`}
+								value={cutout.corner}
+								onchange={(event) =>
+									session.updateCutout(cutout.id, {
+										corner: event.currentTarget.value as Corner
+									})}
+							>
+								<option value={cutout.corner}>{CORNER_LABELS[cutout.corner]}</option>
+								{#each session.freeCorners as corner (corner)}
+									<option value={corner}>{CORNER_LABELS[corner]}</option>
+								{/each}
+							</Select>
 							<NumberField
 								label="잘라 낸 가로"
 								unit="cm"
@@ -114,34 +112,30 @@
 				<fieldset>
 					<legend>{name}</legend>
 					<div class="grid">
-						<div class="select">
-							<label for={`wall-${opening.id}`}>벽</label>
-							<select
-								id={`wall-${opening.id}`}
-								value={opening.wall}
-								onchange={(event) =>
-									session.updateOpening(opening.id, { wall: event.currentTarget.value as Wall })}
-							>
-								{#each walls as wall (wall)}
-									<option value={wall}>{WALL_LABELS[wall]}</option>
-								{/each}
-							</select>
-						</div>
+						<Select
+							label="벽"
+							id={`wall-${opening.id}`}
+							value={opening.wall}
+							onchange={(event) =>
+								session.updateOpening(opening.id, { wall: event.currentTarget.value as Wall })}
+						>
+							{#each walls as wall (wall)}
+								<option value={wall}>{WALL_LABELS[wall]}</option>
+							{/each}
+						</Select>
 						{#if opening.kind === 'door'}
-							<div class="select">
-								<label for={`hinge-${opening.id}`}>경첩</label>
-								<select
-									id={`hinge-${opening.id}`}
-									value={opening.hinge}
-									onchange={(event) =>
-										session.updateOpening(opening.id, {
-											hinge: event.currentTarget.value as Opening['hinge']
-										})}
-								>
-									<option value="start">시작 쪽</option>
-									<option value="end">끝 쪽</option>
-								</select>
-							</div>
+							<Select
+								label="경첩"
+								id={`hinge-${opening.id}`}
+								value={opening.hinge}
+								onchange={(event) =>
+									session.updateOpening(opening.id, {
+										hinge: event.currentTarget.value as Opening['hinge']
+									})}
+							>
+								<option value="start">시작 쪽</option>
+								<option value="end">끝 쪽</option>
+							</Select>
 						{/if}
 						<NumberField
 							label="벽 시작점에서"
@@ -233,28 +227,6 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 0.625rem;
 		width: 100%;
-	}
-
-	.select {
-		display: grid;
-		gap: 0.25rem;
-		min-width: 0;
-	}
-
-	.select label {
-		font-size: 0.8125rem;
-		color: var(--ink-2);
-	}
-
-	select {
-		width: 100%;
-		min-height: 2.5rem;
-		padding: 0 0.375rem;
-		border: 1px solid var(--control);
-		border-radius: var(--radius-field);
-		font-size: 0.875rem;
-		color: var(--ink);
-		background: var(--paper);
 	}
 
 	.actions {
