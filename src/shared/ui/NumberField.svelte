@@ -88,6 +88,8 @@
 <style>
 	.field {
 		display: grid;
+		/* 옆 칸에 설명이 붙어 줄이 높아져도 입력란은 위에 붙여 같은 높이에 둡니다. */
+		align-content: start;
 		gap: 0.25rem;
 		min-width: 0;
 	}

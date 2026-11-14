@@ -64,6 +64,11 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 - 층·분류·받침 여부는 사용자가 아니라 종류(`KIND_PRESETS`)가 정하고, 파일에서 온 값도 종류에서 다시 계산합니다.
 - 등록 목록만 옮길 때는 `{ format: 'v-custom-products', version: 1, products }` 형식의 JSON을 씁니다(`stringifyCustomProducts`, `parseCustomProductsFile`). 배치도 파일을 넣으면 그 안의 `customEntries`를 꺼냅니다. 사용자가 고른 파일이므로 같은 id는 파일 내용으로 바꾸고, 잘못된 항목은 건너뛴 수를 알립니다. 저장은 한 트랜잭션으로 해서 일부만 저장되지 않습니다(`saveCustomProducts`). 내 제품은 브라우저마다 500개(`CUSTOM_PRODUCT_LIMIT`)까지 두며, 등록이나 가져오기로 이 수를 넘으면 `CustomProductLimitError`로 아무것도 저장하지 않습니다. 그래서 내보낸 파일은 항상 다시 가져올 수 있습니다.
 
+## 물건 목록
+
+- 카탈로그가 200개를 넘어 분류는 접어 두고, 검색어가 있으면 결과가 있는 분류를 모두 펼칩니다. 접고 편 상태는 검색하지 않을 때만 기억합니다.
+- 최근 추가한 물건은 `localStorage`의 `v-recent-items`에 id 6개까지 둡니다. 읽기와 쓰기는 모두 `try/catch`로 감쌉니다. 저장된 값을 읽을 수 없거나 깨져 있으면 빈 목록으로 시작하고, 쓰기에 실패하면 그 화면에서는 목록이 보이지만 새로 고치면 사라집니다. 물건 한도에 걸려 놓지 못한 물건은 기록하지 않습니다.
+
 ## CI
 
 `.github/workflows/ci.yml`이 포맷, ESLint, Steiger, 타입, 단위 테스트, 빌드, Storybook 빌드, E2E를 차례로 실행합니다.
