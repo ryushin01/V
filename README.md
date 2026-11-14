@@ -103,3 +103,13 @@ src/
 | [접근성 점검](docs/accessibility.md)           | KWCAG 2.2 항목별 대응                                                   |
 | [시퀀스 다이어그램](docs/sequence-diagrams.md) | 물건 배치·점검·자동 저장, 서버 없는 공유 링크, JSON 내보내기와 불러오기 |
 | [변경 기록](CHANGELOG.md)                      | 버전별 변경 사항                                                        |
+
+## 출처
+
+| 자료                  | 저작자                        | 사용 허락   | 원본                                                               |
+| --------------------- | ----------------------------- | ----------- | ------------------------------------------------------------------ |
+| Roboto Condensed 글꼴 | Google                        | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Roboto+Condensed) |
+| IBM Plex Mono 글꼴    | IBM Corp.                     | SIL OFL 1.1 | [IBM/plex](https://github.com/IBM/plex)                            |
+| Sunflower 글꼴        | The Sunflower Project Authors | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Sunflower)        |
+
+제품 일러스트는 직접 그렸고, 제품 치수·전력 값의 출처는 [카탈로그 문서](docs/catalog.md)에 있습니다.
