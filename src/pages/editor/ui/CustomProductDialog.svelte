@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { Button, Dialog, NumberField } from '#shared/ui';
+	import { Button, Dialog, NumberField, Select } from '#shared/ui';
 	import {
 		createCustomEntry,
 		CustomProductLimitError,
@@ -144,26 +144,21 @@
 			</div>
 		</div>
 		<div class="row">
-			<div class="field">
-				<label for="custom-kind">종류</label>
-				<select
-					id="custom-kind"
-					value={input.kind}
-					onchange={(event) => changeKind(event.currentTarget.value as CustomProductInput['kind'])}
-				>
-					{#each CUSTOM_KINDS as kind (kind)}
-						<option value={kind}>{KIND_PRESETS[kind].label}</option>
-					{/each}
-				</select>
-			</div>
-			<div class="field">
-				<label for="custom-glyph">그림</label>
-				<select id="custom-glyph" bind:value={input.glyph}>
-					{#each preset.glyphs as option (option.id)}
-						<option value={option.id}>{option.label}</option>
-					{/each}
-				</select>
-			</div>
+			<Select
+				label="종류"
+				id="custom-kind"
+				value={input.kind}
+				onchange={(event) => changeKind(event.currentTarget.value as CustomProductInput['kind'])}
+			>
+				{#each CUSTOM_KINDS as kind (kind)}
+					<option value={kind}>{KIND_PRESETS[kind].label}</option>
+				{/each}
+			</Select>
+			<Select label="그림" id="custom-glyph" bind:value={input.glyph}>
+				{#each preset.glyphs as option (option.id)}
+					<option value={option.id}>{option.label}</option>
+				{/each}
+			</Select>
 		</div>
 		<div class="row">
 			<NumberField
@@ -286,8 +281,7 @@
 		color: var(--ink-2);
 	}
 
-	input[type='text'],
-	select {
+	input[type='text'] {
 		width: 100%;
 		min-height: 2.5rem;
 		padding: 0 0.625rem;
