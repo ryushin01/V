@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { BrandMark } from '#shared/ui';
 	import { resolve } from '$app/paths';
 	import { ThemeToggle } from '#features/toggle-theme';
 	import { XrayToggle } from '#features/toggle-xray';
@@ -15,9 +16,7 @@
 
 <header class="nav">
 	<div class="pill">
-		<a class="mark" href={resolve('/')} aria-label="V 처음으로"
-			>V<span class="tick" aria-hidden="true"></span></a
-		>
+		<a class="mark" href={resolve('/')} aria-label="V 처음으로"><BrandMark /></a>
 	</div>
 	<div class="readout" aria-hidden="true">
 		<span class="progress"><span style:transform={`scaleX(${tracker.progress})`}></span></span>
@@ -70,13 +69,6 @@
 		line-height: 1.2;
 		color: inherit;
 		text-decoration: none;
-	}
-
-	.tick {
-		width: 2px;
-		height: 0.5rem;
-		margin-bottom: 0.25rem;
-		background: var(--accent);
 	}
 
 	.item {
