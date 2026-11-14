@@ -106,10 +106,11 @@ src/
 
 ## 출처
 
-| 자료                  | 저작자                        | 사용 허락   | 원본                                                               |
-| --------------------- | ----------------------------- | ----------- | ------------------------------------------------------------------ |
-| Roboto Condensed 글꼴 | Google                        | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Roboto+Condensed) |
-| IBM Plex Mono 글꼴    | IBM Corp.                     | SIL OFL 1.1 | [IBM/plex](https://github.com/IBM/plex)                            |
-| Sunflower 글꼴        | The Sunflower Project Authors | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Sunflower)        |
+| 자료                                                  | 저작자                        | 사용 허락                                | 원본                                                                                                                                                                            |
+| ----------------------------------------------------- | ----------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 블랙레터 V 아이콘 (파비콘·홈 화면 아이콘·머리글 로고) | arnikahossain                 | Flaticon 무료 라이선스(저작자 표기 조건) | [Flaticon "Letter v"](https://www.flaticon.com/free-icon/letter-v_9687654) — [Letter v icons created by arnikahossain - Flaticon](https://www.flaticon.com/free-icons/letter-v) |
+| Roboto Condensed 글꼴                                 | Google                        | SIL OFL 1.1                              | [Google Fonts](https://fonts.google.com/specimen/Roboto+Condensed)                                                                                                              |
+| IBM Plex Mono 글꼴                                    | IBM Corp.                     | SIL OFL 1.1                              | [IBM/plex](https://github.com/IBM/plex)                                                                                                                                         |
+| Sunflower 글꼴                                        | The Sunflower Project Authors | SIL OFL 1.1                              | [Google Fonts](https://fonts.google.com/specimen/Sunflower)                                                                                                                     |
 
 제품 일러스트는 직접 그렸고, 제품 치수·전력 값의 출처는 [카탈로그 문서](docs/catalog.md)에 있습니다.
