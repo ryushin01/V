@@ -62,6 +62,16 @@ function toRange(set) {
 	return out.join(', ');
 }
 
+/** 원문에 적힌 이스케이프(가, \u{1f370}, &#xac00;, &#44032;)를 글자로 풂 */
+function unescapeAll(text) {
+	const from = (code) => String.fromCodePoint(code);
+	return text
+		.replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, hex) => from(parseInt(hex, 16)))
+		.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => from(parseInt(hex, 16)))
+		.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => from(parseInt(hex, 16)))
+		.replace(/&#(\d+);/g, (_, dec) => from(Number(dec)));
+}
+
 /** 주석만 지운 코드(문자열·JSX 글자는 남김). TypeScript 파서를 쓸 수 없을 때 씀 */
 function stripComments(code) {
 	let out = '';
@@ -144,7 +154,7 @@ async function screenText() {
 		}
 	}
 	const set = new Set();
-	for (const ch of parts.join('')) {
+	for (const ch of unescapeAll(parts.join(''))) {
 		const cp = ch.codePointAt(0);
 		// 영문·숫자(ASCII)는 영문 글꼴이 맡음
 		if (cp > 0x7e) set.add(cp);
