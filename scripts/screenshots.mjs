@@ -1,0 +1,218 @@
+// README 화면(docs/images/*.jpg)을 다시 찍습니다. 배치는 예시 배치와 가상 평면도만 씁니다.
+// 먼저 프로덕션 빌드를 띄워 두세요: pnpm build && pnpm preview
+// 사용: BASE_URL=http://localhost:4173 pnpm screenshots
+import { chromium } from '@playwright/test';
+
+const BASE = process.env.BASE_URL ?? 'http://localhost:4173';
+const OUT = 'docs/images';
+const browser = await chromium.launch();
+
+async function open({
+	viewport = { width: 1440, height: 900 },
+	scale = 1,
+	colorScheme = 'light'
+} = {}) {
+	const context = await browser.newContext({
+		viewport,
+		deviceScaleFactor: scale,
+		colorScheme,
+		locale: 'ko-KR'
+	});
+	const page = await context.newPage();
+	await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+	await page.evaluate(() => document.fonts.ready);
+	await page.waitForTimeout(1200);
+	return { page, context };
+}
+
+async function shot(target, name, wait = 1200) {
+	const page = 'page' in target ? target.page() : target;
+	await page.waitForTimeout(wait);
+	await target.screenshot({ path: `${OUT}/${name}.jpg`, type: 'jpeg', quality: 85 });
+	console.log('저장', name);
+}
+
+async function openSample(page) {
+	await page.getByRole('button', { name: '예시로 시작하기' }).click();
+	await page.waitForURL(/\/plans\//);
+	await page.getByRole('heading', { name: '물건 추가' }).waitFor();
+	await page.waitForTimeout(800);
+}
+
+async function openEmpty(page) {
+	await page.getByRole('button', { name: /새 배치도 만들기/ }).click();
+	await page.waitForURL(/\/plans\//);
+	await page.getByRole('heading', { name: '물건 추가' }).waitFor();
+}
+
+/** 검색해서 물건을 놓습니다. */
+async function add(page, query) {
+	await page.getByLabel('모델명이나 제조사로 찾기').fill(query);
+	await page
+		.getByRole('button', { name: new RegExp(`${query}.*배치도에 추가`, 'i') })
+		.first()
+		.click();
+	await page.waitForTimeout(300);
+}
+
+/** 고른 물건을 X·Y(cm)로 옮깁니다. */
+async function place(page, x, y) {
+	for (const [label, value] of [
+		['X', x],
+		['Y', y]
+	]) {
+		const field = page.getByLabel(label, { exact: true });
+		await field.fill(String(value));
+		await field.press('Tab');
+	}
+	await page.waitForTimeout(200);
+}
+
+/** 가상의 평면도 그림(PNG)을 브라우저에서 그려 돌려줍니다. */
+async function samplePlan(page) {
+	const data = await page.evaluate(() => {
+		const canvas = document.createElement('canvas');
+		canvas.width = 900;
+		canvas.height = 700;
+		const g = canvas.getContext('2d');
+		g.fillStyle = '#fff';
+		g.fillRect(0, 0, 900, 700);
+		// 바닥(나무색)과 벽
+		g.fillStyle = '#ead9bf';
+		g.beginPath();
+		g.moveTo(60, 60);
+		g.lineTo(620, 60);
+		g.lineTo(620, 260);
+		g.lineTo(840, 260);
+		g.lineTo(840, 640);
+		g.lineTo(60, 640);
+		g.closePath();
+		g.fill();
+		g.strokeStyle = '#222';
+		g.lineWidth = 10;
+		g.beginPath();
+		g.moveTo(60, 60);
+		g.lineTo(620, 60);
+		g.lineTo(620, 260);
+		g.lineTo(840, 260);
+		g.lineTo(840, 640);
+		g.lineTo(60, 640);
+		g.closePath();
+		g.stroke();
+		g.lineWidth = 3;
+		g.strokeRect(120, 120, 220, 120);
+		g.beginPath();
+		g.arc(60, 520, 110, -Math.PI / 2, 0);
+		g.stroke();
+		g.font = '28px sans-serif';
+		g.fillStyle = '#555';
+		g.fillText('거실', 420, 460);
+		g.fillText('발코니', 680, 200);
+		g.strokeRect(500, 520, 260, 90);
+		g.fillText('수납장', 580, 575);
+		return canvas.toDataURL('image/png').split(',')[1];
+	});
+	return { name: 'plan.png', mimeType: 'image/png', buffer: Buffer.from(data, 'base64') };
+}
+
+// 첫 화면과 완성 도면(1.5배 해상도)
+{
+	const { page, context } = await open({ scale: 1.5 });
+	await shot(page, 'home');
+	// 단계 구역의 끝(점검 단계)까지 내려 도면이 다 그려진 때를 찍습니다.
+	await page.evaluate(() => {
+		const plan = document.querySelector('[aria-label^="벽에서 시작해"]');
+		let section = plan?.parentElement;
+		while (section && section.offsetHeight < window.innerHeight * 1.5)
+			section = section.parentElement;
+		if (!section) return;
+		const top = section.getBoundingClientRect().top + window.scrollY;
+		window.scrollTo({
+			top: top + section.offsetHeight - window.innerHeight * 1.05,
+			behavior: 'instant'
+		});
+	});
+	await shot(page, 'build', 2500);
+	await context.close();
+}
+
+// 편집 화면: 예시 배치, 책상 선택, X-ray, 점검 패널, 제품 등록 창
+{
+	const { page, context } = await open();
+	await openSample(page);
+	await page.getByRole('button', { name: /^책상/ }).first().click();
+	await shot(page, 'editor');
+	await page.getByRole('button', { name: 'X-ray' }).click();
+	await shot(page, 'xray', 1500);
+	await page.getByRole('button', { name: 'X-ray' }).click();
+	// 소파를 TV 쪽으로 옮겨 시청 거리 주의가 뜬 점검 패널을 찍습니다.
+	await page
+		.getByRole('button', { name: /^2인 소파/ })
+		.first()
+		.click();
+	const sofaX = page.getByLabel('X', { exact: true });
+	await sofaX.fill(String(Number(await sofaX.inputValue()) + 90));
+	await sofaX.press('Tab');
+	await shot(page.locator('section[aria-labelledby="review-heading"]'), 'review');
+	await page.getByRole('button', { name: '제품 등록' }).click();
+	await shot(page, 'custom');
+	await context.close();
+}
+
+// 모델별 일러스트: 빈 배치도에 데스크 셋업을 놓습니다.
+{
+	const { page, context } = await open();
+	await openEmpty(page);
+	// 물건을 놓은 뒤 가운데 X·Y(cm)로 자리를 잡습니다(책상 위 모니터·선반·스피커·키보드, 앞에 의자).
+	const setup = [
+		['BARCO', 200, 45],
+		['STILO', 200, 17],
+		['Odyssey OLED G9', 200, 27],
+		['QR65 패시브', 128, 22],
+		['QR65 액티브', 272, 22],
+		['FC980C', 190, 68],
+		['Stream Deck', 245, 68],
+		['LiberNovo', 200, 135]
+	];
+	for (const [query, x, y] of setup) {
+		await add(page, query);
+		await place(page, x, y);
+	}
+	// 선택 표시와 입력칸 초점을 빼고 찍습니다.
+	await page.evaluate(() => document.activeElement?.blur());
+	await page.keyboard.press('Escape');
+	await page.mouse.move(40, 880);
+	await shot(page, 'models');
+	await context.close();
+}
+
+// 평면도 그림 깔기와 모서리 잘라내기
+{
+	const { page, context } = await open();
+	await openEmpty(page);
+	await page
+		.locator('input[type="file"][accept*="image"]')
+		.first()
+		.setInputFiles(await samplePlan(page));
+	await page.getByRole('button', { name: /모서리 잘라내기/ }).click();
+	await add(page, '책상');
+	await add(page, '의자');
+	await shot(page, 'underlay');
+	await context.close();
+}
+
+// 어두운 화면과 모바일
+{
+	const { page, context } = await open({ colorScheme: 'dark' });
+	await openSample(page);
+	await shot(page, 'dark');
+	await context.close();
+}
+{
+	const { page, context } = await open({ viewport: { width: 390, height: 844 } });
+	await openSample(page);
+	await shot(page, 'mobile');
+	await context.close();
+}
+
+await browser.close();
