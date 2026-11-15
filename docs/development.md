@@ -69,6 +69,16 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 - 카탈로그가 200개를 넘어 분류는 접어 두고, 검색어가 있으면 결과가 있는 분류를 모두 펼칩니다. 접고 편 상태는 검색하지 않을 때만 기억합니다.
 - 최근 추가한 물건은 `localStorage`의 `v-recent-items`에 id 6개까지 둡니다. 읽기와 쓰기는 모두 `try/catch`로 감쌉니다. 저장된 값을 읽을 수 없거나 깨져 있으면 빈 목록으로 시작하고, 쓰기에 실패하면 그 화면에서는 목록이 보이지만 새로 고치면 사라집니다. 물건 한도에 걸려 놓지 못한 물건은 기록하지 않습니다.
 
+## 글꼴
+
+제목과 본문은 Barlow Condensed(영문·숫자)와 해바라기(한글), 치수는 IBM Plex Mono입니다. `src/app/styles/global.css`의 `--font-sans`·`--font-display`가 `'Barlow Condensed', 'Sunflower', …` 순서입니다.
+
+- 해바라기는 저장소에 넣어 제공합니다. 원본(500·700)과 라이선스는 `scripts/fonts/sunflower/`, 설정은 `scripts/fonts/config.json`에 있습니다.
+- `pnpm fonts`가 두 가지를 만듭니다.
+  - `src/app/styles/fonts/sunflower.css`, `sunflower/sunflower-<굵기>-ui.woff2`: 소스(`.ts` 문자열, `.svelte`, JSON)에 쓰인 한글·기호만 담은 파일입니다. `+layout.svelte`가 불러와 첫 화면과 함께 받습니다.
+  - `static/fonts/sunflower-rest.css`, `sunflower/sunflower-<굵기>-<번호>.woff2`: 나머지 글자를 Google Fonts 한국어 글꼴과 같은 글자 묶음으로 나눈 조각입니다. `attachRestFonts`가 페이지를 다 받고 1초 뒤 한가할 때 붙이고, 브라우저는 화면에 쓴 글자(사용자가 입력한 제품 이름 등)가 든 조각만 받습니다.
+- 화면 글자를 바꾸면 `pnpm fonts`를 다시 실행합니다. 빠진 글자가 있으면 `src/app/styles/fonts.test.ts`가 실패합니다(`.svelte`는 주석 글자도 셉니다).
+
 ## CI
 
 `.github/workflows/ci.yml`이 포맷, ESLint, Steiger, 타입, 단위 테스트, 빌드, Storybook 빌드, E2E를 차례로 실행합니다.

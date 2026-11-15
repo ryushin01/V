@@ -1,7 +1,7 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.7.0-121214)
+![version](https://img.shields.io/badge/version-0.8.0-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
@@ -56,7 +56,7 @@
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | 프레임워크 | Svelte 5 (runes mode), SvelteKit 3, adapter-static, TypeScript                                                                      |
 | 상태       | class 기반 `$state`·`$derived`, `$state.raw`, `$state.snapshot`(되돌리기), `svelte/motion`, `{@attach}`                             |
-| 그리기     | SVG 2D, Scoped CSS와 CSS 변수                                                                                                       |
+| 그리기     | SVG 2D, Scoped CSS와 CSS 변수, 웹 폰트(Barlow Condensed, 해바라기, IBM Plex Mono)                                                   |
 | 저장       | IndexedDB, JSON 파일                                                                                                                |
 | 품질       | Feature-Sliced Design(Steiger), ESLint, Prettier, svelte-check, Vitest, Testing Library, Playwright, axe, size-limit, Lighthouse CI |
 | 모니터링   | Sentry(DSN이 있을 때만), web-vitals                                                                                                 |
@@ -80,11 +80,13 @@ pnpm dev        # http://localhost:5173
 | `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)             |
 | `pnpm size` / `pnpm lhci`                    | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요) |
 | `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)                  |
+| `pnpm fonts`                                 | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                 |
 
 ## 프로젝트 구조
 
 ```
 e2e/             룰러, 키보드 조작, 저장, 화면 폭, axe 검사
+scripts/         한글 웹 폰트 만들기 (pnpm fonts)
 src/
 ├─ routes/       SvelteKit 라우트 (페이지를 다시 내보내기만 함)
 ├─ app/          전역 스타일
@@ -104,13 +106,20 @@ src/
 | [시퀀스 다이어그램](docs/sequence-diagrams.md) | 물건 배치·점검·자동 저장, 서버 없는 공유 링크, JSON 내보내기와 불러오기 |
 | [변경 기록](CHANGELOG.md)                      | 버전별 변경 사항                                                        |
 
+## 웹 폰트
+
+| 글꼴             | 쓰는 곳               | 굵기            | 저작자                | 라이선스    | 원본                                                                                                                                  |
+| ---------------- | --------------------- | --------------- | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Barlow Condensed | 영문·숫자 (제목·본문) | 400·500·600·700 | Jeremy Tribby         | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Barlow+Condensed) · [jpt/barlow](https://github.com/jpt/barlow)                      |
+| 해바라기         | 한글 (제목·본문)      | 500·700         | 직지소프트(JIKJISOFT) | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Sunflower) · [google/fonts](https://github.com/google/fonts/tree/main/ofl/sunflower) |
+| IBM Plex Mono    | 치수 (영문·숫자)      | 400             | IBM Corp.             | SIL OFL 1.1 | [IBM/plex](https://github.com/IBM/plex)                                                                                               |
+
+모두 같은 사이트에서 제공합니다(외부 글꼴 CDN 없음). 해바라기는 화면에 쓰는 글자만 담은 작은 파일을 먼저 받고, 나머지 글자는 글자 묶음별 조각(`static/fonts/`)으로 나눠 그 글자를 쓸 때만 받습니다([개발 가이드](docs/development.md#글꼴)). 라이선스 전문은 `scripts/fonts/sunflower/OFL.txt`에 있습니다.
+
 ## 출처
 
-| 자료                                                  | 저작자                        | 사용 허락                                | 원본                                                                                                                                                                            |
-| ----------------------------------------------------- | ----------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 블랙레터 V 아이콘 (파비콘·홈 화면 아이콘·머리글 로고) | arnikahossain                 | Flaticon 무료 라이선스(저작자 표기 조건) | [Flaticon "Letter v"](https://www.flaticon.com/free-icon/letter-v_9687654) — [Letter v icons created by arnikahossain - Flaticon](https://www.flaticon.com/free-icons/letter-v) |
-| Roboto Condensed 글꼴                                 | Google                        | SIL OFL 1.1                              | [Google Fonts](https://fonts.google.com/specimen/Roboto+Condensed)                                                                                                              |
-| IBM Plex Mono 글꼴                                    | IBM Corp.                     | SIL OFL 1.1                              | [IBM/plex](https://github.com/IBM/plex)                                                                                                                                         |
-| Sunflower 글꼴                                        | The Sunflower Project Authors | SIL OFL 1.1                              | [Google Fonts](https://fonts.google.com/specimen/Sunflower)                                                                                                                     |
+| 자료                                                  | 저작자        | 사용 허락                                | 원본                                                                                                                                                                            |
+| ----------------------------------------------------- | ------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 블랙레터 V 아이콘 (파비콘·홈 화면 아이콘·머리글 로고) | arnikahossain | Flaticon 무료 라이선스(저작자 표기 조건) | [Flaticon "Letter v"](https://www.flaticon.com/free-icon/letter-v_9687654) — [Letter v icons created by arnikahossain - Flaticon](https://www.flaticon.com/free-icons/letter-v) |
 
 제품 일러스트는 직접 그렸고, 제품 치수·전력 값의 출처는 [카탈로그 문서](docs/catalog.md)에 있습니다.
