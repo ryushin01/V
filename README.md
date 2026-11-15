@@ -72,15 +72,16 @@ pnpm install
 pnpm dev        # http://localhost:5173
 ```
 
-| 명령                                         | 설명                                                           |
-| -------------------------------------------- | -------------------------------------------------------------- |
-| `pnpm build` / `pnpm preview`                | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`)       |
-| `pnpm lint` / `pnpm lint:fsd` / `pnpm check` | ESLint / FSD 구조 / 타입 검사                                  |
-| `pnpm test`                                  | 단위·컴포넌트 테스트                                           |
-| `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)             |
-| `pnpm size` / `pnpm lhci`                    | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요) |
-| `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)                  |
-| `pnpm fonts`                                 | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                 |
+| 명령                                         | 설명                                                                                                             |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `pnpm build` / `pnpm preview`                | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`)                                                         |
+| `pnpm lint` / `pnpm lint:fsd` / `pnpm check` | ESLint / FSD 구조 / 타입 검사                                                                                    |
+| `pnpm test`                                  | 단위·컴포넌트 테스트                                                                                             |
+| `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)                                                               |
+| `pnpm size` / `pnpm lhci`                    | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요)                                                   |
+| `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)                                                                    |
+| `pnpm fonts`                                 | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                                                                   |
+| `pnpm screenshots`                           | README 화면 다시 찍기 (`pnpm exec playwright install chromium` 뒤, `build`와 `preview`를 띄우고 `BASE_URL` 지정) |
 
 ## 프로젝트 구조
 
