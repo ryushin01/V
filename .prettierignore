@@ -7,3 +7,5 @@ pnpm-lock.yaml
 docs/images
 .vercel
 .lighthouseci
+src/app/styles/fonts/
+static/fonts/
