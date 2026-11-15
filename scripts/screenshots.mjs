@@ -178,9 +178,10 @@ async function samplePlan(page) {
 		await add(page, query);
 		await place(page, x, y);
 	}
-	// 선택 표시와 입력칸 초점을 빼고 찍습니다.
+	// 검색어를 지워 최근 추가한 물건 목록이 보이게 하고, 방 밖 빈 곳을 눌러 선택을 풉니다.
+	await page.getByLabel('모델명이나 제조사로 찾기').fill('');
+	await page.mouse.click(700, 160);
 	await page.evaluate(() => document.activeElement?.blur());
-	await page.keyboard.press('Escape');
 	await page.mouse.move(40, 880);
 	await shot(page, 'models');
 	await context.close();
