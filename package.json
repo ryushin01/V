@@ -19,7 +19,8 @@
 		"build-storybook": "storybook build",
 		"size": "size-limit",
 		"lhci": "lhci autorun",
-		"fonts": "node scripts/build-fonts.mjs"
+		"fonts": "node scripts/build-fonts.mjs",
+		"screenshots": "node scripts/screenshots.mjs"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.14.0",
