@@ -1,0 +1,17 @@
+{
+	"outDir": "src/app/styles/fonts",
+	"restDir": "static/fonts",
+	"scan": ["src"],
+	"dataExtensions": ["json", "svelte"],
+	"extra": "년월일시분초오전후요화수목금토만억조",
+	"fonts": [
+		{
+			"family": "Sunflower",
+			"slug": "sunflower",
+			"weights": {
+				"500": "scripts/fonts/sunflower/Sunflower-Medium.woff2",
+				"700": "scripts/fonts/sunflower/Sunflower-Bold.woff2"
+			}
+		}
+	]
+}
