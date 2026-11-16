@@ -100,3 +100,29 @@ sequenceDiagram
         화면->>저장: 새 배치도로 저장
     end
 ```
+
+## 5. 전체 백업과 복원
+
+```mermaid
+sequenceDiagram
+    actor 사용자
+    participant 화면 as 첫 화면 (내 배치도)
+    participant 백업 as backup<br/>(stringifyBackup / parseImportFile)
+    participant 저장 as plans-db (IndexedDB)
+
+    사용자->>화면: 전체 백업
+    화면->>저장: listPlans, listCustomProducts
+    화면->>백업: stringifyBackup(배치도, 내 제품)
+    백업-->>사용자: v-backup-YYYY-MM-DD.json
+    사용자->>화면: JSON 불러오기 (다른 기기·브라우저)
+    화면->>화면: readTextFile (256MB 한도)
+    화면->>백업: parseImportFile
+    alt 배치도 파일
+        백업-->>화면: 배치도 → 새 배치도로 열기
+    else 백업 파일
+        백업->>백업: 배치도마다 parsePlanData(새 id, 저장 시각 유지), 내 제품마다 검사
+        백업-->>화면: 배치도, 내 제품, 건너뛴 수
+        화면->>저장: restoreBackup (두 저장소를 한 트랜잭션으로, 내 제품 한도 확인)
+        저장-->>화면: 목록 다시 읽기, 결과 안내(role=status)
+    end
+```
