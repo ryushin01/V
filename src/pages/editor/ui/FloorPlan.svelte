@@ -777,11 +777,11 @@
 		background: var(--line);
 	}
 
+	/* 버튼이지만 예전 안내 상자와 같은 모양입니다(글자는 전역 .measure, 줄 높이는 본문). */
 	.measure-hint {
 		top: 0.75rem;
 		left: 0.75rem;
-		font: inherit;
-		font-family: var(--font-mono);
+		line-height: inherit;
 	}
 
 	.measure-hint:focus-visible {
