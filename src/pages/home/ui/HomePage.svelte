@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { SITE } from '#shared/config';
-	import { Button, Dialog, Icon, PageMeta } from '#shared/ui';
+	import { Button, Dialog, Icon, LiveMessage, PageMeta } from '#shared/ui';
 	import {
 		createEmptyPlan,
 		createSamplePlan,
@@ -12,12 +12,14 @@
 		listPlans,
 		onPlanChange,
 		parsePlan,
+		PLAN_FILE_MAX_BYTES,
 		PlanPreview,
 		savePlan,
 		type PlanData
 	} from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
 	import { particle } from '#shared/lib/josa';
+	import { readTextFile } from '#shared/lib/file';
 	import { protectStorage } from '#shared/lib/storage';
 	import { reveal } from '#shared/lib/reveal';
 	import { ScrollTracker } from '../model/scroll.svelte';
@@ -123,7 +125,12 @@
 		input.value = '';
 		if (!file) return;
 		importError = '';
-		const parsed = parsePlan(await file.text());
+		const read = await readTextFile(file, PLAN_FILE_MAX_BYTES);
+		if (!read.ok) {
+			importError = read.error;
+			return;
+		}
+		const parsed = parsePlan(read.text);
 		if (!parsed.ok) {
 			importError = parsed.error;
 			return;
@@ -257,13 +264,17 @@
 				>
 			</div>
 		</div>
-		{#if importError}<p class="error" role="alert">{importError}</p>{/if}
-		{#if actionError}<p class="error" role="alert">{actionError}</p>{/if}
+		<LiveMessage message={importError} gap="1rem" />
+		<LiveMessage message={actionError} gap="1rem" />
+		<LiveMessage
+			message={status === 'failed'
+				? '브라우저 저장소를 사용할 수 없습니다. 비공개 창이라면 일반 창에서 열어 주세요.'
+				: ''}
+			gap="1rem"
+		/>
 
 		{#if status === 'failed'}
-			<p class="error" role="alert">
-				브라우저 저장소를 사용할 수 없습니다. 비공개 창이라면 일반 창에서 열어 주세요.
-			</p>
+			<!-- 안내는 위의 상태 메시지 영역에 있습니다. -->
 		{:else if status === 'ready' && plans.length === 0}
 			<p class="empty">
 				아직 저장한 배치도가 없습니다. 이 브라우저에만 저장되며 서버로 보내지 않습니다.
@@ -482,12 +493,6 @@
 		padding-top: 20px;
 		border-top: 1px solid var(--line);
 		color: var(--ink-2);
-	}
-
-	.error {
-		margin-bottom: 1rem;
-		font-weight: 500;
-		color: var(--accent-deep);
 	}
 
 	.grid {

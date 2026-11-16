@@ -153,7 +153,7 @@ test.describe('키보드만으로 배치', () => {
 		const start = await desk.getAttribute('aria-label');
 
 		await page.keyboard.press('ArrowRight');
-		await expect(page.locator('[role="status"][aria-live="polite"]')).toContainText(
+		await expect(page.locator('p.sr-only[role="status"]')).toContainText(
 			'책상 140, 오른쪽으로 10cm 이동'
 		);
 		await expect(desk).not.toHaveAttribute('aria-label', start ?? '');
@@ -309,7 +309,10 @@ test.describe('점검과 저장', () => {
 			mimeType: 'application/json',
 			buffer: Buffer.from('{"version":9}')
 		});
-		await expect(page.getByRole('alert')).toContainText('V 배치도 파일이 아닙니다');
+		// 오류 영역은 처음부터 여럿 있고, 해당 영역에 문구만 들어옵니다.
+		await expect(
+			page.getByRole('alert').filter({ hasText: 'V 배치도 파일이 아닙니다' })
+		).toBeVisible();
 	});
 
 	test('내보낸 파일을 내려받습니다', async ({ page }) => {
@@ -412,7 +415,7 @@ test.describe('공유와 오류 화면', () => {
 		]) {
 			expect(tree).toContain(part);
 		}
-		await expect(page.locator('[role="status"][aria-live="polite"]')).toBeAttached();
+		await expect(page.locator('p.sr-only[role="status"]')).toBeAttached();
 	});
 });
 

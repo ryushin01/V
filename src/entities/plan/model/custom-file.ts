@@ -1,4 +1,5 @@
 import { parseCustomEntry } from './custom';
+import { isRecord } from './guards';
 import { PLAN_LIMITS } from './room';
 import type { CatalogEntry } from './types';
 
@@ -14,9 +15,6 @@ export const CUSTOM_PRODUCT_LIMIT = PLAN_LIMITS.items;
 export type CustomFileResult =
 	| { ok: true; entries: CatalogEntry[]; skipped: number; source: 'products' | 'plan' }
 	| { ok: false; error: string };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** 내 제품 목록을 다른 기기로 옮길 JSON 문자열로 만듭니다. */
 export function stringifyCustomProducts(entries: readonly CatalogEntry[]): string {

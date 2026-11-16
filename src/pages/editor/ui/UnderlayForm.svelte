@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Dialog, Icon, NumberField } from '#shared/ui';
+	import { Button, Dialog, Icon, LiveMessage, NumberField } from '#shared/ui';
 	import { loadImage, validateImageFile } from '../lib/load-image';
 	import type { EditorSession } from '../model/session.svelte';
 
@@ -54,7 +54,14 @@
 		onchange={handleFile}
 		data-testid="underlay-file"
 	/>
-	{#if error}<p class="error" role="alert">{error}</p>{/if}
+	<LiveMessage message={error} size="0.875rem" />
+	<LiveMessage
+		role="status"
+		size="0.875rem"
+		message={calibrating
+			? `도면에서 길이를 아는 ${pointCount === 0 ? '첫 번째' : '두 번째'} 점을 눌러 주세요. Esc로 취소합니다.`
+			: ''}
+	/>
 
 	{#if image}
 		<div class="grid">
@@ -91,11 +98,6 @@
 				oncommit={(value) => session.updateUnderlay({ y: value })}
 			/>
 		</div>
-		{#if calibrating}
-			<p class="note" role="status">
-				도면에서 길이를 아는 {pointCount === 0 ? '첫 번째' : '두 번째'} 점을 눌러 주세요. Esc로 취소합니다.
-			</p>
-		{/if}
 		<div class="actions">
 			{#if calibrating}
 				<Button size="sm" onclick={() => session.cancelCalibration()}>취소</Button>
@@ -154,12 +156,6 @@
 	.note {
 		font-size: 0.875rem;
 		color: var(--ink-2);
-	}
-
-	.error {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--accent-deep);
 	}
 
 	.grid {

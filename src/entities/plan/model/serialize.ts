@@ -1,6 +1,7 @@
 import { createId } from '#shared/lib/id';
 import { findCatalogEntry, SPEC_LIMITS } from './catalog';
 import { parseCustomEntry } from './custom';
+import { finite, isRecord } from './guards';
 import { cutoutLimits, PLAN_LIMITS, ROOM_LIMITS, wallRange } from './room';
 import type {
 	CatalogEntry,
@@ -18,14 +19,14 @@ import type {
 
 export type ParseResult = { ok: true; plan: PlanData } | { ok: false; error: string };
 
+/**
+ * 배치도·내 제품 파일을 읽을 때의 크기 한도입니다. 평면도 이미지(최대 800만 글자)와 물건 500개를 담아도
+ * 넉넉하고, 이보다 큰 파일은 읽기 전에 거절해 탭이 멈추지 않게 합니다.
+ */
+export const PLAN_FILE_MAX_BYTES = 16 * 1024 * 1024;
+
 const WALLS: readonly Wall[] = ['north', 'east', 'south', 'west'];
 const COORDINATE_LIMIT = 10000;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const finite = (value: unknown): value is number =>
-	typeof value === 'number' && Number.isFinite(value);
 
 const CORNERS: readonly Corner[] = ['nw', 'ne', 'se', 'sw'];
 
