@@ -9,6 +9,7 @@
 		savePlan,
 		type PlanData
 	} from '#entities/plan';
+	import { planFingerprint } from '../model/autosave';
 	import { EditorSession } from '../model/session.svelte';
 	import CatalogPanel from './CatalogPanel.svelte';
 	import EditorToolbar from './EditorToolbar.svelte';
@@ -58,7 +59,7 @@
 	/** 이 탭 사정(저장하지 않은 변경, 끌기)으로 다른 탭의 변경을 미뤄 두었는지 */
 	let syncWanted = false;
 
-	const fingerprint = (plan: PlanData) => JSON.stringify({ ...plan, updatedAt: 0 });
+	const fingerprint = planFingerprint;
 
 	function persist(plan: PlanData) {
 		pending = null;
