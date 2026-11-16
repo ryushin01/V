@@ -67,13 +67,16 @@ async function navigate(request: Request, url: URL): Promise<Response> {
 	return Promise.race([network.catch(() => saved.clone()), timeout]);
 }
 
-/** 저장본을 먼저 쓰고, 없으면 받아서 저장합니다. */
+/**
+ * 저장본을 먼저 쓰고, 없으면 받아서 저장합니다. 저장은 할 수 있을 때만 합니다. 저장 공간이 모자라
+ * 저장에 실패해도(QuotaExceededError 등) 받아 온 응답은 그대로 돌려줍니다.
+ */
 async function cacheFirst(request: Request, cacheName: string): Promise<Response> {
 	const cache = await caches.open(cacheName);
 	const saved = await cache.match(request);
 	if (saved) return saved;
 	const response = await fetch(request);
-	if (response.ok) await cache.put(request, response.clone());
+	if (response.ok) await cache.put(request, response.clone()).catch(() => undefined);
 	return response;
 }
 
