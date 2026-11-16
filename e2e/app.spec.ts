@@ -205,6 +205,26 @@ test.describe('포인터 조작', () => {
 	});
 });
 
+test.describe('거리 재기', () => {
+	test('두 점을 눌러 거리를 재고 Esc로 마칩니다', async ({ page }) => {
+		await openSample(page);
+		const toggle = page.getByRole('button', { name: '거리 재기' });
+		await toggle.click();
+		await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+		const canvas = page.getByRole('group', { name: /방 배치도/ });
+		const box = (await canvas.boundingBox())!;
+		await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.5);
+		await page.mouse.click(box.x + box.width * 0.6, box.y + box.height * 0.5);
+		await expect(page.getByTestId('measure-line')).toHaveText(/^\d+ cm$/);
+		await expect(page.locator('p.sr-only[role="status"]')).toContainText('두 점 사이');
+		// 거리를 재는 동안에는 물건이 선택되거나 옮겨지지 않습니다.
+		await expect(page.getByRole('heading', { name: '선택한 물건' })).toHaveCount(0);
+		await page.keyboard.press('Escape');
+		await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+		await expect(page.getByTestId('measure-line')).toHaveCount(0);
+	});
+});
+
 test.describe('점검과 저장', () => {
 	test('겹치면 글자와 아이콘으로 알립니다', async ({ page }) => {
 		await openEmpty(page);

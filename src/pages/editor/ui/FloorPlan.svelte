@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { tick } from 'svelte';
-	import { corners, pointInConvex } from '#shared/lib/geometry';
+	import { tick, untrack } from 'svelte';
+	import { corners, distance, pointInConvex, type Point } from '#shared/lib/geometry';
 	import { Button, Icon, Ruler } from '#shared/ui';
 	import { LAYER_ORDER, RoomOutline, XrayOverlay } from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
@@ -119,10 +119,66 @@
 		value !== null && (value.type === 'move' || value.type === 'rotate');
 
 	/** 두 손가락이 닿으면 물건 끌기를 취소하고 확대로 바꿉니다. */
+	/** 거리 재기: 두 점을 차례로 누르면 그 사이를 잽니다. 저장하지 않는 화면 도구입니다. */
+	let measuring = $state(false);
+	let measurePoints = $state.raw<Point[]>([]);
+	const MEASURE_SNAP_CM = 5;
+	const measured = $derived(
+		measurePoints.length === 2 ? Math.round(distance(measurePoints[0], measurePoints[1])) : null
+	);
+
+	function stopMeasure() {
+		measuring = false;
+		measurePoints = [];
+		session.announcement = '거리 재기를 마쳤습니다.';
+	}
+
+	function toggleMeasure() {
+		if (measuring) {
+			stopMeasure();
+			return;
+		}
+		if (session.calibration) session.cancelCalibration();
+		measuring = true;
+		measurePoints = [];
+		session.announcement = '거리 재기: 도면에서 두 점을 차례로 눌러 주세요. Esc로 마칩니다.';
+	}
+
+	/** 5cm 격자에 맞추고, Shift를 누르면 누른 자리 그대로 씁니다. */
+	function addMeasurePoint(event: PointerEvent) {
+		const { sx, sy } = local(event);
+		const raw = view.toWorld(sx, sy);
+		const snap = (value: number) =>
+			event.shiftKey ? value : Math.round(value / MEASURE_SNAP_CM) * MEASURE_SNAP_CM;
+		const point = { x: snap(raw.x), y: snap(raw.y) };
+		measurePoints = measurePoints.length === 1 ? [measurePoints[0], point] : [point];
+		session.announcement =
+			measurePoints.length === 1
+				? '두 번째 점을 눌러 주세요.'
+				: `두 점 사이 ${Math.round(distance(measurePoints[0], point))}cm. 다른 곳을 누르면 새로 잽니다.`;
+	}
+
+	// 축척 맞추기를 시작하면(평면도 이미지 패널) 거리 재기를 끕니다.
+	$effect(() => {
+		if (session.calibration && untrack(() => measuring)) {
+			measuring = false;
+			measurePoints = [];
+		}
+	});
+
 	function trackTouch(event: PointerEvent) {
-		if (session.calibration && event.button === 0) {
-			// 축척을 맞추는 동안에는 물건을 잡지 않고 점만 찍습니다.
+		if (measuring && event.button === 0 && event.isPrimary) {
+			// 거리를 재는 동안에는 물건을 잡거나 화면을 옮기지 않고 점만 찍습니다. 누른 물건에 초점이 가서
+			// 선택되지 않도록 기본 동작도 막습니다.
 			event.stopPropagation();
+			event.preventDefault();
+			addMeasurePoint(event);
+			return;
+		}
+		if (session.calibration && event.button === 0) {
+			// 축척을 맞추는 동안에는 물건을 잡거나 선택하지 않고 점만 찍습니다.
+			event.stopPropagation();
+			event.preventDefault();
 			const { sx, sy } = local(event);
 			session.addCalibrationPoint(view.toWorld(sx, sy));
 			return;
@@ -243,6 +299,7 @@
 	}
 
 	function handleWindowKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && measuring) stopMeasure();
 		if (event.key === 'Escape' && session.calibration) session.cancelCalibration();
 		if (event.key === 'Escape' && isItemGesture(gesture)) {
 			session.cancelGesture();
@@ -289,7 +346,7 @@
 			onpointercancel={handleCancel}
 			onpointerleave={() => (pointer = null)}
 			onwheel={handleWheel}
-			class:calibrating={!!session.calibration}
+			class:calibrating={!!session.calibration || measuring}
 		>
 			<defs>
 				<pattern
@@ -368,6 +425,21 @@
 						<circle class="calibration-point" cx={point.x} cy={point.y} r={5 / view.scale} />
 					{/each}
 				{/if}
+				{#if measuring && measurePoints.length > 0}
+					{@const [a, b] = measurePoints}
+					{@const size = 11 / view.scale}
+					{#if b}
+						<g class="dimension measure-line" data-testid="measure-line">
+							<line x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
+							<text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - size / 2} font-size={size}
+								>{measured} cm</text
+							>
+						</g>
+					{/if}
+					{#each measurePoints as point, index (index)}
+						<circle class="calibration-point" cx={point.x} cy={point.y} r={5 / view.scale} />
+					{/each}
+				{/if}
 				{#if dimensions && selectedBounds}
 					{@const size = 11 / view.scale}
 					<g class="dimension" font-size={size}>
@@ -420,6 +492,12 @@
 				X {Math.round(pointer.x)} · Y {Math.round(pointer.y)}
 			</div>
 		{/if}
+		{#if measuring}
+			<!-- 같은 안내를 화면 낭독기에는 편집 안내 영역으로 읽어 줍니다. -->
+			<div class="measure-hint coords measure" aria-hidden="true">
+				{measured === null ? '두 점을 눌러 거리를 잽니다' : `${measured} cm`} · Esc로 마침
+			</div>
+		{/if}
 		<div class="controls" role="group" aria-label="화면 조작">
 			<Button size="sm" aria-label="축소" title="축소" onclick={() => view.zoomCenter(1 / 1.25)}
 				><Icon name="minus" /></Button
@@ -460,6 +538,14 @@
 				onclick={() => view.panBy(-PAN_STEP, 0)}><Icon name="right" /></Button
 			>
 			<span class="divider" aria-hidden="true"></span>
+			<Button
+				size="sm"
+				class="measure-toggle"
+				aria-pressed={measuring}
+				aria-label="거리 재기"
+				title="거리 재기 (두 점을 누릅니다)"
+				onclick={toggleMeasure}><Icon name="ruler" /></Button
+			>
 			<label class="toggle"><input type="checkbox" bind:checked={showCables} /> 케이블</label>
 		</div>
 	</div>
@@ -612,6 +698,17 @@
 		height: 1.25rem;
 		margin: 0 0.25rem;
 		background: var(--line);
+	}
+
+	.measure-hint {
+		top: 0.75rem;
+		left: 0.75rem;
+	}
+
+	.controls :global(.measure-toggle[aria-pressed='true']) {
+		border-color: var(--ink);
+		color: var(--paper);
+		background: var(--ink);
 	}
 
 	.toggle {

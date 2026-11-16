@@ -23,7 +23,9 @@
 		keyboard: 'M3 7h18v11H3zM7 11h.5M11 11h.5M15 11h.5M8 15h8',
 		arrow: 'M6 18 18 6M9 6h9v9',
 		share: 'M12 15V4M8 8l4-4 4 4M5 12v8h14v-8',
-		layers: 'M12 3 3 8l9 5 9-5zM3 13l9 5 9-5'
+		layers: 'M12 3 3 8l9 5 9-5zM3 13l9 5 9-5',
+		ruler: 'M4 16 16 4l4 4L8 20zM7 13l1.5 1.5M10 10l2 2M13 7l1.5 1.5',
+		image: 'M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5h.01'
 	} as const;
 
 	export type IconName = keyof typeof PATHS;
