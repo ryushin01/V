@@ -344,6 +344,23 @@ describe('FloorPlan', () => {
 		expect(toggle).toHaveAttribute('aria-pressed', 'false');
 	});
 
+	it('마우스가 도면 위에 있어도 키보드로 재는 동안에는 키보드 십자선을 보여 줍니다', async () => {
+		const session = empty();
+		const { container } = render(FloorPlan, { session });
+		const svg = container.querySelector('.canvas svg') as SVGSVGElement;
+		const coords = () => container.querySelector('.canvas > .coords:not(.measure-hint)');
+		// 기본 배율 1.6: 화면 (16, 16)은 (10, 10)cm입니다.
+		await fireEvent.pointerMove(svg, { pointerType: 'mouse', clientX: 16, clientY: 16 });
+		expect(coords()).toHaveTextContent('X 10 · Y 10');
+		screen.getByRole('button', { name: '거리 재기' }).focus();
+		await userEvent.keyboard('{Enter}');
+		await waitFor(() => expect(coords()).toHaveTextContent('X 200 · Y 160'));
+		await userEvent.keyboard('{ArrowRight}');
+		expect(coords()).toHaveTextContent('X 210 · Y 160');
+		await fireEvent.pointerMove(svg, { pointerType: 'mouse', clientX: 16, clientY: 16 });
+		expect(coords()).toHaveTextContent('X 10 · Y 10');
+	});
+
 	it('거리를 재는 동안 두 번째 손가락은 화면을 옮기거나 선택을 풀지 않습니다', async () => {
 		const session = empty();
 		session.addItem('desk-140');

@@ -158,8 +158,12 @@
 		measureCursor = { x: session.room.width / 2, y: session.room.depth / 2 };
 		session.announcement =
 			'거리 재기: 도면에서 두 점을 차례로 누르거나, 방향키로 십자선을 옮기고 Enter로 찍어 주세요. Esc로 마칩니다.';
-		// 키보드로 켰으면(누른 위치가 없는 클릭) 십자선을 옮길 수 있게 십자선 버튼으로 초점을 옮깁니다.
-		if (event.detail === 0) void tick().then(() => measureButton?.focus());
+		// 키보드로 켰으면(누른 위치가 없는 클릭) 십자선을 옮길 수 있게 십자선 버튼으로 초점을 옮기고,
+		// 도면 위에 남은 마우스 위치 대신 키보드 십자선을 보여 줍니다.
+		if (event.detail === 0) {
+			pointer = null;
+			void tick().then(() => measureButton?.focus());
+		}
 	}
 
 	function placeMeasurePoint(point: Point) {
@@ -196,6 +200,8 @@
 		const move = MEASURE_KEYS[event.key];
 		if (!move || event.ctrlKey || event.metaKey || event.altKey) return;
 		event.preventDefault();
+		// 키보드로 옮기는 동안에는 마우스 위치 대신 키보드 십자선을 보여 줍니다(마우스를 움직이면 다시 마우스).
+		pointer = null;
 		const cursor = cursorOrCenter();
 		const step = event.shiftKey ? 1 : MEASURE_KEY_STEP_CM;
 		const clamp = (value: number, max: number) => Math.min(max, Math.max(0, value));
@@ -567,7 +573,10 @@
 				class="measure-hint coords measure"
 				aria-describedby={measureHelpId}
 				onkeydown={handleMeasureKeydown}
-				onclick={() => placeMeasurePoint(cursorOrCenter())}
+				onclick={() => {
+					pointer = null;
+					placeMeasurePoint(cursorOrCenter());
+				}}
 			>
 				{measured === null ? '두 점을 찍어 거리를 잽니다' : `${measured} cm`} · Esc로 마침
 			</button>
