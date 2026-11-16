@@ -9,7 +9,12 @@ function hasFinalConsonant(word: string): boolean {
 	return LETTER_HAS_FINAL.has(last.toUpperCase());
 }
 
+/** 단어 끝소리에 맞는 조사만 고릅니다. 따옴표로 감싼 이름처럼 단어와 조사 사이에 글자가 낄 때 씁니다. */
+export function particle(word: string, withFinal: string, withoutFinal: string): string {
+	return hasFinalConsonant(word) ? withFinal : withoutFinal;
+}
+
 /** 단어 끝소리에 맞는 조사를 붙입니다. 예: josa('책상', '이', '가') → '책상이' */
 export function josa(word: string, withFinal: string, withoutFinal: string): string {
-	return `${word}${hasFinalConsonant(word) ? withFinal : withoutFinal}`;
+	return `${word}${particle(word, withFinal, withoutFinal)}`;
 }

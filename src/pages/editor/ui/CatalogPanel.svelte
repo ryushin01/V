@@ -7,6 +7,7 @@
 		CustomProductLimitError,
 		matchesCatalogQuery,
 		listCustomProducts,
+		onPlanChange,
 		parseCustomProductsFile,
 		saveCustomProducts,
 		stringifyCustomProducts,
@@ -69,6 +70,10 @@
 	onMount(() => {
 		recentIds = readRecent();
 		void refresh();
+		// 다른 탭에서 내 제품을 등록·고치기·삭제하면 목록과 놓은 물건의 정의를 다시 읽습니다.
+		return onPlanChange((change) => {
+			if (change.type === 'products') void refresh();
+		});
 	});
 
 	function openDialog(entry: CatalogEntry | null) {

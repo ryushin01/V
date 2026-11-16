@@ -205,6 +205,71 @@ test.describe('점검과 저장', () => {
 		await expect(page).toHaveURL(/\/plans\//);
 	});
 
+	test('두 탭에서 고쳐도 서로의 변경을 잃지 않습니다', async ({ page, context }) => {
+		await openEmpty(page);
+		const other = await context.newPage();
+		await other.goto(page.url());
+		await expect(other.getByRole('heading', { name: '물건 추가' })).toBeVisible();
+
+		// 한 탭에서 이름을 바꾸면 다른 탭이 바로 불러옵니다.
+		await page.getByLabel('배치도 이름').fill('첫 탭에서 바꾼 이름');
+		await expect(other.getByLabel('배치도 이름')).toHaveValue('첫 탭에서 바꾼 이름');
+		await expect(other.getByRole('status').filter({ hasText: '다른 탭에서' })).toHaveText(
+			'다른 탭에서 바뀐 내용을 불러왔습니다.'
+		);
+
+		// 다른 탭에서 물건을 놓아도 앞의 이름이 남고, 첫 탭에도 물건이 나타납니다.
+		await addFromCatalog(other, '사무용 의자');
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+		await page.reload();
+		await expect(page.getByLabel('배치도 이름')).toHaveValue('첫 탭에서 바꾼 이름');
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+	});
+
+	test('끌던 중에 다른 탭이 고친 내용은 놓은 뒤에 불러옵니다', async ({ page, context }) => {
+		await openEmpty(page);
+		await addFromCatalog(page, '사무용 의자');
+		await page.waitForTimeout(600);
+		const other = await context.newPage();
+		await other.goto(page.url());
+		await expect(other.locator('[data-item-id]')).toHaveCount(1);
+
+		// 첫 탭에서 물건을 누른 채로(끌기 시작) 다른 탭에서 이름을 바꿉니다.
+		const chair = page.locator('[data-item-id]').first();
+		const box = await chair.boundingBox();
+		await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+		await page.mouse.down();
+		await other.getByLabel('배치도 이름').fill('다른 탭 이름');
+		await other.waitForTimeout(800);
+		await expect(page.getByLabel('배치도 이름')).toHaveValue('새 배치도');
+
+		// 옮기지 않고 놓으면 미뤄 둔 변경을 불러옵니다.
+		await page.mouse.up();
+		await expect(page.getByLabel('배치도 이름')).toHaveValue('다른 탭 이름');
+	});
+
+	test('다른 탭에서 지운 배치도는 편집 중인 탭에서도 지운 것으로 보여 줍니다', async ({
+		page,
+		context
+	}) => {
+		await openEmpty(page);
+		const home = await context.newPage();
+		await home.goto('/');
+		await home.getByRole('button', { name: '새 배치도 삭제' }).click();
+		await home.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click();
+		await expect(page.getByRole('heading', { name: '배치도가 삭제되었습니다' })).toBeVisible();
+		await expect(home.getByText('아직 저장한 배치도가 없습니다', { exact: false })).toBeVisible();
+	});
+
+	test('이름을 비우고 나가면 이전 이름으로 돌아갑니다', async ({ page }) => {
+		await openEmpty(page);
+		const name = page.getByLabel('배치도 이름');
+		await name.fill('');
+		await name.press('Tab');
+		await expect(name).toHaveValue('새 배치도');
+		await expect(page).toHaveTitle('새 배치도 편집 | V');
+	});
+
 	test('새 배치도 버튼을 빠르게 두 번 눌러도 하나만 만듭니다', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('button', { name: /새 배치도 만들기/ }).dblclick();
@@ -458,6 +523,42 @@ test.describe('내 제품 등록', () => {
 			/우리 집 원목 책상/
 		);
 		await fresh.close();
+	});
+
+	test('다른 탭에서 내 제품을 고치면 놓은 물건과 목록에도 바로 반영합니다', async ({
+		page,
+		context
+	}) => {
+		await openEmpty(page);
+		await page.getByRole('button', { name: '제품 등록' }).click();
+		const dialog = page.getByRole('dialog', { name: '제품 등록' });
+		await dialog.getByLabel('제품 이름 (필수)').fill('탭 공유 책상');
+		await dialog.getByLabel('가로', { exact: true }).fill('150');
+		await dialog.getByLabel('가로', { exact: true }).press('Tab');
+		await dialog.getByRole('button', { name: '등록' }).click();
+		await expect(dialog).toBeHidden();
+		await page.waitForTimeout(600);
+
+		const other = await context.newPage();
+		await other.goto(page.url());
+		await expect(other.locator('[data-item-id]').first()).toHaveAttribute(
+			'aria-label',
+			/탭 공유 책상, 가로 150/
+		);
+
+		await page.getByRole('button', { name: '탭 공유 책상 고치기' }).click();
+		const edit = page.getByRole('dialog', { name: '내 제품 고치기' });
+		await edit.getByLabel('가로', { exact: true }).fill('180');
+		await edit.getByLabel('가로', { exact: true }).press('Tab');
+		await edit.getByRole('button', { name: '저장' }).click();
+		await expect(edit).toBeHidden();
+
+		await expect(other.locator('[data-item-id]').first()).toHaveAttribute(
+			'aria-label',
+			/탭 공유 책상, 가로 180/
+		);
+		// 내 제품 목록과 최근 추가한 물건 모두 새 치수로 바뀝니다.
+		await expect(other.getByRole('button', { name: /^탭 공유 책상 180×60/ })).toHaveCount(2);
 	});
 
 	test('내 제품 목록을 파일로 내보내 다른 브라우저에서 가져옵니다', async ({ page }) => {

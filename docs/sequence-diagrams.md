@@ -19,11 +19,37 @@ sequenceDiagram
     세션-->>도면: 경고 표시, X-ray 치수
     도면-->>사용자: aria-live로 결과 안내
     세션->>세션: 바뀐 내용인지 비교 (updatedAt 제외)
-    세션->>저장: 300ms 뒤 savePlan
+    세션->>저장: 300ms 뒤 savePlan (화면이 숨겨지거나 닫히면 바로)
     저장-->>세션: 저장됨 / 저장 오류 표시
 ```
 
-## 2. 서버 없는 공유 링크
+## 2. 같은 배치도를 연 다른 탭과 맞추기
+
+```mermaid
+sequenceDiagram
+    participant 탭A as 편집 탭 A
+    participant 저장 as plans-db (IndexedDB)
+    participant 채널 as BroadcastChannel('v-plans')
+    participant 탭B as 편집 탭 B
+    participant 목록 as 첫 화면 탭
+
+    탭A->>저장: savePlan
+    저장->>채널: { type: 'saved', id, updatedAt }
+    채널-->>탭B: 같은 id이고 B가 아는 것보다 늦은 저장
+    alt B에 저장하지 않은 변경·저장 중·끌기가 없음
+        탭B->>저장: getPlan(id)
+        탭B->>탭B: replaceWith (화면 위치·선택 유지, 되돌리기 기록 비움, 안내)
+    else B도 고치는 중
+        탭B->>저장: B의 저장이 최신이 됨 (나중에 저장한 쪽이 남음) → A가 같은 방법으로 불러옴
+    end
+    채널-->>목록: 보이면 0.3초 뒤 다시 읽기, 숨겨졌으면 다시 보일 때 한 번
+    Note over 탭B: 탭이 다시 보이거나 뒤로 가기 캐시에서 돌아오면 저장 시각을 비교해 놓친 변경을 불러옴
+    탭A->>저장: deletePlan (첫 화면에서 삭제)
+    저장->>채널: { type: 'deleted', id }
+    채널-->>탭B: "배치도가 삭제되었습니다" 화면 (저장하지 않은 변경이 있으면 B의 저장이 되살림)
+```
+
+## 3. 서버 없는 공유 링크
 
 ```mermaid
 sequenceDiagram
@@ -52,7 +78,7 @@ sequenceDiagram
     end
 ```
 
-## 3. JSON 내보내기와 불러오기
+## 4. JSON 내보내기와 불러오기
 
 ```mermaid
 sequenceDiagram
