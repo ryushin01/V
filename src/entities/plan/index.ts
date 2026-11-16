@@ -28,6 +28,7 @@ export {
 	CATALOG,
 	CATEGORY_LABELS,
 	getCatalogEntry,
+	LAYER_ORDER,
 	matchesCatalogQuery,
 	registerCustomEntries,
 	resolveEntry,
@@ -52,7 +53,7 @@ export {
 	wallLength,
 	wallRange
 } from './model/room';
-export { parsePlan, stringifyPlan } from './model/serialize';
+export { parsePlan, PLAN_FILE_MAX_BYTES, stringifyPlan } from './model/serialize';
 export type {
 	Analysis,
 	CatalogCategory,

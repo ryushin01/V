@@ -17,7 +17,7 @@ describe('SharedPage', () => {
 	it('잘못된 링크는 이유를 알립니다', async () => {
 		location.hash = '#broken';
 		render(SharedPage);
-		expect(await screen.findByRole('alert')).toHaveTextContent('V 공유 링크가 아닙니다');
+		expect(await screen.findByText(/V 공유 링크가 아닙니다/)).toHaveAttribute('role', 'alert');
 	});
 
 	it('더블 클릭해도 한 번만 복사합니다', async () => {

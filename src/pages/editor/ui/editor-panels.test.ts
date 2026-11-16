@@ -212,9 +212,16 @@ describe('EditorToolbar', () => {
 		await waitFor(() => expect(undo).toBeEnabled());
 	});
 
-	it('저장 실패를 알립니다', () => {
+	it('저장 실패는 화면에 보이고 바로 알립니다', () => {
 		render(EditorToolbar, { session: empty(), saveStatus: 'error' });
-		expect(screen.getByRole('status')).toHaveTextContent('저장 실패');
+		expect(screen.getByText(/저장 실패/)).toBeVisible();
+		expect(screen.getByText(/저장하지 못했습니다/)).toHaveAttribute('role', 'alert');
+	});
+
+	it('저장 중·저장됨은 화면에만 보이고 읽어 주지 않습니다', () => {
+		render(EditorToolbar, { session: empty(), saveStatus: 'saving' });
+		expect(screen.getByText('저장 중')).not.toHaveAttribute('role');
+		expect(screen.getByRole('alert', { hidden: true }).textContent).toBe('');
 	});
 });
 

@@ -62,6 +62,19 @@ describe('NumberField', () => {
 		expect(input.getAttribute('aria-valuenow')).toBe('150');
 	});
 
+	it('지우는 중인 빈 칸은 오류로 보지 않고, 빈 칸으로 확정하면 알립니다', async () => {
+		const { oncommit, input } = setup();
+		await userEvent.clear(input);
+		expect(input.getAttribute('aria-invalid')).toBeNull();
+		await userEvent.tab();
+		expect(oncommit).not.toHaveBeenCalled();
+		expect(input.getAttribute('aria-invalid')).toBe('true');
+		expect(input.getAttribute('aria-errormessage')).toBe(input.getAttribute('aria-describedby'));
+		expect(
+			document.getElementById(input.getAttribute('aria-errormessage') ?? '')?.textContent
+		).toBe('숫자를 입력해 주세요.');
+	});
+
 	it('범위를 벗어나면 오류를 연결하고 확정하지 않습니다', async () => {
 		const { oncommit, input } = setup();
 		await userEvent.clear(input);

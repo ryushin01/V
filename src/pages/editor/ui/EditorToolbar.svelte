@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { BrandMark, Button, Dialog, Icon } from '#shared/ui';
+	import { downloadText } from '#shared/lib/file';
+	import { BrandMark, Button, Dialog, Icon, LiveMessage } from '#shared/ui';
 	import { encodePlan, stringifyPlan } from '#entities/plan';
 	import { ThemeToggle } from '#features/toggle-theme';
 	import { XrayToggle } from '#features/toggle-xray';
@@ -58,14 +59,8 @@
 	}
 
 	function exportFile() {
-		const blob = new Blob([stringifyPlan(session.toData())], { type: 'application/json' });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = `${session.savedName.replace(/[\\/:*?"<>|]/g, '_')}.json`;
-		link.click();
-		// 다운로드가 비동기로 시작하는 브라우저를 위해 주소 해제를 미룹니다.
-		setTimeout(() => URL.revokeObjectURL(url), 0);
+		const name = session.savedName.replace(/[\\/:*?"<>|]/g, '_');
+		downloadText(`${name}.json`, stringifyPlan(session.toData()));
 		session.announcement = 'JSON 파일로 내보냈습니다.';
 	}
 </script>
@@ -83,9 +78,16 @@
 			onblur={() => session.commitName()}
 		/>
 	</div>
-	<p class="status measure" class:failed={saveStatus === 'error'} role="status">
+	<!-- 저장 상태는 바뀔 때마다 읽으면 이동 안내와 겹치므로 화면에만 보이고, 실패만 따로 알립니다. -->
+	<p class="status measure" class:failed={saveStatus === 'error'}>
 		{SAVE_LABEL[saveStatus]}
 	</p>
+	<LiveMessage
+		srOnly
+		message={saveStatus === 'error'
+			? '저장하지 못했습니다. 내보내기로 파일을 받아 보관해 주세요.'
+			: ''}
+	/>
 	<div class="actions">
 		<Button
 			size="sm"
