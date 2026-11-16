@@ -226,6 +226,28 @@ test.describe('점검과 저장', () => {
 		await expect(page.locator('[data-item-id]')).toHaveCount(1);
 	});
 
+	test('끌던 중에 다른 탭이 고친 내용은 놓은 뒤에 불러옵니다', async ({ page, context }) => {
+		await openEmpty(page);
+		await addFromCatalog(page, '사무용 의자');
+		await page.waitForTimeout(600);
+		const other = await context.newPage();
+		await other.goto(page.url());
+		await expect(other.locator('[data-item-id]')).toHaveCount(1);
+
+		// 첫 탭에서 물건을 누른 채로(끌기 시작) 다른 탭에서 이름을 바꿉니다.
+		const chair = page.locator('[data-item-id]').first();
+		const box = await chair.boundingBox();
+		await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+		await page.mouse.down();
+		await other.getByLabel('배치도 이름').fill('다른 탭 이름');
+		await other.waitForTimeout(800);
+		await expect(page.getByLabel('배치도 이름')).toHaveValue('새 배치도');
+
+		// 옮기지 않고 놓으면 미뤄 둔 변경을 불러옵니다.
+		await page.mouse.up();
+		await expect(page.getByLabel('배치도 이름')).toHaveValue('다른 탭 이름');
+	});
+
 	test('다른 탭에서 지운 배치도는 편집 중인 탭에서도 지운 것으로 보여 줍니다', async ({
 		page,
 		context
