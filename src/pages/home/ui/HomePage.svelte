@@ -54,15 +54,20 @@
 	let fileInput = $state<HTMLInputElement>();
 	let creating = false;
 
+	/** 다시 읽기가 겹치면(처음 읽기와 다른 탭 알림 등) 마지막 요청의 결과만 씁니다. */
+	let refreshRun = 0;
+
 	async function refresh() {
+		const run = (refreshRun += 1);
 		try {
 			const list = await listPlans();
 			// 미리보기가 배치도에 담긴 옛 사본 대신 저장소의 최신 내 제품 정의로 그리게 합니다.
 			await listCustomProducts().catch(() => []);
+			if (run !== refreshRun) return;
 			plans = list;
 			status = 'ready';
 		} catch {
-			status = 'failed';
+			if (run === refreshRun) status = 'failed';
 		}
 	}
 
