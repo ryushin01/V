@@ -5,6 +5,7 @@ export {
 	getPlan,
 	listCustomProducts,
 	listPlans,
+	restoreBackup,
 	saveCustomProduct,
 	saveCustomProducts,
 	savePlan
@@ -37,8 +38,15 @@ export {
 	WATTS_BASIS_LABELS
 } from './model/catalog';
 export { decodePlan, encodePlan } from './api/share-link';
+export {
+	BACKUP_FILE_MAX_BYTES,
+	BACKUP_PLAN_LIMIT,
+	parseImportFile,
+	stringifyBackup,
+	type ImportResult
+} from './model/backup';
 export { onPlanChange, type PlanChange } from './api/plan-sync';
-export { createEmptyPlan, createSamplePlan } from './model/factory';
+export { copyPlan, createEmptyPlan, createSamplePlan } from './model/factory';
 export { findFreeSpot, halfExtents } from './model/placement';
 export {
 	CORNER_LABELS,

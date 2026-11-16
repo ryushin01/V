@@ -5,21 +5,26 @@
 	import { SITE } from '#shared/config';
 	import { Button, Dialog, Icon, LiveMessage, PageMeta } from '#shared/ui';
 	import {
+		BACKUP_FILE_MAX_BYTES,
+		copyPlan,
 		createEmptyPlan,
 		createSamplePlan,
+		CustomProductLimitError,
 		deletePlan,
 		listCustomProducts,
 		listPlans,
 		onPlanChange,
-		parsePlan,
-		PLAN_FILE_MAX_BYTES,
+		parseImportFile,
 		PlanPreview,
+		restoreBackup,
 		savePlan,
+		stringifyBackup,
+		type CatalogEntry,
 		type PlanData
 	} from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
 	import { particle } from '#shared/lib/josa';
-	import { readTextFile } from '#shared/lib/file';
+	import { downloadText, readTextFile } from '#shared/lib/file';
 	import { protectStorage } from '#shared/lib/storage';
 	import { reveal } from '#shared/lib/reveal';
 	import { ScrollTracker } from '../model/scroll.svelte';
@@ -53,6 +58,10 @@
 	let status = $state<'loading' | 'ready' | 'failed'>('loading');
 	let importError = $state('');
 	let actionError = $state('');
+	/** 백업·복제처럼 이 화면에 머무는 동작의 결과 안내 */
+	let notice = $state('');
+	let importing = false;
+	let copying = false;
 	let pendingDelete = $state.raw<PlanData | null>(null);
 	let deleteOpen = $state(false);
 	let fileInput = $state<HTMLInputElement>();
@@ -119,23 +128,82 @@
 		}
 	}
 
+	/** 배치도 파일이면 새 배치도로 열고, 백업 파일이면 모두 가져와 목록에 둡니다. */
 	async function importFile(event: Event & { currentTarget: HTMLInputElement }) {
 		const input = event.currentTarget;
 		const file = input.files?.[0];
 		input.value = '';
-		if (!file) return;
+		if (!file || importing) return;
 		importError = '';
-		const read = await readTextFile(file, PLAN_FILE_MAX_BYTES);
+		notice = '';
+		const read = await readTextFile(file, BACKUP_FILE_MAX_BYTES);
 		if (!read.ok) {
 			importError = read.error;
 			return;
 		}
-		const parsed = parsePlan(read.text);
+		const parsed = parseImportFile(read.text);
 		if (!parsed.ok) {
 			importError = parsed.error;
 			return;
 		}
-		await openNewPlan(() => parsed.plan);
+		if (parsed.kind === 'plan') {
+			await openNewPlan(() => parsed.plan);
+			return;
+		}
+		importing = true;
+		void protectStorage();
+		try {
+			await restoreBackup(parsed.plans, parsed.products);
+			await refresh();
+			const skipped = parsed.skipped > 0 ? ` 읽을 수 없어 건너뛴 항목 ${parsed.skipped}개.` : '';
+			notice = `백업에서 배치도 ${parsed.plans.length}개와 내 제품 ${parsed.products.length}개를 가져왔습니다.${skipped}`;
+		} catch (error) {
+			importError =
+				error instanceof CustomProductLimitError
+					? `${error.message} 가져오면 ${error.total}개가 되어 가져오지 않았습니다.`
+					: '백업을 저장하지 못했습니다. 저장 공간이 부족하거나 비공개 창일 수 있습니다.';
+		} finally {
+			importing = false;
+		}
+	}
+
+	/** 이 브라우저의 모든 배치도(평면도 이미지 포함)와 내 제품을 한 파일로 내려받습니다. */
+	async function exportBackup() {
+		importError = '';
+		notice = '';
+		let all: PlanData[];
+		let products: CatalogEntry[] = [];
+		try {
+			all = await listPlans();
+		} catch {
+			actionError = '브라우저 저장소를 읽지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+			return;
+		}
+		try {
+			products = await listCustomProducts();
+		} catch {
+			// 내 제품을 읽지 못해도 배치도는 백업합니다(배치도에 쓰인 내 제품은 배치도에 함께 담겨 있음).
+		}
+		const date = new Intl.DateTimeFormat('sv-SE').format(new Date());
+		downloadText(`v-backup-${date}.json`, stringifyBackup(all, products));
+		notice = `배치도 ${all.length}개와 내 제품 ${products.length}개를 백업 파일로 내려받았습니다.`;
+	}
+
+	async function duplicate(plan: PlanData) {
+		if (copying) return;
+		copying = true;
+		actionError = '';
+		notice = '';
+		try {
+			const copy = copyPlan(plan);
+			await savePlan(copy);
+			await refresh();
+			notice = `‘${copy.name}’${particle(copy.name, '을', '를')} 만들었습니다.`;
+		} catch {
+			actionError = '배치도를 복제하지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+		} finally {
+			copying = false;
+		}
 	}
 
 	function askDelete(plan: PlanData) {
@@ -251,7 +319,7 @@
 	>
 		<div class="plans-head">
 			<h2 id="plans-heading" class="display-2">내 배치도</h2>
-			<div>
+			<div class="head-actions">
 				<input
 					bind:this={fileInput}
 					type="file"
@@ -259,6 +327,9 @@
 					hidden
 					onchange={importFile}
 				/>
+				{#if plans.length > 0}
+					<Button onclick={exportBackup}><Icon name="download" size={16} /> 전체 백업</Button>
+				{/if}
 				<Button onclick={() => fileInput?.click()}
 					><Icon name="upload" size={16} /> JSON 불러오기</Button
 				>
@@ -266,6 +337,7 @@
 		</div>
 		<LiveMessage message={importError} gap="1rem" />
 		<LiveMessage message={actionError} gap="1rem" />
+		<LiveMessage role="status" message={notice} gap="1rem" />
 		<LiveMessage
 			message={status === 'failed'
 				? '브라우저 저장소를 사용할 수 없습니다. 비공개 창이라면 일반 창에서 열어 주세요.'
@@ -294,14 +366,19 @@
 								)}
 							</span>
 						</a>
-						<Button
-							size="sm"
-							variant="danger"
-							aria-label={`${plan.name} 삭제`}
-							onclick={() => askDelete(plan)}
-						>
-							<Icon name="trash" size={16} /> 삭제
-						</Button>
+						<div class="card-actions">
+							<Button size="sm" aria-label={`${plan.name} 복제`} onclick={() => duplicate(plan)}>
+								<Icon name="copy" size={16} /> 복제
+							</Button>
+							<Button
+								size="sm"
+								variant="danger"
+								aria-label={`${plan.name} 삭제`}
+								onclick={() => askDelete(plan)}
+							>
+								<Icon name="trash" size={16} /> 삭제
+							</Button>
+						</div>
 					</li>
 				{/each}
 			</ul>
@@ -478,6 +555,13 @@
 		padding-block: 2rem 6rem;
 		outline: none;
 		scroll-margin-top: calc(var(--nav-h) + 2rem);
+	}
+
+	.head-actions,
+	.card-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
 	}
 
 	.plans-head {
