@@ -7,13 +7,16 @@
 		createEmptyPlan,
 		createSamplePlan,
 		deletePlan,
+		listCustomProducts,
 		listPlans,
+		onPlanChange,
 		parsePlan,
 		PlanPreview,
 		savePlan,
 		type PlanData
 	} from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
+	import { particle } from '#shared/lib/josa';
 	import { reveal } from '#shared/lib/reveal';
 	import { ScrollTracker } from '../model/scroll.svelte';
 	import BuildStage from './BuildStage.svelte';
@@ -51,16 +54,50 @@
 	let fileInput = $state<HTMLInputElement>();
 	let creating = false;
 
+	/** 다시 읽기가 겹치면(처음 읽기와 다른 탭 알림 등) 마지막 요청의 결과만 씁니다. */
+	let refreshRun = 0;
+
 	async function refresh() {
+		const run = (refreshRun += 1);
 		try {
-			plans = await listPlans();
+			const list = await listPlans();
+			// 미리보기가 배치도에 담긴 옛 사본 대신 저장소의 최신 내 제품 정의로 그리게 합니다.
+			await listCustomProducts().catch(() => []);
+			if (run !== refreshRun) return;
+			plans = list;
 			status = 'ready';
 		} catch {
-			status = 'failed';
+			if (run === refreshRun) status = 'failed';
 		}
 	}
 
 	onMount(refresh);
+
+	/** 다른 탭에서 배치도를 저장·삭제하면 목록을 다시 읽습니다. 숨겨진 동안에는 다시 보일 때 한 번만 읽습니다. */
+	onMount(() => {
+		let stale = false;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const stop = onPlanChange((change) => {
+			if (change.type === 'products') return;
+			if (document.visibilityState !== 'visible') {
+				stale = true;
+				return;
+			}
+			clearTimeout(timer);
+			timer = setTimeout(refresh, 300);
+		});
+		const onVisible = () => {
+			if (document.visibilityState !== 'visible' || !stale) return;
+			stale = false;
+			void refresh();
+		};
+		document.addEventListener('visibilitychange', onVisible);
+		return () => {
+			stop();
+			clearTimeout(timer);
+			document.removeEventListener('visibilitychange', onVisible);
+		};
+	});
 
 	async function openNewPlan(make: () => PlanData) {
 		if (creating) return;
@@ -276,7 +313,9 @@
 </footer>
 
 <Dialog bind:open={deleteOpen} title="배치도를 삭제할까요?">
-	<p>‘{pendingDelete?.name}’을 삭제하면 되돌릴 수 없습니다.</p>
+	<p>
+		‘{pendingDelete?.name}’{particle(pendingDelete?.name ?? '', '을', '를')} 삭제하면 되돌릴 수 없습니다.
+	</p>
 	{#snippet actions()}
 		<Button onclick={() => (deleteOpen = false)}>취소</Button>
 		<Button variant="danger" onclick={confirmDelete}>삭제</Button>

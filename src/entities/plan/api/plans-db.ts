@@ -1,6 +1,7 @@
 import { registerCustomEntries } from '../model/catalog';
 import { CUSTOM_PRODUCT_LIMIT } from '../model/custom-file';
 import type { CatalogEntry, PlanData } from '../model/types';
+import { announcePlanChange } from './plan-sync';
 
 const DB_NAME = 'v-setup-planner';
 const STORE = 'plans';
@@ -102,16 +103,21 @@ export async function saveCustomProducts(entries: readonly CatalogEntry[]): Prom
 		database.close();
 	}
 	registerCustomEntries(entries, true);
+	announcePlanChange({ type: 'products' });
 }
 
 export async function deleteCustomProduct(id: string): Promise<void> {
 	await run('readwrite', (store) => store.delete(id), CUSTOM_STORE);
+	announcePlanChange({ type: 'products' });
 }
 
+/** 저장한 뒤 다른 탭에 알립니다. 같은 배치도를 연 탭은 이 알림으로 최신 내용을 다시 불러옵니다. */
 export async function savePlan(plan: PlanData): Promise<void> {
 	await run('readwrite', (store) => store.put(plan));
+	announcePlanChange({ type: 'saved', id: plan.id, updatedAt: plan.updatedAt });
 }
 
 export async function deletePlan(id: string): Promise<void> {
 	await run('readwrite', (store) => store.delete(id));
+	announcePlanChange({ type: 'deleted', id });
 }

@@ -62,7 +62,7 @@
 		const url = URL.createObjectURL(blob);
 		const link = document.createElement('a');
 		link.href = url;
-		link.download = `${session.name.replace(/[\\/:*?"<>|]/g, '_') || 'plan'}.json`;
+		link.download = `${session.savedName.replace(/[\\/:*?"<>|]/g, '_')}.json`;
 		link.click();
 		// 다운로드가 비동기로 시작하는 브라우저를 위해 주소 해제를 미룹니다.
 		setTimeout(() => URL.revokeObjectURL(url), 0);
@@ -74,7 +74,14 @@
 	<a class="mark" href={resolve('/')} aria-label="V 배치도 목록으로"><BrandMark /></a>
 	<div class="name">
 		<label class="sr-only" for="plan-name">배치도 이름</label>
-		<input id="plan-name" type="text" maxlength="60" autocomplete="off" bind:value={session.name} />
+		<input
+			id="plan-name"
+			type="text"
+			maxlength="60"
+			autocomplete="off"
+			bind:value={session.name}
+			onblur={() => session.commitName()}
+		/>
 	</div>
 	<p class="status measure" class:failed={saveStatus === 'error'} role="status">
 		{SAVE_LABEL[saveStatus]}

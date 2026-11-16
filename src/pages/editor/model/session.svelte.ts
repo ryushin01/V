@@ -62,11 +62,16 @@ function sameSnapshot(a: Snapshot, b: Snapshot): boolean {
 	return a.underlay?.src === b.underlay?.src && body(a) === body(b);
 }
 
+/** 이름을 한 번도 정하지 않은 배치도에 씁니다. */
+const DEFAULT_NAME = '새 배치도';
+
 export class EditorSession {
 	readonly id: string;
 	readonly viewport = new Viewport();
 
-	name = $state('');
+	#name = $state('');
+	/** 마지막으로 확정한 이름(불러올 때, 입력란을 떠날 때). 입력란을 비우면 이 이름으로 저장합니다. */
+	#lastName = DEFAULT_NAME;
 	room = $state<RoomData>({ width: 0, depth: 0, openings: [] });
 	items = $state<PlacedItem[]>([]);
 	selectedId = $state<string | null>(null);
@@ -81,6 +86,8 @@ export class EditorSession {
 	#lastKey: string | null = null;
 	#lastTime = 0;
 	#gestureStart: Snapshot | null = null;
+	/** 끌기 중인지. 끌기가 끝나면 미뤄 둔 다른 탭 동기화를 하도록 반응형으로 둡니다. */
+	#gesturing = $state(false);
 
 	readonly selected = $derived(this.items.find((item) => item.id === this.selectedId) ?? null);
 	readonly analysis = $derived(analyzePlan(this.room, this.items));
@@ -91,10 +98,44 @@ export class EditorSession {
 
 	constructor(plan: PlanData) {
 		this.id = plan.id;
-		this.name = plan.name;
+		this.#acceptName(plan.name);
 		this.room = plan.room;
 		this.items = plan.items.map((item) => new PlacedItem(item));
 		this.underlay = plan.underlay ?? null;
+	}
+
+	/** 입력란에 보이는 이름입니다. 입력하는 동안에는 비어 있을 수 있습니다. */
+	get name(): string {
+		return this.#name;
+	}
+
+	set name(value: string) {
+		this.#name = value;
+	}
+
+	/** 저장하고 목록·제목에 쓰는 이름입니다. 입력란을 비우면 마지막으로 확정한 이름을 씁니다. */
+	get savedName(): string {
+		return this.#name.trim() || this.#lastName;
+	}
+
+	/**
+	 * 이름 입력란을 떠날 때 부릅니다. 비어 있으면 마지막으로 확정한 이름으로 되돌리고, 아니면 확정합니다.
+	 * 글자를 지우는 동안의 중간 값('거실' → '거')은 확정하지 않습니다.
+	 */
+	commitName() {
+		const name = this.#name.trim();
+		if (name) this.#lastName = name;
+		else this.#name = this.#lastName;
+	}
+
+	#acceptName(name: string) {
+		this.#name = name;
+		this.#lastName = name.trim() || DEFAULT_NAME;
+	}
+
+	#setGesture(snapshot: Snapshot | null) {
+		this.#gestureStart = snapshot;
+		this.#gesturing = snapshot !== null;
 	}
 
 	toData(): PlanData {
@@ -102,7 +143,7 @@ export class EditorSession {
 		return {
 			version: 1,
 			id: this.id,
-			name: this.name,
+			name: this.savedName,
 			room,
 			items,
 			updatedAt: Date.now(),
@@ -140,7 +181,7 @@ export class EditorSession {
 	}
 
 	#commit(before: Snapshot, key: string | null = null) {
-		this.#gestureStart = null;
+		this.#setGesture(null);
 		if (sameSnapshot(before, this.#capture())) return;
 		const now = Date.now();
 		const coalesce = key !== null && key === this.#lastKey && now - this.#lastTime < COALESCE_MS;
@@ -184,6 +225,22 @@ export class EditorSession {
 		this.#lastKey = null;
 		this.#restore(next);
 		this.announcement = '다시 실행했습니다.';
+	}
+
+	/**
+	 * 다른 탭에서 저장한 내용으로 바꿉니다. 화면 위치와 (남아 있으면) 선택은 그대로 두고,
+	 * 되돌리면 다른 탭의 변경을 지우게 되므로 되돌리기 기록은 비웁니다.
+	 */
+	replaceWith(plan: PlanData) {
+		this.#acceptName(plan.name);
+		this.#restore({ room: plan.room, items: plan.items, underlay: plan.underlay ?? null });
+		// 찍어 둔 축척 점은 이전 평면도 이미지 기준이라 버립니다.
+		this.calibration = null;
+		this.#past = [];
+		this.#future = [];
+		this.#lastKey = null;
+		this.#setGesture(null);
+		this.announcement = '다른 탭에서 바뀐 내용을 불러왔습니다.';
 	}
 
 	select(id: string | null) {
@@ -247,7 +304,7 @@ export class EditorSession {
 
 	/** 끌기가 시작될 때의 상태를 기억합니다. */
 	beginGesture() {
-		this.#gestureStart ??= this.#capture();
+		if (!this.#gestureStart) this.#setGesture(this.#capture());
 	}
 
 	endGesture() {
@@ -257,12 +314,12 @@ export class EditorSession {
 	cancelGesture() {
 		if (!this.#gestureStart) return;
 		this.#restore(this.#gestureStart);
-		this.#gestureStart = null;
+		this.#setGesture(null);
 		this.announcement = '이동을 취소했습니다.';
 	}
 
 	get hasGesture() {
-		return this.#gestureStart !== null;
+		return this.#gesturing;
 	}
 
 	/** 포인터로 옮길 때 씁니다. 5cm 격자와 벽에 맞춥니다. */
