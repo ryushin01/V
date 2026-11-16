@@ -21,6 +21,30 @@ async function addFromCatalog(page: Page, name: string) {
 	await page.getByRole('button', { name: new RegExp(`^${name}`) }).click();
 }
 
+/** 지금 연 배치도가 IndexedDB에 저장된 물건 수입니다. 자동 저장이 끝났는지 고정 대기 없이 확인합니다. */
+function storedItemCount(page: Page): Promise<number> {
+	const id = page.url().split('/').pop();
+	return page.evaluate(
+		(planId) =>
+			new Promise<number>((resolve) => {
+				const request = indexedDB.open('v-setup-planner');
+				request.onsuccess = () => {
+					const database = request.result;
+					const get = database
+						.transaction('plans')
+						.objectStore('plans')
+						.get(planId ?? '');
+					get.onsuccess = () => {
+						resolve(get.result?.items.length ?? -1);
+						database.close();
+					};
+				};
+				request.onerror = () => resolve(-1);
+			}),
+		id
+	);
+}
+
 async function expectNoAxeViolations(page: Page) {
 	// 스크롤하면 나타나는 요소도 나타난 뒤의 대비로 검사합니다.
 	await page.evaluate(() => {
@@ -229,7 +253,7 @@ test.describe('점검과 저장', () => {
 	test('끌던 중에 다른 탭이 고친 내용은 놓은 뒤에 불러옵니다', async ({ page, context }) => {
 		await openEmpty(page);
 		await addFromCatalog(page, '사무용 의자');
-		await page.waitForTimeout(600);
+		await expect.poll(() => storedItemCount(page)).toBe(1);
 		const other = await context.newPage();
 		await other.goto(page.url());
 		await expect(other.locator('[data-item-id]')).toHaveCount(1);
@@ -537,7 +561,7 @@ test.describe('내 제품 등록', () => {
 		await dialog.getByLabel('가로', { exact: true }).press('Tab');
 		await dialog.getByRole('button', { name: '등록' }).click();
 		await expect(dialog).toBeHidden();
-		await page.waitForTimeout(600);
+		await expect.poll(() => storedItemCount(page)).toBe(1);
 
 		const other = await context.newPage();
 		await other.goto(page.url());
@@ -618,5 +642,105 @@ test.describe('화면 폭과 접근성', () => {
 		await openSample(page);
 		await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
 		await expect(page).toHaveTitle(/예시.* 편집 \| V/);
+	});
+});
+
+test.describe('런칭 기본', () => {
+	test('모든 화면에서 CSP 위반이 없고 저장한 테마를 먼저 적용합니다', async ({ page }) => {
+		await page.addInitScript(() => {
+			localStorage.setItem('v-theme', 'dark');
+			const violations: string[] = [];
+			(window as unknown as { __csp: string[] }).__csp = violations;
+			document.addEventListener('securitypolicyviolation', (event) =>
+				violations.push(`${event.violatedDirective} ${event.blockedURI}`)
+			);
+		});
+		const violations = () => page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
+
+		await page.goto('/');
+		await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+		await expect(page.locator('meta[http-equiv="content-security-policy"]')).toHaveCount(1);
+		expect(await violations()).toEqual([]);
+
+		await page.getByRole('button', { name: '예시로 시작하기' }).click();
+		await page.waitForURL(/\/plans\//);
+		await page
+			.locator('input[type="file"][accept*="image"]')
+			.first()
+			.setInputFiles({
+				name: 'plan.png',
+				mimeType: 'image/png',
+				buffer: Buffer.from(
+					'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+					'base64'
+				)
+			});
+		await expect(page.getByTestId('underlay')).toBeVisible();
+		expect(await violations()).toEqual([]);
+
+		await page.getByRole('button', { name: '공유' }).click();
+		const url = await page.getByLabel('주소').inputValue();
+		await page.goto(url);
+		await expect(page.getByRole('button', { name: /내 배치도로 복사/ })).toBeVisible();
+		expect(await violations()).toEqual([]);
+
+		await page.goto('/no-such-page');
+		await expect(page.getByText('ERROR')).toBeVisible();
+		expect(await violations()).toEqual([]);
+	});
+
+	test('오프라인에서도 첫 화면과 편집 화면이 열리고 고친 내용이 남습니다', async ({
+		page,
+		context
+	}) => {
+		await openEmpty(page);
+		const url = page.url();
+		// 서비스 워커가 앱 파일을 모두 저장하고 이 화면을 맡을 때까지 기다립니다.
+		await page.evaluate(async () => {
+			await navigator.serviceWorker.ready;
+		});
+		await page.reload();
+		await expect
+			.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
+			.toBe(true);
+
+		await context.setOffline(true);
+		await page.goto('/');
+		await expect(page.getByRole('heading', { level: 1 })).toContainText('자로 재고');
+		await page.goto(url);
+		await expect(page.getByRole('heading', { name: '물건 추가' })).toBeVisible();
+		await addFromCatalog(page, '사무용 의자');
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+		await expect.poll(() => storedItemCount(page)).toBe(1);
+		await page.reload();
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+		await context.setOffline(false);
+	});
+
+	test('설치용 매니페스트와 아이콘, 공유 미리보기, 검색 설정', async ({ page, request }) => {
+		const manifest = await (await request.get('/manifest.webmanifest')).json();
+		expect(manifest).toMatchObject({ short_name: 'V', display: 'standalone', start_url: '/' });
+		for (const icon of manifest.icons as { src: string; sizes: string }[]) {
+			const response = await request.get(icon.src);
+			expect(response.status(), icon.src).toBe(200);
+		}
+		expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(
+			expect.arrayContaining(['192x192', '512x512'])
+		);
+
+		await page.goto('/');
+		await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+			'content',
+			'https://v-setup-planner-ryushin01.vercel.app/og-image.jpg'
+		);
+		await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+			'href',
+			'https://v-setup-planner-ryushin01.vercel.app/'
+		);
+		expect((await request.get('/og-image.jpg')).status()).toBe(200);
+		expect(await (await request.get('/robots.txt')).text()).toContain('Disallow: /plans/');
+
+		await openEmpty(page);
+		await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
 	});
 });

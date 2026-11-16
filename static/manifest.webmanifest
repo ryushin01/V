@@ -1,0 +1,24 @@
+{
+	"name": "V - 데스크·게이밍 셋업 배치도",
+	"short_name": "V",
+	"description": "책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 크기로 배치하고 동선과 전력을 점검합니다.",
+	"lang": "ko",
+	"dir": "ltr",
+	"id": "/",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#f4f4f2",
+	"theme_color": "#f4f4f2",
+	"categories": ["productivity", "utilities"],
+	"icons": [
+		{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+		{
+			"src": "/icon-maskable-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
+}

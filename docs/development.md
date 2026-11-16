@@ -109,7 +109,46 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 
 ## 배포
 
-Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에 배포됩니다(PR 미리보기는 아래처럼 꺼 둠). 배치도 편집 주소는 `vercel.json`의 `routes`로 `spa.html`을 내려 주고, 없는 주소는 같은 내용의 `404.html`을 404 상태로 내려 줘 앱의 오류 화면이 뜹니다. Vercel이 Svelte를 감지하면 없는 주소에 `index.html`을 내려 주므로, `rewrites` 대신 끝에 404를 명시한 `routes`를 씁니다.
+Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합니다. `main`에 병합하면 프로덕션에 배포됩니다(PR 미리보기는 아래처럼 꺼 둠). 배치도 편집 주소는 `vercel.json`의 `routes`로 `spa.html`을 내려 주고, 없는 주소는 같은 내용의 `404.html`을 404 상태로 내려 줘 앱의 오류 화면이 뜹니다. Vercel이 Svelte를 감지하면 없는 주소에 `index.html`을 내려 주므로, `rewrites` 대신 끝에 404를 명시한 `routes`를 씁니다. `routes`를 쓰면 `headers`를 함께 쓸 수 없어, 응답 헤더도 `continue: true`인 경로로 붙입니다.
+
+| 경로                                                        | 헤더                                                                                                                                                                                 |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 모든 응답                                                   | `Content-Security-Policy: frame-ancestors 'none'`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` |
+| `/_app/immutable/*` (이름에 해시가 있는 파일)               | `Cache-Control: public, max-age=31536000, immutable`                                                                                                                                 |
+| `/fonts/*`, `/brand/*`, 아이콘, `og-image.jpg`              | `Cache-Control: public, max-age=86400, stale-while-revalidate=604800` (파일을 바꾸면 하루 안에 새 파일로 바뀜. 급하면 이름을 바꿈)                                                   |
+| HTML, `service-worker.js`, `manifest.webmanifest` 등 나머지 | Vercel 기본값(`max-age=0, must-revalidate`): 매번 새 버전인지 확인                                                                                                                   |
+
+## 보안 (CSP)
+
+`vite.config.ts`의 `csp`(해시 방식)가 미리 그린 페이지와 대체 페이지(`spa.html`, `404.html`)마다 `<meta http-equiv="content-security-policy">`를 넣습니다.
+
+- 스크립트는 같은 출처와 해시만 허용합니다. SvelteKit이 만드는 인라인 스크립트(시작 코드, 서비스 워커 등록)의 해시는 SvelteKit이 더하고, `src/app.html`의 테마 스크립트 해시는 빌드할 때 다시 계산합니다.
+- 인라인 스타일은 허용합니다(미리 그린 HTML의 `style` 속성). 이미지는 `data:`(평면도 이미지)·`blob:`까지, 연결은 같은 출처만 허용하고 `VITE_SENTRY_DSN`이 있으면 그 수집 주소를 더합니다.
+- `<meta>`에서 쓸 수 없는 `frame-ancestors`는 응답 헤더로 보냅니다(위 표).
+- E2E가 첫 화면·편집 화면(평면도 이미지 포함)·공유 화면·오류 화면에서 `securitypolicyviolation`이 없는지 확인합니다. 외부 스크립트·이미지를 새로 쓰면 지시어를 함께 고칩니다.
+
+## 오프라인과 설치 (PWA)
+
+배치도는 원래 브라우저에만 있으므로, 앱 파일을 저장해 두면 네트워크 없이도 만들고 고칠 수 있습니다.
+
+- **매니페스트**: `static/manifest.webmanifest`(이름, `standalone`, 아이콘 192·512·마스크용 512). 512 아이콘은 `pnpm icons`가 `scripts/brand/letter-v-512.png`(Flaticon 원본 512px)로 지금 아이콘과 같은 비율로 만듭니다.
+- **서비스 워커**: `src/service-worker/index.ts`. SvelteKit 3에서는 `$app/service-worker`(`self`), `$app/manifest`(`immutable`·`assets`·`prerendered`), `$app/env`(`version`)를 씁니다. 타입 검사는 따로 둔 `src/service-worker/tsconfig.json`(`$app/tsconfig/service-worker`)으로 하고(`pnpm check`에 포함), 루트 `tsconfig.json`과 Steiger에서는 뺍니다.
+  - 설치할 때 앱 코드·스타일, 영문·라틴 확장 글꼴과 한글 화면 글자 글꼴, 첫 화면·공유 화면·`spa.html`, 아이콘을 저장합니다(약 0.7MB). 한글 글꼴 조각(`/fonts/sunflower/*`)과 다른 문자 묶음 글꼴은 쓸 때 받아 같은 버전 저장소에 둡니다(조각 목록 CSS는 화면 글자가 바뀌면 내용이 바뀌므로 버전과 함께 정리).
+  - 페이지 이동은 네트워크를 먼저 쓰고, 오프라인이거나 4초 안에 답이 없으면 저장본을 줍니다(`/plans/*`는 `spa.html`). 온라인이면 새로 고칠 때 바로 새 버전을 받습니다.
+  - 해시 파일은 저장본을 먼저 씁니다. 새 버전이 활성화되면 이전 버전의 저장본을 지웁니다(`v-app-<version>`).
+  - 개발 서버(`pnpm dev`)에서는 요청을 가로채지 않습니다.
+- E2E가 서비스 워커가 맡은 뒤 오프라인으로 바꿔 첫 화면·편집 화면이 열리고 고친 내용이 남는지 확인합니다.
+
+## 저장 공간 보호
+
+브라우저는 저장 공간이 모자라거나 사이트를 한동안 쓰지 않으면(Safari는 7일, 홈 화면 앱은 예외) 사이트 데이터를 지울 수 있습니다. 배치도를 새로 만들거나 공유 링크에서 복사할 때 `navigator.storage.persist()`를 요청합니다(`shared/lib/storage`의 `protectStorage`). 이미 보호되었으면 다시 묻지 않고, 파이어폭스는 허용 여부를 한 번 묻습니다.
+
+## 검색과 공유 미리보기
+
+`shared/ui`의 `PageMeta`가 화면마다 제목·설명과 OG·트위터 메타를 넣습니다. OG 주소와 `canonical`은 절대 주소여야 해서 `shared/config`의 운영 주소(`SITE.url`)를 씁니다. 주소가 바뀌면 이 값과 `static/robots.txt`·`static/sitemap.xml`을 함께 고칩니다.
+
+- 첫 화면은 `canonical`을 넣고, 공유·편집·오류 화면은 `noindex`입니다. `robots.txt`는 편집 화면(`/plans/`)을 수집하지 않게 합니다.
+- 공유 미리보기 그림 `static/og-image.jpg`(1200×630)는 `pnpm screenshots`가 README 화면과 함께 다시 찍습니다.
 
 ## 품질 예산
 

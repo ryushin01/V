@@ -1,7 +1,7 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.9.0-121214)
+![version](https://img.shields.io/badge/version-0.10.0-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
@@ -46,7 +46,8 @@
 | 거리·전력    | TV 시야각 30~40° 권장 거리, 모니터 거리, 소비 전력, 멀티탭 구 수와 정격, 콘센트까지 케이블 길이                                                                                                                                                                                                                                                                               |
 | 키보드       | 방향키 10cm, Shift+방향키 1cm, `R` 15° 회전, 끌기를 대신하는 숫자 입력과 화면 이동 버튼, `aria-live` 결과 안내                                                                                                                                                                                                                                                                |
 | 터치         | 두 손가락 확대·이동, 한 손가락 끌기                                                                                                                                                                                                                                                                                                                                           |
-| 저장·공유    | 자동 저장, 되돌리기·다시 하기, JSON 내보내기·불러오기(파일 검증), 서버 없는 공유 링크(금액·이미지 제외), 라이트·다크 테마                                                                                                                                                                                                                                                     |
+| 저장·공유    | 자동 저장, 되돌리기·다시 하기, 같은 배치도를 연 다른 탭과 자동으로 맞춤, JSON 내보내기·불러오기(파일 검증), 서버 없는 공유 링크(금액·이미지 제외)와 공유 미리보기, 라이트·다크 테마                                                                                                                                                                                           |
+| 오프라인     | 홈 화면에 앱으로 설치, 서비스 워커로 네트워크 없이도 열고 고침, 브라우저에 저장 공간 보호 요청                                                                                                                                                                                                                                                                                |
 
 ## 기술 스택
 
@@ -59,7 +60,9 @@
 | 그리기     | SVG 2D, Scoped CSS와 CSS 변수, 웹 폰트(Barlow Condensed, 해바라기, IBM Plex Mono)                                                   |
 | 저장       | IndexedDB, JSON 파일                                                                                                                |
 | 품질       | Feature-Sliced Design(Steiger), ESLint, Prettier, svelte-check, Vitest, Testing Library, Playwright, axe, size-limit, Lighthouse CI |
+| 보안       | CSP(해시 방식), 보안 응답 헤더                                                                                                      |
 | 모니터링   | Sentry(DSN이 있을 때만), web-vitals                                                                                                 |
+| 오프라인   | 서비스 워커(SvelteKit `$app/service-worker`), 웹 앱 매니페스트, BroadcastChannel(탭 동기화)                                         |
 | 문서·배포  | Storybook 10, GitHub Actions, Vercel(정적 배포)                                                                                     |
 
 ## 시작하기
@@ -72,25 +75,27 @@ pnpm install
 pnpm dev        # http://localhost:5173
 ```
 
-| 명령                                         | 설명                                                                                                             |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `pnpm build` / `pnpm preview`                | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`)                                                         |
-| `pnpm lint` / `pnpm lint:fsd` / `pnpm check` | ESLint / FSD 구조 / 타입 검사                                                                                    |
-| `pnpm test`                                  | 단위·컴포넌트 테스트                                                                                             |
-| `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)                                                               |
-| `pnpm size` / `pnpm lhci`                    | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요)                                                   |
-| `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)                                                                    |
-| `pnpm fonts`                                 | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                                                                   |
-| `pnpm screenshots`                           | README 화면 다시 찍기 (`pnpm exec playwright install chromium` 뒤, `build`와 `preview`를 띄우고 `BASE_URL` 지정) |
+| 명령                                         | 설명                                                                                                                                  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build` / `pnpm preview`                | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`)                                                                              |
+| `pnpm lint` / `pnpm lint:fsd` / `pnpm check` | ESLint / FSD 구조 / 타입 검사                                                                                                         |
+| `pnpm test`                                  | 단위·컴포넌트 테스트                                                                                                                  |
+| `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)                                                                                    |
+| `pnpm size` / `pnpm lhci`                    | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요)                                                                        |
+| `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)                                                                                         |
+| `pnpm fonts`                                 | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                                                                                        |
+| `pnpm icons`                                 | 설치용 아이콘(512·마스크용) 다시 만들기                                                                                               |
+| `pnpm screenshots`                           | README 화면과 공유 미리보기 그림 다시 찍기 (`pnpm exec playwright install chromium` 뒤, `build`와 `preview`를 띄우고 `BASE_URL` 지정) |
 
 ## 프로젝트 구조
 
 ```
 e2e/             룰러, 키보드 조작, 저장, 화면 폭, axe 검사
-scripts/         한글 웹 폰트 만들기 (pnpm fonts)
+scripts/         한글 웹 폰트·설치 아이콘 만들기, README 화면 찍기
 src/
 ├─ routes/       SvelteKit 라우트 (페이지를 다시 내보내기만 함)
-├─ app/          전역 스타일
+├─ app/          전역 스타일, 모니터링
+├─ service-worker/ 오프라인용 서비스 워커
 ├─ pages/        home(첫 화면·목록), editor(배치 편집과 세션 상태), shared(공유 보기), error
 ├─ features/     toggle-theme, toggle-xray
 ├─ entities/     plan(카탈로그, 점검 계산, 저장, 평면도 그림)
@@ -119,8 +124,8 @@ src/
 
 ## 출처
 
-| 자료                                                  | 저작자        | 사용 허락                                | 원본                                                                                                                                                                            |
-| ----------------------------------------------------- | ------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 블랙레터 V 아이콘 (파비콘·홈 화면 아이콘·머리글 로고) | arnikahossain | Flaticon 무료 라이선스(저작자 표기 조건) | [Flaticon "Letter v"](https://www.flaticon.com/free-icon/letter-v_9687654) — [Letter v icons created by arnikahossain - Flaticon](https://www.flaticon.com/free-icons/letter-v) |
+| 자료                                                       | 저작자        | 사용 허락                                | 원본                                                                                                                                                                            |
+| ---------------------------------------------------------- | ------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 블랙레터 V 아이콘 (파비콘·홈 화면·설치 아이콘·머리글 로고) | arnikahossain | Flaticon 무료 라이선스(저작자 표기 조건) | [Flaticon "Letter v"](https://www.flaticon.com/free-icon/letter-v_9687654) — [Letter v icons created by arnikahossain - Flaticon](https://www.flaticon.com/free-icons/letter-v) |
 
 제품 일러스트는 직접 그렸고, 제품 치수·전력 값의 출처는 [카탈로그 문서](docs/catalog.md)에 있습니다.
