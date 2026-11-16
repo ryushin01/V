@@ -620,3 +620,103 @@ test.describe('화면 폭과 접근성', () => {
 		await expect(page).toHaveTitle(/예시.* 편집 \| V/);
 	});
 });
+
+test.describe('런칭 기본', () => {
+	test('모든 화면에서 CSP 위반이 없고 저장한 테마를 먼저 적용합니다', async ({ page }) => {
+		await page.addInitScript(() => {
+			localStorage.setItem('v-theme', 'dark');
+			const violations: string[] = [];
+			(window as unknown as { __csp: string[] }).__csp = violations;
+			document.addEventListener('securitypolicyviolation', (event) =>
+				violations.push(`${event.violatedDirective} ${event.blockedURI}`)
+			);
+		});
+		const violations = () => page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
+
+		await page.goto('/');
+		await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+		await expect(page.locator('meta[http-equiv="content-security-policy"]')).toHaveCount(1);
+		expect(await violations()).toEqual([]);
+
+		await page.getByRole('button', { name: '예시로 시작하기' }).click();
+		await page.waitForURL(/\/plans\//);
+		await page
+			.locator('input[type="file"][accept*="image"]')
+			.first()
+			.setInputFiles({
+				name: 'plan.png',
+				mimeType: 'image/png',
+				buffer: Buffer.from(
+					'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+					'base64'
+				)
+			});
+		await expect(page.getByTestId('underlay')).toBeVisible();
+		expect(await violations()).toEqual([]);
+
+		await page.getByRole('button', { name: '공유' }).click();
+		const url = await page.getByLabel('주소').inputValue();
+		await page.goto(url);
+		await expect(page.getByRole('button', { name: /내 배치도로 복사/ })).toBeVisible();
+		expect(await violations()).toEqual([]);
+
+		await page.goto('/no-such-page');
+		await expect(page.getByText('ERROR')).toBeVisible();
+		expect(await violations()).toEqual([]);
+	});
+
+	test('오프라인에서도 첫 화면과 편집 화면이 열리고 고친 내용이 남습니다', async ({
+		page,
+		context
+	}) => {
+		await openEmpty(page);
+		const url = page.url();
+		// 서비스 워커가 앱 파일을 모두 저장하고 이 화면을 맡을 때까지 기다립니다.
+		await page.evaluate(async () => {
+			await navigator.serviceWorker.ready;
+		});
+		await page.reload();
+		await expect
+			.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
+			.toBe(true);
+
+		await context.setOffline(true);
+		await page.goto('/');
+		await expect(page.getByRole('heading', { level: 1 })).toContainText('자로 재고');
+		await page.goto(url);
+		await expect(page.getByRole('heading', { name: '물건 추가' })).toBeVisible();
+		await addFromCatalog(page, '사무용 의자');
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+		await page.waitForTimeout(600);
+		await page.reload();
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+		await context.setOffline(false);
+	});
+
+	test('설치용 매니페스트와 아이콘, 공유 미리보기, 검색 설정', async ({ page, request }) => {
+		const manifest = await (await request.get('/manifest.webmanifest')).json();
+		expect(manifest).toMatchObject({ short_name: 'V', display: 'standalone', start_url: '/' });
+		for (const icon of manifest.icons as { src: string; sizes: string }[]) {
+			const response = await request.get(icon.src);
+			expect(response.status(), icon.src).toBe(200);
+		}
+		expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(
+			expect.arrayContaining(['192x192', '512x512'])
+		);
+
+		await page.goto('/');
+		await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+			'content',
+			'https://v-setup-planner-ryushin01.vercel.app/og-image.jpg'
+		);
+		await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+			'href',
+			'https://v-setup-planner-ryushin01.vercel.app/'
+		);
+		expect((await request.get('/og-image.jpg')).status()).toBe(200);
+		expect(await (await request.get('/robots.txt')).text()).toContain('Disallow: /plans/');
+
+		await openEmpty(page);
+		await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+	});
+});

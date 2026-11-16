@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { Button } from '#shared/ui';
+	import { Button, PageMeta } from '#shared/ui';
 	import {
 		getPlan,
 		listCustomProducts,
@@ -198,9 +198,7 @@
 	);
 </script>
 
-<svelte:head>
-	<title>{pageTitle}</title>
-</svelte:head>
+<PageMeta title={pageTitle} noindex />
 
 <svelte:window
 	onkeydown={handleKeydown}

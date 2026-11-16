@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Button, Dialog, Icon } from '#shared/ui';
+	import { SITE } from '#shared/config';
+	import { Button, Dialog, Icon, PageMeta } from '#shared/ui';
 	import {
 		createEmptyPlan,
 		createSamplePlan,
@@ -17,6 +18,7 @@
 	} from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
 	import { particle } from '#shared/lib/josa';
+	import { protectStorage } from '#shared/lib/storage';
 	import { reveal } from '#shared/lib/reveal';
 	import { ScrollTracker } from '../model/scroll.svelte';
 	import BuildStage from './BuildStage.svelte';
@@ -103,6 +105,8 @@
 		if (creating) return;
 		creating = true;
 		actionError = '';
+		// 배치도는 이 브라우저에만 있으므로 브라우저가 저장소를 지우지 않도록 요청합니다.
+		void protectStorage();
 		try {
 			const plan = make();
 			await savePlan(plan);
@@ -157,13 +161,7 @@
 	] as const;
 </script>
 
-<svelte:head>
-	<title>V | 데스크·게이밍 셋업 배치도</title>
-	<meta
-		name="description"
-		content="책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 크기로 배치하고 동선과 전력을 점검합니다."
-	/>
-</svelte:head>
+<PageMeta title={SITE.title} />
 
 <a class="skip-link" href="#plans">내 배치도로 바로가기</a>
 <SiteNav {tracker} />
