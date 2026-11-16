@@ -36,6 +36,7 @@ export {
 	WATTS_BASIS_LABELS
 } from './model/catalog';
 export { decodePlan, encodePlan } from './api/share-link';
+export { onPlanChange, type PlanChange } from './api/plan-sync';
 export { createEmptyPlan, createSamplePlan } from './model/factory';
 export { findFreeSpot, halfExtents } from './model/placement';
 export {

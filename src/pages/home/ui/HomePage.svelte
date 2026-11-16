@@ -8,12 +8,14 @@
 		createSamplePlan,
 		deletePlan,
 		listPlans,
+		onPlanChange,
 		parsePlan,
 		PlanPreview,
 		savePlan,
 		type PlanData
 	} from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
+	import { particle } from '#shared/lib/josa';
 	import { reveal } from '#shared/lib/reveal';
 	import { ScrollTracker } from '../model/scroll.svelte';
 	import BuildStage from './BuildStage.svelte';
@@ -61,6 +63,31 @@
 	}
 
 	onMount(refresh);
+
+	/** 다른 탭에서 배치도를 저장·삭제하면 목록을 다시 읽습니다. 숨겨진 동안에는 다시 보일 때 한 번만 읽습니다. */
+	onMount(() => {
+		let stale = false;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const stop = onPlanChange(() => {
+			if (document.visibilityState !== 'visible') {
+				stale = true;
+				return;
+			}
+			clearTimeout(timer);
+			timer = setTimeout(refresh, 300);
+		});
+		const onVisible = () => {
+			if (document.visibilityState !== 'visible' || !stale) return;
+			stale = false;
+			void refresh();
+		};
+		document.addEventListener('visibilitychange', onVisible);
+		return () => {
+			stop();
+			clearTimeout(timer);
+			document.removeEventListener('visibilitychange', onVisible);
+		};
+	});
 
 	async function openNewPlan(make: () => PlanData) {
 		if (creating) return;
@@ -276,7 +303,9 @@
 </footer>
 
 <Dialog bind:open={deleteOpen} title="배치도를 삭제할까요?">
-	<p>‘{pendingDelete?.name}’을 삭제하면 되돌릴 수 없습니다.</p>
+	<p>
+		‘{pendingDelete?.name}’{particle(pendingDelete?.name ?? '', '을', '를')} 삭제하면 되돌릴 수 없습니다.
+	</p>
 	{#snippet actions()}
 		<Button onclick={() => (deleteOpen = false)}>취소</Button>
 		<Button variant="danger" onclick={confirmDelete}>삭제</Button>

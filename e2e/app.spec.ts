@@ -205,6 +205,49 @@ test.describe('점검과 저장', () => {
 		await expect(page).toHaveURL(/\/plans\//);
 	});
 
+	test('두 탭에서 고쳐도 서로의 변경을 잃지 않습니다', async ({ page, context }) => {
+		await openEmpty(page);
+		const other = await context.newPage();
+		await other.goto(page.url());
+		await expect(other.getByRole('heading', { name: '물건 추가' })).toBeVisible();
+
+		// 한 탭에서 이름을 바꾸면 다른 탭이 바로 불러옵니다.
+		await page.getByLabel('배치도 이름').fill('첫 탭에서 바꾼 이름');
+		await expect(other.getByLabel('배치도 이름')).toHaveValue('첫 탭에서 바꾼 이름');
+		await expect(other.getByRole('status').filter({ hasText: '다른 탭에서' })).toHaveText(
+			'다른 탭에서 바뀐 내용을 불러왔습니다.'
+		);
+
+		// 다른 탭에서 물건을 놓아도 앞의 이름이 남고, 첫 탭에도 물건이 나타납니다.
+		await addFromCatalog(other, '사무용 의자');
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+		await page.reload();
+		await expect(page.getByLabel('배치도 이름')).toHaveValue('첫 탭에서 바꾼 이름');
+		await expect(page.locator('[data-item-id]')).toHaveCount(1);
+	});
+
+	test('다른 탭에서 지운 배치도는 편집 중인 탭에서도 지운 것으로 보여 줍니다', async ({
+		page,
+		context
+	}) => {
+		await openEmpty(page);
+		const home = await context.newPage();
+		await home.goto('/');
+		await home.getByRole('button', { name: '새 배치도 삭제' }).click();
+		await home.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click();
+		await expect(page.getByRole('heading', { name: '배치도가 삭제되었습니다' })).toBeVisible();
+		await expect(home.getByText('아직 저장한 배치도가 없습니다', { exact: false })).toBeVisible();
+	});
+
+	test('이름을 비우고 나가면 이전 이름으로 돌아갑니다', async ({ page }) => {
+		await openEmpty(page);
+		const name = page.getByLabel('배치도 이름');
+		await name.fill('');
+		await name.press('Tab');
+		await expect(name).toHaveValue('새 배치도');
+		await expect(page).toHaveTitle('새 배치도 편집 | V');
+	});
+
 	test('새 배치도 버튼을 빠르게 두 번 눌러도 하나만 만듭니다', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('button', { name: /새 배치도 만들기/ }).dblclick();

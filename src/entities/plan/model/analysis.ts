@@ -1,10 +1,12 @@
 import {
+	boundsOf,
 	corners,
 	distance,
 	distanceToPolygon,
 	localToWorld,
 	pointInConvex,
 	polygonsOverlap,
+	type Bounds,
 	type Point,
 	type RotatedRect
 } from '#shared/lib/geometry';
@@ -26,18 +28,27 @@ export const CHAIR_CLEARANCE_CM = 60;
 const PASSAGE_WIDTH_CM = 60;
 const MONITOR_RANGE_CM = { min: 50, max: 100 } as const;
 const ROUTE_GRID_CM = 10;
+/** 좌석에서 이 거리 안의 통로 칸에 닿으면 좌석까지 갈 수 있다고 봅니다. */
+const SEAT_REACH_CM = PASSAGE_WIDTH_CM / 2 + 20;
 const INCH_TO_CM = 2.54;
 /** 16:9 화면의 대각선 대비 가로 길이 */
 const SCREEN_WIDTH_RATIO = 16 / Math.hypot(16, 9);
 
-interface Resolved {
+/** 다각형과 그 경계 상자입니다. 경계 상자로 먼 쌍을 먼저 걸러 냅니다. */
+interface Shape {
+	polygon: Point[];
+	bounds: Bounds;
+}
+
+interface Resolved extends Shape {
 	data: ItemData;
 	entry: CatalogEntry;
 	name: string;
 	rect: RotatedRect;
-	polygon: Point[];
 	center: Point;
 }
+
+const shapeOf = (polygon: Point[]): Shape => ({ polygon, bounds: boundsOf(polygon) });
 
 function resolveItem(data: ItemData): Resolved {
 	const entry = resolveEntry(data);
@@ -53,9 +64,28 @@ function resolveItem(data: ItemData): Resolved {
 		entry,
 		rect,
 		name: data.label || entry.name,
-		polygon: corners(rect),
+		...shapeOf(corners(rect)),
 		center: { x: data.x, y: data.y }
 	};
+}
+
+/**
+ * 경계 상자가 이만큼 넘게 떨어진 쌍은 분리축 검사를 하지 않습니다. 사각형끼리는 분리축 방향의 간격이
+ * 실제 거리의 cos 45°(약 0.71배) 이상이라, 1cm 떨어진 쌍은 분리축 검사(허용 오차 0.01cm)로도
+ * 반드시 겹치지 않음이 나옵니다. 그래서 판정 결과는 모든 쌍을 검사할 때와 같습니다.
+ */
+const BOUNDS_GAP_CM = 1;
+
+function overlaps(a: Shape, b: Shape): boolean {
+	if (
+		a.bounds.maxX + BOUNDS_GAP_CM < b.bounds.minX ||
+		b.bounds.maxX + BOUNDS_GAP_CM < a.bounds.minX ||
+		a.bounds.maxY + BOUNDS_GAP_CM < b.bounds.minY ||
+		b.bounds.maxY + BOUNDS_GAP_CM < a.bounds.minY
+	) {
+		return false;
+	}
+	return polygonsOverlap(a.polygon, b.polygon);
 }
 
 /** 서로 겹쳐 놓는 것이 자연스러운 조합입니다. 의자·발받침대는 책상 아래로, 휴대 기기는 거치대 위로 갑니다. */
@@ -96,25 +126,29 @@ function nearest(from: Point, candidates: Resolved[]): { item: Resolved; length:
 
 function chairClearance(room: RoomData, chair: Resolved, floor: Resolved[]): number {
 	for (let depth = 5; depth <= CHAIR_CLEARANCE_CM; depth += 5) {
-		const strip: RotatedRect = {
-			...(() => {
-				const center = localToWorld(chair.rect, 0, chair.rect.depth / 2 + depth / 2);
-				return { cx: center.x, cy: center.y };
-			})(),
-			width: chair.rect.width,
-			depth,
-			rotation: chair.rect.rotation
-		};
-		const polygon = corners(strip);
+		const center = localToWorld(chair.rect, 0, chair.rect.depth / 2 + depth / 2);
+		const strip = shapeOf(
+			corners({
+				cx: center.x,
+				cy: center.y,
+				width: chair.rect.width,
+				depth,
+				rotation: chair.rect.rotation
+			})
+		);
 		const blocked =
-			isOutsideRoom(room, polygon) ||
-			floor.some((item) => item !== chair && polygonsOverlap(item.polygon, polygon));
+			isOutsideRoom(room, strip.polygon) ||
+			floor.some((item) => item !== chair && overlaps(item, strip));
 		if (blocked) return depth - 5;
 	}
 	return CHAIR_CLEARANCE_CM;
 }
 
-/** 폭 60cm로 지나갈 수 있는 칸을 문에서부터 넓혀 가며 각 좌석에 닿는지 확인합니다. */
+/**
+ * 폭 60cm로 지나갈 수 있는 칸을 문에서부터 넓혀 가며 각 좌석에 닿는지 확인합니다.
+ * 칸마다 모든 물건을 보지 않고, 물건마다 자기 둘레의 칸만 확인해 막습니다. 판정 기준(칸 중심과
+ * 물건 사이 거리)은 같아 결과도 같습니다.
+ */
 function reachableSeats(room: RoomData, floor: Resolved[], seats: Resolved[]): Set<string> {
 	const reached = new Set<string>();
 	const doors = room.openings.filter((opening) => opening.kind === 'door');
@@ -123,12 +157,18 @@ function reachableSeats(room: RoomData, floor: Resolved[], seats: Resolved[]): S
 	const rows = Math.floor(room.depth / ROUTE_GRID_CM);
 	if (columns === 0 || rows === 0 || doors.length === 0) return reached;
 
-	const obstacles = floor.filter((item) => !isSeat(item));
-	const removed = (room.cutouts ?? []).map((cutout) => cutoutPolygon(room, cutout));
 	const center = (column: number, row: number): Point => ({
 		x: (column + 0.5) * ROUTE_GRID_CM,
 		y: (row + 0.5) * ROUTE_GRID_CM
 	});
+	/** 경계 상자에서 margin 안에 중심이 들 수 있는 칸의 범위입니다. 실제 판정은 칸마다 거리로 합니다. */
+	const cellsNear = (bounds: Bounds, margin: number) => ({
+		firstColumn: Math.max(0, Math.floor((bounds.minX - margin) / ROUTE_GRID_CM - 0.5)),
+		lastColumn: Math.min(columns - 1, Math.ceil((bounds.maxX + margin) / ROUTE_GRID_CM - 0.5)),
+		firstRow: Math.max(0, Math.floor((bounds.minY - margin) / ROUTE_GRID_CM - 0.5)),
+		lastRow: Math.min(rows - 1, Math.ceil((bounds.maxY + margin) / ROUTE_GRID_CM - 0.5))
+	});
+
 	const open = new Uint8Array(columns * rows);
 	for (let row = 0; row < rows; row += 1) {
 		for (let column = 0; column < columns; column += 1) {
@@ -138,10 +178,21 @@ function reachableSeats(room: RoomData, floor: Resolved[], seats: Resolved[]): S
 				point.y < radius ||
 				point.x > room.width - radius ||
 				point.y > room.depth - radius;
-			if (nearWall) continue;
-			if (removed.some((polygon) => distanceToPolygon(point, polygon) < radius)) continue;
-			if (obstacles.some((item) => distanceToPolygon(point, item.polygon) < radius)) continue;
-			open[row * columns + column] = 1;
+			if (!nearWall) open[row * columns + column] = 1;
+		}
+	}
+	const blockers: Shape[] = [
+		...(room.cutouts ?? []).map((cutout) => shapeOf(cutoutPolygon(room, cutout))),
+		...floor.filter((item) => !isSeat(item))
+	];
+	for (const { polygon, bounds } of blockers) {
+		const near = cellsNear(bounds, radius);
+		for (let row = near.firstRow; row <= near.lastRow; row += 1) {
+			for (let column = near.firstColumn; column <= near.lastColumn; column += 1) {
+				const index = row * columns + column;
+				if (open[index] && distanceToPolygon(center(column, row), polygon) < radius)
+					open[index] = 0;
+			}
 		}
 	}
 
@@ -166,12 +217,6 @@ function reachableSeats(room: RoomData, floor: Resolved[], seats: Resolved[]): S
 		const index = queue[head];
 		const row = Math.floor(index / columns);
 		const column = index - row * columns;
-		const point = center(column, row);
-		for (const seat of seats) {
-			if (!reached.has(seat.data.id) && distanceToPolygon(point, seat.polygon) <= radius + 20) {
-				reached.add(seat.data.id);
-			}
-		}
 		const neighbours = [
 			column > 0 ? index - 1 : -1,
 			column < columns - 1 ? index + 1 : -1,
@@ -182,6 +227,22 @@ function reachableSeats(room: RoomData, floor: Resolved[], seats: Resolved[]): S
 			if (next >= 0 && open[next] && !seen[next]) {
 				seen[next] = 1;
 				queue.push(next);
+			}
+		}
+	}
+
+	// 좌석마다 둘레의 칸 중 문에서 닿은 칸이 있는지 봅니다.
+	for (const seat of seats) {
+		const near = cellsNear(seat.bounds, SEAT_REACH_CM);
+		search: for (let row = near.firstRow; row <= near.lastRow; row += 1) {
+			for (let column = near.firstColumn; column <= near.lastColumn; column += 1) {
+				if (
+					seen[row * columns + column] &&
+					distanceToPolygon(center(column, row), seat.polygon) <= SEAT_REACH_CM
+				) {
+					reached.add(seat.data.id);
+					break search;
+				}
 			}
 		}
 	}
@@ -238,16 +299,17 @@ function analyzePower(
 		}
 	};
 
-	const stripsByDistance = [...strips].sort(
-		(a, b) =>
-			(nearest(
-				a.item.center,
-				outlets.map((o) => o.item)
-			)?.length ?? 0) -
-			(nearest(
-				b.item.center,
-				outlets.map((o) => o.item)
-			)?.length ?? 0)
+	/** 가까운 전원까지의 거리로 정렬합니다. 거리는 한 번만 구합니다(안정 정렬이라 순서는 그대로). */
+	const byNearest = <T>(list: T[], center: (value: T) => Point, sources: Resolved[]): T[] =>
+		list
+			.map((value) => ({ value, length: nearest(center(value), sources)?.length ?? 0 }))
+			.sort((a, b) => a.length - b.length)
+			.map(({ value }) => value);
+
+	const stripsByDistance = byNearest(
+		strips,
+		(strip) => strip.item.center,
+		outlets.map((outlet) => outlet.item)
 	);
 	for (const strip of stripsByDistance) {
 		const target = nearestFree(strip.item.center, outlets);
@@ -265,29 +327,21 @@ function analyzePower(
 		}
 	}
 
-	const candidates = () => [...outlets, ...strips.filter((strip) => strip.plugged)];
-	const ordered = [...devices].sort(
-		(a, b) =>
-			(nearest(
-				a.center,
-				candidates().map((n) => n.item)
-			)?.length ?? 0) -
-			(nearest(
-				b.center,
-				candidates().map((n) => n.item)
-			)?.length ?? 0)
+	const candidates = [...outlets, ...strips.filter((strip) => strip.plugged)];
+	const ordered = byNearest(
+		devices,
+		(device) => device.center,
+		candidates.map((node) => node.item)
 	);
 	const unpowered: Resolved[] = [];
-	const loadOn = new Map<string, number>();
 	for (const device of ordered) {
-		const target = nearestFree(device.center, candidates());
+		const target = nearestFree(device.center, candidates);
 		if (!target) {
 			unpowered.push(device);
 			continue;
 		}
 		connect(device, target.node, target.length);
 		target.node.load += device.entry.watts;
-		loadOn.set(target.node.item.data.id, target.node.load);
 	}
 
 	for (const connection of connections) {
@@ -344,11 +398,17 @@ const SEVERITY_ORDER: Record<FindingSeverity, number> = { error: 0, warning: 1, 
 export function analyzePlan(room: RoomData, data: readonly ItemData[]): Analysis {
 	const items = data.map(resolveItem);
 	const findings: Finding[] = [];
+	/**
+	 * id는 점검 종류와 물건으로만 정합니다. 다른 항목이 생기거나 사라져도 같은 항목의 id가 그대로라
+	 * 점검 목록이 끄는 동안 통째로 다시 그려지지 않습니다. 같은 조합이 또 나오면(문 두 개가 같은 물건을
+	 * 막는 경우 등) 순번을 붙입니다.
+	 */
+	const used = new Map<string, number>();
 	const push = (finding: Omit<Finding, 'id'>) => {
-		findings.push({
-			...finding,
-			id: `${finding.code}:${finding.itemIds.join(',')}:${findings.length}`
-		});
+		const base = `${finding.code}:${finding.itemIds.join(',')}`;
+		const count = (used.get(base) ?? 0) + 1;
+		used.set(base, count);
+		findings.push({ ...finding, id: count === 1 ? base : `${base}#${count}` });
 	};
 
 	const supports = items.filter(isSupport);
@@ -396,7 +456,7 @@ export function analyzePlan(room: RoomData, data: readonly ItemData[]): Analysis
 			for (let j = i + 1; j < group.length; j += 1) {
 				const [a, b] = [group[i], group[j]];
 				const tucked = canShareSpace(a.entry.kind, b.entry.kind);
-				if (!tucked && polygonsOverlap(a.polygon, b.polygon)) {
+				if (!tucked && overlaps(a, b)) {
 					push({
 						code: 'overlap',
 						severity: 'error',
@@ -411,9 +471,9 @@ export function analyzePlan(room: RoomData, data: readonly ItemData[]): Analysis
 
 	for (const opening of room.openings) {
 		if (opening.kind !== 'door') continue;
-		const { swing } = openingGeometry(room, opening);
+		const swing = shapeOf(openingGeometry(room, opening).swing);
 		for (const item of floor) {
-			if (polygonsOverlap(item.polygon, swing)) {
+			if (overlaps(item, swing)) {
 				push({
 					code: 'door-swing',
 					severity: 'error',
