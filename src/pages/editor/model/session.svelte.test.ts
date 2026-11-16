@@ -42,6 +42,33 @@ describe('EditorSession', () => {
 		expect(session.items[0].x).toBe(start);
 	});
 
+	it('이름을 비워도 마지막 이름으로 저장합니다', () => {
+		const session = new EditorSession(createEmptyPlan('거실'));
+		session.name = '';
+		expect(session.savedName).toBe('거실');
+		expect(session.toData().name).toBe('거실');
+		session.name = '  서재 ';
+		expect(session.toData().name).toBe('서재');
+	});
+
+	it('다른 탭의 내용으로 바꾸면 선택은 남기고 되돌리기 기록은 비웁니다', () => {
+		const { session, desk } = sessionWithDesk();
+		const remote = session.toData();
+		remote.name = '다른 탭';
+		remote.items = [
+			...remote.items,
+			{ ...remote.items[0], id: 'remote-chair', catalogId: 'chair' }
+		];
+		remote.items[0] = { ...remote.items[0], x: 250 };
+		session.replaceWith(remote);
+		expect(session.name).toBe('다른 탭');
+		expect(session.items.map((item) => item.id)).toEqual([desk.id, 'remote-chair']);
+		expect(session.items[0].x).toBe(250);
+		expect(session.selectedId).toBe(desk.id);
+		expect(session.canUndo).toBe(false);
+		expect(session.announcement).toBe('다른 탭에서 바뀐 내용을 불러왔습니다.');
+	});
+
 	it('되돌리기와 다시 하기', () => {
 		const { session } = sessionWithDesk();
 		expect(session.canUndo).toBe(true);

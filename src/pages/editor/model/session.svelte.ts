@@ -62,11 +62,16 @@ function sameSnapshot(a: Snapshot, b: Snapshot): boolean {
 	return a.underlay?.src === b.underlay?.src && body(a) === body(b);
 }
 
+/** 이름을 한 번도 정하지 않은 배치도에 씁니다. */
+const DEFAULT_NAME = '새 배치도';
+
 export class EditorSession {
 	readonly id: string;
 	readonly viewport = new Viewport();
 
-	name = $state('');
+	#name = $state('');
+	/** 마지막으로 비어 있지 않던 이름. 입력란을 비워도 이 이름으로 저장합니다. */
+	#lastName = DEFAULT_NAME;
 	room = $state<RoomData>({ width: 0, depth: 0, openings: [] });
 	items = $state<PlacedItem[]>([]);
 	selectedId = $state<string | null>(null);
@@ -97,12 +102,27 @@ export class EditorSession {
 		this.underlay = plan.underlay ?? null;
 	}
 
+	/** 입력란에 보이는 이름입니다. 입력하는 동안에는 비어 있을 수 있습니다. */
+	get name(): string {
+		return this.#name;
+	}
+
+	set name(value: string) {
+		this.#name = value;
+		if (value.trim()) this.#lastName = value.trim();
+	}
+
+	/** 저장하고 목록·제목에 쓰는 이름입니다. 입력란을 비우면 마지막 이름을 씁니다. */
+	get savedName(): string {
+		return this.#name.trim() || this.#lastName;
+	}
+
 	toData(): PlanData {
 		const { room, items, underlay } = this.#capture();
 		return {
 			version: 1,
 			id: this.id,
-			name: this.name,
+			name: this.savedName,
 			room,
 			items,
 			updatedAt: Date.now(),
@@ -184,6 +204,20 @@ export class EditorSession {
 		this.#lastKey = null;
 		this.#restore(next);
 		this.announcement = '다시 실행했습니다.';
+	}
+
+	/**
+	 * 다른 탭에서 저장한 내용으로 바꿉니다. 화면 위치와 (남아 있으면) 선택은 그대로 두고,
+	 * 되돌리면 다른 탭의 변경을 지우게 되므로 되돌리기 기록은 비웁니다.
+	 */
+	replaceWith(plan: PlanData) {
+		this.name = plan.name;
+		this.#restore({ room: plan.room, items: plan.items, underlay: plan.underlay ?? null });
+		this.#past = [];
+		this.#future = [];
+		this.#lastKey = null;
+		this.#gestureStart = null;
+		this.announcement = '다른 탭에서 바뀐 내용을 불러왔습니다.';
 	}
 
 	select(id: string | null) {

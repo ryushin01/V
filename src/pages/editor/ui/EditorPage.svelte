@@ -2,7 +2,7 @@
 	import { onDestroy, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { Button } from '#shared/ui';
-	import { getPlan, savePlan, type PlanData } from '#entities/plan';
+	import { getPlan, onPlanChange, savePlan, type PlanData } from '#entities/plan';
 	import { EditorSession } from '../model/session.svelte';
 	import CatalogPanel from './CatalogPanel.svelte';
 	import EditorToolbar from './EditorToolbar.svelte';
@@ -16,8 +16,10 @@
 	let { id }: { id: string } = $props();
 
 	let session = $state.raw<EditorSession | null>(null);
-	let loadState = $state<'loading' | 'ready' | 'missing' | 'failed'>('loading');
+	let loadState = $state<'loading' | 'ready' | 'missing' | 'deleted' | 'failed'>('loading');
 	let saveStatus = $state<'saved' | 'saving' | 'error'>('saved');
+	/** 이 탭이 마지막으로 불러오거나 저장한 내용의 저장 시각. 다른 탭이 더 늦게 저장했는지 비교합니다. */
+	let knownUpdatedAt = 0;
 
 	$effect(() => {
 		const planId = id;
@@ -27,6 +29,7 @@
 			.then((plan) => {
 				if (!active) return;
 				session = plan ? new EditorSession(plan) : null;
+				knownUpdatedAt = plan?.updatedAt ?? 0;
 				loadState = plan ? 'ready' : 'missing';
 			})
 			.catch(() => {
@@ -39,25 +42,35 @@
 
 	const SAVE_DELAY_MS = 300;
 	let pending: PlanData | null = null;
+	/** 저장 중인 요청 수 */
+	let inFlight = 0;
 	let lastSaved = '';
+
+	const fingerprint = (plan: PlanData) => JSON.stringify({ ...plan, updatedAt: 0 });
 
 	function persist(plan: PlanData) {
 		pending = null;
-		savePlan(plan).then(
-			() => (saveStatus = pending ? 'saving' : 'saved'),
-			() => (saveStatus = 'error')
-		);
+		inFlight += 1;
+		savePlan(plan)
+			.then(
+				() => {
+					knownUpdatedAt = Math.max(knownUpdatedAt, plan.updatedAt);
+					saveStatus = pending ? 'saving' : 'saved';
+				},
+				() => (saveStatus = 'error')
+			)
+			.finally(() => (inFlight -= 1));
 	}
 
 	$effect(() => {
 		if (!session) return;
 		const plan = session.toData();
-		const fingerprint = JSON.stringify({ ...plan, updatedAt: 0 });
-		if (!lastSaved || lastSaved === fingerprint) {
-			lastSaved = fingerprint;
+		const current = fingerprint(plan);
+		if (!lastSaved || lastSaved === current) {
+			lastSaved = current;
 			return;
 		}
-		lastSaved = fingerprint;
+		lastSaved = current;
 		pending = plan;
 		untrack(() => (saveStatus = 'saving'));
 		const timer = setTimeout(() => persist(plan), SAVE_DELAY_MS);
@@ -69,6 +82,48 @@
 	}
 
 	onDestroy(flush);
+
+	/** 이 탭에 아직 저장하지 않았거나 저장 중인 변경, 끌고 있는 물건이 있으면 다른 탭 내용을 덮어 불러오지 않습니다. */
+	const busy = () => !session || pending !== null || inFlight > 0 || session.hasGesture;
+
+	/**
+	 * 다른 탭에서 저장하거나 지운 내용을 불러옵니다. 이 탭에 저장하지 않은 변경이 있으면 그대로 두고,
+	 * 이 탭이 저장하면 그 내용이 최신이 됩니다(나중에 저장한 쪽이 남음).
+	 */
+	async function syncFromStorage() {
+		if (busy()) return;
+		let latest: PlanData | undefined;
+		try {
+			latest = await getPlan(id);
+		} catch {
+			return;
+		}
+		if (busy() || !session) return;
+		if (!latest) {
+			session = null;
+			loadState = 'deleted';
+			return;
+		}
+		if (latest.updatedAt <= knownUpdatedAt) return;
+		knownUpdatedAt = latest.updatedAt;
+		session.replaceWith(latest);
+		// 불러온 내용을 다시 저장하지 않도록 자동 저장의 비교 기준을 맞춥니다.
+		lastSaved = fingerprint(session.toData());
+	}
+
+	$effect(() =>
+		onPlanChange((change) => {
+			if (change.id !== id) return;
+			if (change.type === 'saved' && change.updatedAt <= knownUpdatedAt) return;
+			void syncFromStorage();
+		})
+	);
+
+	function handleVisibility() {
+		// 휴대폰에서 앱을 바꾸면 pagehide 없이 정리될 수 있어, 숨겨질 때 바로 저장합니다.
+		if (document.visibilityState === 'hidden') flush();
+		else void syncFromStorage();
+	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (!session || !(event.ctrlKey || event.metaKey)) return;
@@ -84,21 +139,40 @@
 		}
 	}
 
-	const pageTitle = $derived(session ? `${session.name} 편집 | V` : '배치도 편집 | V');
+	const pageTitle = $derived(session ? `${session.savedName} 편집 | V` : '배치도 편집 | V');
+
+	const MESSAGES = {
+		missing: ['배치도를 찾을 수 없습니다', '이 브라우저에 저장된 배치도만 열 수 있습니다.'],
+		deleted: ['배치도가 삭제되었습니다', '다른 탭에서 이 배치도를 삭제했습니다.'],
+		failed: [
+			'배치도를 불러오지 못했습니다',
+			'브라우저 저장소를 사용할 수 없는 상태입니다. 비공개 창이라면 일반 창에서 열어 주세요.'
+		]
+	} as const;
+	const message = $derived(
+		MESSAGES[loadState === 'deleted' || loadState === 'failed' ? loadState : 'missing']
+	);
 </script>
 
 <svelte:head>
 	<title>{pageTitle}</title>
 </svelte:head>
 
-<svelte:window onkeydown={handleKeydown} onpagehide={flush} />
+<svelte:window
+	onkeydown={handleKeydown}
+	onpagehide={flush}
+	onpageshow={(event) => {
+		if (event.persisted) void syncFromStorage();
+	}}
+/>
+<svelte:document onvisibilitychange={handleVisibility} />
 
 {#if session && loadState === 'ready'}
 	<div class="editor">
 		<a class="skip-link" href="#stage">배치도로 바로가기</a>
 		<EditorToolbar {session} {saveStatus} />
 		<main class="workspace">
-			<h1 class="sr-only">{session.name} 편집</h1>
+			<h1 class="sr-only">{session.savedName} 편집</h1>
 			<aside class="side" aria-label="물건 목록"><CatalogPanel {session} /></aside>
 			<section id="stage" class="center" aria-label="배치도" tabindex="-1">
 				<FloorPlan {session} />
@@ -122,14 +196,8 @@
 	<main class="message" aria-busy="true"><h1>배치도를 불러오는 중입니다</h1></main>
 {:else}
 	<main class="message">
-		<h1>
-			{loadState === 'missing' ? '배치도를 찾을 수 없습니다' : '배치도를 불러오지 못했습니다'}
-		</h1>
-		<p>
-			{loadState === 'missing'
-				? '이 브라우저에 저장된 배치도만 열 수 있습니다.'
-				: '브라우저 저장소를 사용할 수 없는 상태입니다. 비공개 창이라면 일반 창에서 열어 주세요.'}
-		</p>
+		<h1>{message[0]}</h1>
+		<p>{message[1]}</p>
 		<Button variant="primary" href={resolve('/')}>배치도 목록으로</Button>
 	</main>
 {/if}
