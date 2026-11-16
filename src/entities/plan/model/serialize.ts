@@ -141,6 +141,11 @@ export function parsePlan(text: string): ParseResult {
 	} catch {
 		return { ok: false, error: 'JSON 형식이 아닙니다. V에서 내보낸 파일을 골라 주세요.' };
 	}
+	return parsePlanData(raw);
+}
+
+/** JSON으로 읽은 배치도 값을 검사합니다. 백업 파일 안의 배치도도 같은 검사를 거칩니다. */
+export function parsePlanData(raw: unknown): ParseResult {
 	if (!isRecord(raw) || raw.version !== 1 || !isRecord(raw.room)) {
 		return { ok: false, error: 'V 배치도 파일이 아닙니다. 버전 1 파일만 불러올 수 있습니다.' };
 	}

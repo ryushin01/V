@@ -5,21 +5,26 @@
 	import { SITE } from '#shared/config';
 	import { Button, Dialog, Icon, LiveMessage, PageMeta } from '#shared/ui';
 	import {
+		BACKUP_FILE_MAX_BYTES,
+		copyPlan,
 		createEmptyPlan,
 		createSamplePlan,
+		CustomProductLimitError,
 		deletePlan,
 		listCustomProducts,
 		listPlans,
 		onPlanChange,
-		parsePlan,
-		PLAN_FILE_MAX_BYTES,
+		parseImportFile,
 		PlanPreview,
+		restoreBackup,
 		savePlan,
+		splitBackup,
+		type CatalogEntry,
 		type PlanData
 	} from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
 	import { particle } from '#shared/lib/josa';
-	import { readTextFile } from '#shared/lib/file';
+	import { downloadText, readTextFile } from '#shared/lib/file';
 	import { protectStorage } from '#shared/lib/storage';
 	import { reveal } from '#shared/lib/reveal';
 	import { ScrollTracker } from '../model/scroll.svelte';
@@ -53,6 +58,13 @@
 	let status = $state<'loading' | 'ready' | 'failed'>('loading');
 	let importError = $state('');
 	let actionError = $state('');
+	/** 백업·복제처럼 이 화면에 머무는 동작의 결과 안내 */
+	let notice = $state('');
+	let importing = false;
+	let exporting = false;
+	/** 저장된 내 제품 수. 배치도가 없어도 내 제품이 있으면 전체 백업을 둡니다. */
+	let productCount = $state(0);
+	let copying = false;
 	let pendingDelete = $state.raw<PlanData | null>(null);
 	let deleteOpen = $state(false);
 	let fileInput = $state<HTMLInputElement>();
@@ -66,8 +78,9 @@
 		try {
 			const list = await listPlans();
 			// 미리보기가 배치도에 담긴 옛 사본 대신 저장소의 최신 내 제품 정의로 그리게 합니다.
-			await listCustomProducts().catch(() => []);
+			const products = await listCustomProducts().catch(() => []);
 			if (run !== refreshRun) return;
+			productCount = products.length;
 			plans = list;
 			status = 'ready';
 		} catch {
@@ -119,23 +132,100 @@
 		}
 	}
 
+	/** 배치도 파일이면 새 배치도로 열고, 백업 파일이면 모두 가져와 목록에 둡니다. */
 	async function importFile(event: Event & { currentTarget: HTMLInputElement }) {
 		const input = event.currentTarget;
 		const file = input.files?.[0];
 		input.value = '';
-		if (!file) return;
+		if (!file || importing) return;
+		// 읽기 전에 잠가, 읽는 동안 같은 파일을 또 골라도 두 번 가져오지 않습니다.
+		importing = true;
 		importError = '';
-		const read = await readTextFile(file, PLAN_FILE_MAX_BYTES);
-		if (!read.ok) {
-			importError = read.error;
-			return;
+		notice = '';
+		try {
+			const read = await readTextFile(file, BACKUP_FILE_MAX_BYTES);
+			if (!read.ok) {
+				importError = read.error;
+				return;
+			}
+			const parsed = parseImportFile(read.text);
+			if (!parsed.ok) {
+				importError = parsed.error;
+				return;
+			}
+			if (parsed.kind === 'plan') {
+				await openNewPlan(() => parsed.plan);
+				return;
+			}
+			void protectStorage();
+			await restoreBackup(parsed.plans, parsed.products);
+			await refresh();
+			const skipped = parsed.skipped > 0 ? ` 읽을 수 없어 건너뛴 항목 ${parsed.skipped}개.` : '';
+			notice = `백업에서 배치도 ${parsed.plans.length}개와 내 제품 ${parsed.products.length}개를 가져왔습니다.${skipped}`;
+		} catch (error) {
+			importError =
+				error instanceof CustomProductLimitError
+					? `${error.message} 가져오면 ${error.total}개가 되어 가져오지 않았습니다.`
+					: '백업을 저장하지 못했습니다. 저장 공간이 부족하거나 비공개 창일 수 있습니다.';
+		} finally {
+			importing = false;
 		}
-		const parsed = parsePlan(read.text);
-		if (!parsed.ok) {
-			importError = parsed.error;
-			return;
+	}
+
+	/**
+	 * 이 브라우저의 모든 배치도(평면도 이미지 포함)와 내 제품을 백업 파일로 내려받습니다. 보통은 파일 하나이고,
+	 * 다시 가져올 수 있는 한도(배치도 500개, 256MB)를 넘으면 빠짐없이 여러 파일로 나눕니다. 내 제품을 읽지
+	 * 못하면 빠진 백업이 되므로 내려받지 않습니다.
+	 */
+	async function exportBackup() {
+		if (exporting) return;
+		exporting = true;
+		importError = '';
+		actionError = '';
+		notice = '';
+		try {
+			let all: PlanData[];
+			let products: CatalogEntry[];
+			try {
+				[all, products] = await Promise.all([listPlans(), listCustomProducts()]);
+			} catch {
+				actionError =
+					'브라우저 저장소를 읽지 못해 백업하지 않았습니다. 잠시 뒤 다시 시도해 주세요.';
+				return;
+			}
+			const files = splitBackup(all, products);
+			const date = new Intl.DateTimeFormat('sv-SE').format(new Date());
+			files.forEach((text, index) =>
+				downloadText(
+					files.length === 1 ? `v-backup-${date}.json` : `v-backup-${date}-${index + 1}.json`,
+					text
+				)
+			);
+			const counts = `배치도 ${all.length}개와 내 제품 ${products.length}개를`;
+			notice =
+				files.length === 1
+					? `${counts} 백업 파일로 내려받았습니다.`
+					: `${counts} 백업 파일 ${files.length}개로 나눠 내려받았습니다. 옮길 때 모두 불러와 주세요.`;
+		} finally {
+			exporting = false;
 		}
-		await openNewPlan(() => parsed.plan);
+	}
+
+	async function duplicate(plan: PlanData) {
+		if (copying) return;
+		copying = true;
+		actionError = '';
+		notice = '';
+		try {
+			const copy = copyPlan(plan);
+			await savePlan(copy);
+			await refresh();
+			notice = `‘${copy.name}’${particle(copy.name, '을', '를')} 만들었습니다.`;
+		} catch {
+			actionError = '배치도를 복제하지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+		} finally {
+			copying = false;
+		}
 	}
 
 	function askDelete(plan: PlanData) {
@@ -156,8 +246,11 @@
 		pendingDelete = null;
 	}
 
+	/** 날짜로 바꿀 수 없는 시각(손상된 기록)이면 비워 목록이 멈추지 않게 합니다. */
 	const formatDate = (time: number) =>
-		new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(time);
+		Number.isFinite(new Date(time).getTime())
+			? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(time)
+			: '';
 
 	const CHECKS = [
 		['겹침과 문', '회전한 물건끼리의 겹침, 문이 여닫히는 공간, 방 밖으로 나간 물건을 찾습니다.'],
@@ -251,7 +344,7 @@
 	>
 		<div class="plans-head">
 			<h2 id="plans-heading" class="display-2">내 배치도</h2>
-			<div>
+			<div class="head-actions">
 				<input
 					bind:this={fileInput}
 					type="file"
@@ -259,6 +352,9 @@
 					hidden
 					onchange={importFile}
 				/>
+				{#if plans.length > 0 || productCount > 0}
+					<Button onclick={exportBackup}><Icon name="download" size={16} /> 전체 백업</Button>
+				{/if}
 				<Button onclick={() => fileInput?.click()}
 					><Icon name="upload" size={16} /> JSON 불러오기</Button
 				>
@@ -266,6 +362,7 @@
 		</div>
 		<LiveMessage message={importError} gap="1rem" />
 		<LiveMessage message={actionError} gap="1rem" />
+		<LiveMessage role="status" message={notice} gap="1rem" />
 		<LiveMessage
 			message={status === 'failed'
 				? '브라우저 저장소를 사용할 수 없습니다. 비공개 창이라면 일반 창에서 열어 주세요.'
@@ -294,14 +391,19 @@
 								)}
 							</span>
 						</a>
-						<Button
-							size="sm"
-							variant="danger"
-							aria-label={`${plan.name} 삭제`}
-							onclick={() => askDelete(plan)}
-						>
-							<Icon name="trash" size={16} /> 삭제
-						</Button>
+						<div class="card-actions">
+							<Button size="sm" aria-label={`${plan.name} 복제`} onclick={() => duplicate(plan)}>
+								<Icon name="copy" size={16} /> 복제
+							</Button>
+							<Button
+								size="sm"
+								variant="danger"
+								aria-label={`${plan.name} 삭제`}
+								onclick={() => askDelete(plan)}
+							>
+								<Icon name="trash" size={16} /> 삭제
+							</Button>
+						</div>
 					</li>
 				{/each}
 			</ul>
@@ -478,6 +580,13 @@
 		padding-block: 2rem 6rem;
 		outline: none;
 		scroll-margin-top: calc(var(--nav-h) + 2rem);
+	}
+
+	.head-actions,
+	.card-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
 	}
 
 	.plans-head {
