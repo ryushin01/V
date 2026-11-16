@@ -1,11 +1,16 @@
-/** 글자를 파일로 내려받습니다. 다운로드가 비동기로 시작하는 브라우저를 위해 주소 해제를 미룹니다. */
-export function downloadText(filename: string, text: string, type = 'application/json'): void {
-	const url = URL.createObjectURL(new Blob([text], { type }));
+/** 파일을 내려받습니다. 다운로드가 비동기로 시작하는 브라우저를 위해 주소 해제를 미룹니다. */
+export function downloadBlob(filename: string, blob: Blob): void {
+	const url = URL.createObjectURL(blob);
 	const link = document.createElement('a');
 	link.href = url;
 	link.download = filename;
 	link.click();
 	setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+/** 글자를 파일로 내려받습니다. */
+export function downloadText(filename: string, text: string, type = 'application/json'): void {
+	downloadBlob(filename, new Blob([text], { type }));
 }
 
 export type TextFileResult = { ok: true; text: string } | { ok: false; error: string };

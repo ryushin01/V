@@ -335,6 +335,25 @@ test.describe('점검과 저장', () => {
 		).toBeVisible();
 	});
 
+	test('평면도를 PNG 그림으로 저장합니다', async ({ page }) => {
+		await openSample(page);
+		const downloading = page.waitForEvent('download');
+		await page.getByRole('button', { name: '그림 저장' }).click();
+		const download = await downloading;
+		expect(download.suggestedFilename()).toMatch(/^예시.*\.png$/);
+		const { readFile } = await import('node:fs/promises');
+		const file = await readFile(await download.path());
+		// PNG 서명과 IHDR의 가로·세로(방 460×380cm → 1cm에 4px)
+		expect(file.subarray(1, 4).toString()).toBe('PNG');
+		expect(file.readUInt32BE(16)).toBe((460 + 16) * 4);
+		expect(file.readUInt32BE(20)).toBe((380 + 16) * 4);
+		expect(file.length).toBeGreaterThan(20_000);
+		await expect(page.locator('p.sr-only[role="status"]')).toContainText('PNG 그림으로 저장');
+		// 그림을 만든 뒤 화면 밖에 그린 미리보기를 남기지 않습니다.
+		await expect(page.locator('body > div[aria-hidden="true"]')).toHaveCount(0);
+		if (process.env.SAVE_PLAN_IMAGE) await download.saveAs(process.env.SAVE_PLAN_IMAGE);
+	});
+
 	test('내보낸 파일을 내려받습니다', async ({ page }) => {
 		await openSample(page);
 		const download = page.waitForEvent('download');
