@@ -30,6 +30,16 @@ function place(
 	return { id: createId(), catalogId, x, y, rotation, price, label };
 }
 
+/** 배치도를 새 id로 복사합니다. 같은 방에서 가구 배치를 A안·B안으로 비교할 때 씁니다. */
+export function copyPlan(plan: PlanData): PlanData {
+	return {
+		...structuredClone(plan),
+		id: createId(),
+		name: `${plan.name.slice(0, 57)} 사본`,
+		updatedAt: Date.now()
+	};
+}
+
 /** 예시 금액은 모두 가상의 값입니다. */
 export function createSamplePlan(): PlanData {
 	return {

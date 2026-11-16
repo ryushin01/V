@@ -747,3 +747,53 @@ test.describe('런칭 기본', () => {
 		await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
 	});
 });
+
+test.describe('백업과 복제', () => {
+	test('복제한 배치도는 따로 열립니다', async ({ page }) => {
+		await openSample(page);
+		await page.goto('/');
+		await page.getByRole('button', { name: /^예시: .* 복제$/ }).click();
+		await expect(page.getByRole('status').filter({ hasText: '사본' })).toContainText(
+			'사본’을 만들었습니다.'
+		);
+		await page.getByRole('link', { name: /사본/ }).click();
+		await page.waitForURL(/\/plans\//);
+		await expect(page.locator('[data-item-id]')).toHaveCount(13);
+		await expect(page.getByLabel('배치도 이름')).toHaveValue(/ 사본$/);
+	});
+
+	test('전체 백업을 다른 브라우저에서 불러옵니다', async ({ page, browser }) => {
+		await openSample(page);
+		await page.getByRole('button', { name: '제품 등록' }).click();
+		const dialog = page.getByRole('dialog', { name: '제품 등록' });
+		await dialog.getByLabel('제품 이름 (필수)').fill('백업할 스피커');
+		await dialog.getByLabel('종류').selectOption({ label: '스피커' });
+		await dialog.getByLabel('등록하고 배치도에 놓기').uncheck();
+		await dialog.getByRole('button', { name: '등록' }).click();
+		await expect(dialog).toBeHidden();
+
+		await page.goto('/');
+		const downloading = page.waitForEvent('download');
+		await page.getByRole('button', { name: '전체 백업' }).click();
+		const download = await downloading;
+		expect(download.suggestedFilename()).toMatch(/^v-backup-\d{4}-\d{2}-\d{2}\.json$/);
+		await expect(page.getByRole('status').filter({ hasText: '백업 파일로' })).toContainText(
+			'배치도 1개와 내 제품 1개'
+		);
+
+		const fresh = await browser.newContext();
+		const other = await fresh.newPage();
+		await other.goto('/');
+		const choosing = other.waitForEvent('filechooser');
+		await other.getByRole('button', { name: 'JSON 불러오기' }).click();
+		await (await choosing).setFiles(await download.path());
+		await expect(other.getByRole('status').filter({ hasText: '백업에서' })).toContainText(
+			'배치도 1개와 내 제품 1개를 가져왔습니다.'
+		);
+		await other.getByRole('link', { name: /예시/ }).click();
+		await other.waitForURL(/\/plans\//);
+		await expect(other.locator('[data-item-id]')).toHaveCount(13);
+		await expect(other.getByRole('button', { name: '백업할 스피커 고치기' })).toBeVisible();
+		await fresh.close();
+	});
+});
