@@ -80,10 +80,7 @@
 			maxlength="60"
 			autocomplete="off"
 			bind:value={session.name}
-			onblur={() => {
-				// 비운 채 나가면 마지막 이름으로 되돌립니다. 저장은 처음부터 그 이름으로 합니다.
-				if (!session.name.trim()) session.name = session.savedName;
-			}}
+			onblur={() => session.commitName()}
 		/>
 	</div>
 	<p class="status measure" class:failed={saveStatus === 'error'} role="status">

@@ -41,64 +41,93 @@
 	});
 
 	const SAVE_DELAY_MS = 300;
+	/** 아직 저장소에 넘기지 않은 변경 */
 	let pending: PlanData | null = null;
+	let timer: ReturnType<typeof setTimeout> | undefined;
 	/** 저장 중인 요청 수 */
 	let inFlight = 0;
-	let lastSaved = '';
+	/** 자동 저장에 마지막으로 넘긴 내용과, 저장소가 저장을 확인한 내용(저장 시각 제외) */
+	let scheduled = '';
+	let confirmed = '';
+	/** 이 탭 사정(저장하지 않은 변경, 끌기)으로 다른 탭의 변경을 미뤄 두었는지 */
+	let syncWanted = false;
 
 	const fingerprint = (plan: PlanData) => JSON.stringify({ ...plan, updatedAt: 0 });
 
 	function persist(plan: PlanData) {
 		pending = null;
 		inFlight += 1;
-		savePlan(plan)
+		// 다른 탭과 저장 순서를 비교하도록, 변경을 캡처한 때가 아니라 저장소에 쓰는 때의 시각을 붙입니다.
+		const stamped = { ...plan, updatedAt: Date.now() };
+		savePlan(stamped)
 			.then(
 				() => {
-					knownUpdatedAt = Math.max(knownUpdatedAt, plan.updatedAt);
+					knownUpdatedAt = Math.max(knownUpdatedAt, stamped.updatedAt);
+					confirmed = fingerprint(stamped);
 					saveStatus = pending ? 'saving' : 'saved';
 				},
+				// 실패한 변경은 confirmed와 달라 저장하지 않은 변경으로 남습니다(다른 탭 내용이 덮지 않음).
 				() => (saveStatus = 'error')
 			)
-			.finally(() => (inFlight -= 1));
+			.finally(() => {
+				inFlight -= 1;
+				if (syncWanted) void syncFromStorage();
+			});
 	}
 
+	function flush() {
+		clearTimeout(timer);
+		if (pending) persist(pending);
+	}
+
+	// 바뀐 내용이 있을 때만 타이머를 다시 겁니다. 내용이 같은데 효과가 다시 돌 때(내 제품 목록을 다시 읽는 등)
+	// 타이머를 지우면 저장이 멈추므로, 정리 함수로 타이머를 지우지 않고 화면을 떠날 때 flush합니다.
 	$effect(() => {
 		if (!session) return;
 		const plan = session.toData();
 		const current = fingerprint(plan);
-		if (!lastSaved || lastSaved === current) {
-			lastSaved = current;
+		if (!scheduled) {
+			scheduled = current;
+			confirmed = current;
 			return;
 		}
-		lastSaved = current;
+		if (scheduled === current) return;
+		scheduled = current;
 		pending = plan;
 		untrack(() => (saveStatus = 'saving'));
-		const timer = setTimeout(() => persist(plan), SAVE_DELAY_MS);
-		return () => clearTimeout(timer);
+		clearTimeout(timer);
+		timer = setTimeout(flush, SAVE_DELAY_MS);
 	});
-
-	function flush() {
-		if (pending) persist(pending);
-	}
 
 	onDestroy(flush);
 
-	/** 이 탭에 아직 저장하지 않았거나 저장 중인 변경, 끌고 있는 물건이 있으면 다른 탭 내용을 덮어 불러오지 않습니다. */
-	const busy = () => !session || pending !== null || inFlight > 0 || session.hasGesture;
+	/**
+	 * 이 탭에 저장하지 않았거나(실패 포함) 저장 중인 변경, 끌고 있는 물건이 있으면 다른 탭 내용을
+	 * 덮어 불러오지 않습니다.
+	 */
+	const busy = () =>
+		!session || pending !== null || inFlight > 0 || scheduled !== confirmed || session.hasGesture;
 
 	/**
-	 * 다른 탭에서 저장하거나 지운 내용을 불러옵니다. 이 탭에 저장하지 않은 변경이 있으면 그대로 두고,
-	 * 이 탭이 저장하면 그 내용이 최신이 됩니다(나중에 저장한 쪽이 남음).
+	 * 다른 탭에서 저장하거나 지운 내용을 불러옵니다. 이 탭이 바쁘면 미뤄 두었다가 저장이나 끌기가 끝나면
+	 * 다시 봅니다. 그사이 이 탭이 저장하면 그 내용이 최신이 됩니다(나중에 저장한 쪽이 남음).
 	 */
 	async function syncFromStorage() {
-		if (busy()) return;
+		if (busy()) {
+			syncWanted = true;
+			return;
+		}
+		syncWanted = false;
 		let latest: PlanData | undefined;
 		try {
 			latest = await getPlan(id);
 		} catch {
 			return;
 		}
-		if (busy() || !session) return;
+		if (busy() || !session) {
+			syncWanted = true;
+			return;
+		}
 		if (!latest) {
 			session = null;
 			loadState = 'deleted';
@@ -108,7 +137,7 @@
 		knownUpdatedAt = latest.updatedAt;
 		session.replaceWith(latest);
 		// 불러온 내용을 다시 저장하지 않도록 자동 저장의 비교 기준을 맞춥니다.
-		lastSaved = fingerprint(session.toData());
+		scheduled = confirmed = fingerprint(session.toData());
 	}
 
 	$effect(() =>
@@ -118,6 +147,11 @@
 			void syncFromStorage();
 		})
 	);
+
+	// 끌기 중에 받은 변경은 끌기가 끝나면(옮기지 않고 놓은 경우 포함) 불러옵니다.
+	$effect(() => {
+		if (session && !session.hasGesture && syncWanted) void syncFromStorage();
+	});
 
 	function handleVisibility() {
 		// 휴대폰에서 앱을 바꾸면 pagehide 없이 정리될 수 있어, 숨겨질 때 바로 저장합니다.
