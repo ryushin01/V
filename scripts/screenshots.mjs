@@ -188,6 +188,20 @@ async function samplePlan(page) {
 	await context.close();
 }
 
+// 거리 재기: 예시 배치에서 책상 앞쪽과 소파 사이를 잽니다.
+{
+	const { page, context } = await open();
+	await openSample(page);
+	await page.getByRole('button', { name: '거리 재기' }).click();
+	const canvas = page.getByRole('group', { name: /방 배치도/ });
+	const box = await canvas.boundingBox();
+	await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.42);
+	await page.mouse.click(box.x + box.width * 0.53, box.y + box.height * 0.42);
+	await page.mouse.move(box.x + box.width * 0.53, box.y + box.height * 0.42);
+	await shot(page, 'measure');
+	await context.close();
+}
+
 // 평면도 그림 깔기와 모서리 잘라내기
 {
 	const { page, context } = await open();
