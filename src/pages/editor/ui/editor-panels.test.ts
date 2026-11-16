@@ -282,6 +282,57 @@ describe('FloorPlan', () => {
 		expect(session.canUndo).toBe(true);
 	});
 
+	it('거리 재기: 두 점 사이를 5cm 격자로 재고, 물건은 잡지 않으며 Esc로 마칩니다', async () => {
+		const session = empty();
+		session.addItem('desk-140');
+		const { container } = render(FloorPlan, { session });
+		const svg = container.querySelector('.canvas svg') as SVGSVGElement;
+		svg.setPointerCapture = vi.fn();
+		const toggle = screen.getByRole('button', { name: '거리 재기' });
+		await userEvent.click(toggle);
+		expect(toggle).toHaveAttribute('aria-pressed', 'true');
+		expect(session.announcement).toContain('두 점을 차례로 눌러');
+
+		// 기본 배율 1.6, 여백 0: 화면 (16, 16)은 (10, 10)cm, (176, 16)은 (110, 10)cm입니다.
+		const start = { x: session.items[0].x, y: session.items[0].y };
+		const press = (clientX: number, clientY: number, shiftKey = false) =>
+			fireEvent.pointerDown(svg, {
+				pointerId: 1,
+				pointerType: 'mouse',
+				isPrimary: true,
+				button: 0,
+				clientX,
+				clientY,
+				shiftKey
+			});
+		await press(16, 16);
+		expect(session.announcement).toBe('두 번째 점을 눌러 주세요.');
+		await press(177, 16);
+		expect(session.announcement).toContain('두 점 사이 100cm');
+		expect(screen.getByTestId('measure-line')).toHaveTextContent('100 cm');
+		// 세 번째 점은 새로 재기 시작하고, Shift를 누르면 격자에 맞추지 않습니다.
+		await press(16, 16);
+		await press(177, 16, true);
+		expect(session.announcement).toContain('두 점 사이 101cm');
+		expect(session.items[0]).toMatchObject(start);
+		expect(session.selectedId).toBe(session.items[0].id);
+
+		await fireEvent.keyDown(window, { key: 'Escape' });
+		expect(toggle).toHaveAttribute('aria-pressed', 'false');
+		expect(screen.queryByTestId('measure-line')).toBeNull();
+		expect(session.announcement).toBe('거리 재기를 마쳤습니다.');
+	});
+
+	it('축척 맞추기를 시작하면 거리 재기를 끕니다', async () => {
+		const session = empty();
+		session.setUnderlay({ src: 'data:image/png;base64,AA==', pixelWidth: 100, pixelHeight: 80 });
+		render(FloorPlan, { session });
+		const toggle = screen.getByRole('button', { name: '거리 재기' });
+		await userEvent.click(toggle);
+		session.startCalibration();
+		await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'false'));
+	});
+
 	it('화면 이동 버튼으로 끌기 없이 움직입니다', async () => {
 		const session = empty();
 		render(FloorPlan, { session });
