@@ -2,7 +2,13 @@
 	import { onDestroy, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { Button } from '#shared/ui';
-	import { getPlan, onPlanChange, savePlan, type PlanData } from '#entities/plan';
+	import {
+		getPlan,
+		listCustomProducts,
+		onPlanChange,
+		savePlan,
+		type PlanData
+	} from '#entities/plan';
 	import { EditorSession } from '../model/session.svelte';
 	import CatalogPanel from './CatalogPanel.svelte';
 	import EditorToolbar from './EditorToolbar.svelte';
@@ -121,6 +127,8 @@
 		let latest: PlanData | undefined;
 		try {
 			latest = await getPlan(id);
+			// 배치도에 담긴 사본은 없는 내 제품만 채우므로, 다른 탭에서 고친 내 제품 정의를 저장소에서 다시 읽습니다.
+			await listCustomProducts();
 		} catch {
 			return;
 		}
@@ -142,7 +150,8 @@
 
 	$effect(() =>
 		onPlanChange((change) => {
-			if (change.id !== id) return;
+			// 내 제품 변경은 물건 목록(CatalogPanel)이 다시 읽습니다.
+			if (change.type === 'products' || change.id !== id) return;
 			if (change.type === 'saved' && change.updatedAt <= knownUpdatedAt) return;
 			void syncFromStorage();
 		})

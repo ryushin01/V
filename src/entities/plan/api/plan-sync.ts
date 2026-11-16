@@ -1,6 +1,8 @@
-/** 같은 브라우저의 다른 탭에 알리는 배치도 저장·삭제입니다. */
+/** 같은 브라우저의 다른 탭에 알리는 배치도 저장·삭제와 내 제품 변경입니다. */
 export type PlanChange =
-	{ type: 'saved'; id: string; updatedAt: number } | { type: 'deleted'; id: string };
+	| { type: 'saved'; id: string; updatedAt: number }
+	| { type: 'deleted'; id: string }
+	| { type: 'products' };
 
 const CHANNEL_NAME = 'v-plans';
 const listeners = new Set<(change: PlanChange) => void>();
@@ -9,6 +11,7 @@ let channel: BroadcastChannel | null | undefined;
 function parseChange(data: unknown): PlanChange | null {
 	if (typeof data !== 'object' || data === null) return null;
 	const { type, id, updatedAt } = data as Record<string, unknown>;
+	if (type === 'products') return { type };
 	if (typeof id !== 'string') return null;
 	if (type === 'deleted') return { type, id };
 	if (type === 'saved' && typeof updatedAt === 'number') return { type, id, updatedAt };

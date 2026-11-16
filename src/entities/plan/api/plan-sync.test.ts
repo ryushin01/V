@@ -1,8 +1,9 @@
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createCustomEntry } from '../model/custom';
 import { createEmptyPlan } from '../model/factory';
 import { onPlanChange, type PlanChange } from './plan-sync';
-import { deletePlan, savePlan } from './plans-db';
+import { deleteCustomProduct, deletePlan, saveCustomProducts, savePlan } from './plans-db';
 
 /** 다른 탭을 흉내 내는 채널입니다. 같은 이름의 다른 채널 객체끼리 메시지를 주고받습니다. */
 const otherTab = new BroadcastChannel('v-plans');
@@ -35,6 +36,25 @@ describe('배치도 변경 알림', () => {
 		const message = nextMessage('deleted');
 		await deletePlan(plan.id);
 		expect(await message).toEqual({ type: 'deleted', id: plan.id });
+	});
+
+	it('내 제품을 저장·삭제하면 다른 탭에 알립니다', async () => {
+		const entry = createCustomEntry({
+			name: '알림 책상',
+			brand: '',
+			kind: 'desk',
+			width: 150,
+			depth: 70,
+			watts: 0,
+			cable: 0,
+			glyph: ''
+		});
+		let message = nextMessage('products');
+		await saveCustomProducts([entry]);
+		expect(await message).toEqual({ type: 'products' });
+		message = nextMessage('products');
+		await deleteCustomProduct(entry.id);
+		expect(await message).toEqual({ type: 'products' });
 	});
 
 	it('다른 탭의 알림을 받고, 형식이 틀린 메시지는 버립니다', async () => {
