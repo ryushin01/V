@@ -1,4 +1,5 @@
-// README 화면(docs/images/*.jpg)을 다시 찍습니다. 배치는 예시 배치와 가상 평면도만 씁니다.
+// README 화면(docs/images/*.jpg)과 공유 미리보기 그림(static/og-image.jpg)을 다시 찍습니다.
+// 배치는 예시 배치와 가상 평면도만 씁니다.
 // 먼저 프로덕션 빌드를 띄워 두세요: pnpm build && pnpm preview
 // 사용: BASE_URL=http://localhost:4173 pnpm screenshots
 import { chromium } from '@playwright/test';
@@ -213,6 +214,23 @@ async function samplePlan(page) {
 	const { page, context } = await open({ viewport: { width: 390, height: 844 } });
 	await openSample(page);
 	await shot(page, 'mobile');
+	await context.close();
+}
+
+// 공유 미리보기(OG) 그림: 첫 화면을 1200×630으로 찍습니다. 동작 줄이기로 등장 효과 없이 찍습니다.
+{
+	const context = await browser.newContext({
+		viewport: { width: 1200, height: 630 },
+		colorScheme: 'light',
+		reducedMotion: 'reduce',
+		locale: 'ko-KR'
+	});
+	const page = await context.newPage();
+	await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+	await page.evaluate(() => document.fonts.ready);
+	await page.waitForTimeout(1200);
+	await page.screenshot({ path: 'static/og-image.jpg', type: 'jpeg', quality: 86 });
+	console.log('저장 og-image');
 	await context.close();
 }
 

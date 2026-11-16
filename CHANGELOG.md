@@ -1,5 +1,14 @@
 # 변경 기록
 
+## 0.10.0 - 2026-11-16
+
+- 오프라인·설치: 웹 앱 매니페스트와 서비스 워커. 앱 파일·첫 화면 글꼴·페이지를 저장해 네트워크 없이도 첫 화면과 편집 화면이 열리고 고친 내용이 남음. 홈 화면에 앱으로 설치(아이콘 512·마스크용 추가)
+- 보안: CSP(해시 방식, 페이지마다 `<meta>`), `frame-ancestors 'none'`·`X-Frame-Options`·`X-Content-Type-Options`·`Referrer-Policy`·`Permissions-Policy`·`Cross-Origin-Opener-Policy` 응답 헤더
+- 캐시: 이름에 해시가 있는 파일(`_app/immutable`)은 1년 `immutable`, 글꼴·로고·아이콘은 하루 + 일주일 `stale-while-revalidate`. 다시 방문할 때 재확인 요청이 없어짐
+- 공유 미리보기(OG·트위터 카드, 1200×630 그림), 첫 화면 `canonical`, 라이트·다크 `theme-color`, 편집 화면 `noindex`, `robots.txt`에서 편집 화면 제외, `sitemap.xml`
+- 배치도를 만들거나 공유 링크에서 복사할 때 브라우저에 저장 공간 보호(`storage.persist`)를 요청
+- `pnpm icons`(매니페스트 아이콘 만들기), `pnpm screenshots`가 공유 미리보기 그림도 찍음
+
 ## 0.9.0 - 2026-11-16
 
 - 성능: 점검 계산을 빠르게 바꿈. 통로 탐색은 물건 둘레의 칸만 확인하고, 겹침·문·의자 여유는 경계 상자가 떨어진 쌍을 건너뜀. 1500×1500cm·물건 200개 기준 계산 한 번이 약 280ms → 3ms, 1000×800cm·80개는 CPU를 4배 느리게 해도 끌기 프레임 p95 133ms → 17ms. 0.8.0 구현과 무작위 배치 400여 개의 결과가 같은지 시험으로 확인

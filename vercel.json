@@ -12,6 +12,32 @@
 			}
 		},
 		{
+			"src": "^/.*$",
+			"headers": {
+				"Content-Security-Policy": "frame-ancestors 'none'",
+				"X-Frame-Options": "DENY",
+				"X-Content-Type-Options": "nosniff",
+				"Referrer-Policy": "strict-origin-when-cross-origin",
+				"Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()",
+				"Cross-Origin-Opener-Policy": "same-origin"
+			},
+			"continue": true
+		},
+		{
+			"src": "^/_app/immutable/.+$",
+			"headers": {
+				"Cache-Control": "public, max-age=31536000, immutable"
+			},
+			"continue": true
+		},
+		{
+			"src": "^/(fonts/.+|brand/.+|favicon\\.ico|icon-[^/]+\\.png|apple-touch-icon\\.png|og-image\\.jpg)$",
+			"headers": {
+				"Cache-Control": "public, max-age=86400, stale-while-revalidate=604800"
+			},
+			"continue": true
+		},
+		{
 			"handle": "filesystem"
 		},
 		{
