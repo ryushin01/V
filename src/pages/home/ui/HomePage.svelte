@@ -68,7 +68,8 @@
 	onMount(() => {
 		let stale = false;
 		let timer: ReturnType<typeof setTimeout> | undefined;
-		const stop = onPlanChange(() => {
+		const stop = onPlanChange((change) => {
+			if (change.type === 'products') return;
 			if (document.visibilityState !== 'visible') {
 				stale = true;
 				return;

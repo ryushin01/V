@@ -525,6 +525,42 @@ test.describe('내 제품 등록', () => {
 		await fresh.close();
 	});
 
+	test('다른 탭에서 내 제품을 고치면 놓은 물건과 목록에도 바로 반영합니다', async ({
+		page,
+		context
+	}) => {
+		await openEmpty(page);
+		await page.getByRole('button', { name: '제품 등록' }).click();
+		const dialog = page.getByRole('dialog', { name: '제품 등록' });
+		await dialog.getByLabel('제품 이름 (필수)').fill('탭 공유 책상');
+		await dialog.getByLabel('가로', { exact: true }).fill('150');
+		await dialog.getByLabel('가로', { exact: true }).press('Tab');
+		await dialog.getByRole('button', { name: '등록' }).click();
+		await expect(dialog).toBeHidden();
+		await page.waitForTimeout(600);
+
+		const other = await context.newPage();
+		await other.goto(page.url());
+		await expect(other.locator('[data-item-id]').first()).toHaveAttribute(
+			'aria-label',
+			/탭 공유 책상, 가로 150/
+		);
+
+		await page.getByRole('button', { name: '탭 공유 책상 고치기' }).click();
+		const edit = page.getByRole('dialog', { name: '내 제품 고치기' });
+		await edit.getByLabel('가로', { exact: true }).fill('180');
+		await edit.getByLabel('가로', { exact: true }).press('Tab');
+		await edit.getByRole('button', { name: '저장' }).click();
+		await expect(edit).toBeHidden();
+
+		await expect(other.locator('[data-item-id]').first()).toHaveAttribute(
+			'aria-label',
+			/탭 공유 책상, 가로 180/
+		);
+		// 내 제품 목록과 최근 추가한 물건 모두 새 치수로 바뀝니다.
+		await expect(other.getByRole('button', { name: /^탭 공유 책상 180×60/ })).toHaveCount(2);
+	});
+
 	test('내 제품 목록을 파일로 내보내 다른 브라우저에서 가져옵니다', async ({ page }) => {
 		await openEmpty(page);
 		await page.getByRole('button', { name: '제품 등록' }).click();
