@@ -8,16 +8,17 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 - 경로는 `package.json`의 `imports`로 지정합니다. `#entities/plan`은 `src/entities/plan/index.ts`로만 연결되므로 공개 API를 건너뛸 수 없습니다.
 - 한 페이지에서만 쓰는 코드는 페이지 슬라이스에 둡니다. 편집 세션이 `pages/editor`에 있는 이유입니다.
 - 컴포넌트 옆에 `*.stories.ts`와 테스트를 둡니다. 편집기 패널의 테스트는 `editor-panels.test.ts`에 모았습니다.
+- 여러 곳에서 쓰는 것은 공통으로 둡니다: 파일 내려받기·읽기(`shared/lib/file`, 읽기는 크기 한도와 실패를 처리), 상태 메시지 영역(`shared/ui`의 `LiveMessage`), 화면 제목·공유 미리보기(`PageMeta`), 파일 검사 함수(`entities/plan/model/guards.ts`), 도면을 그리는 층 순서(`LAYER_ORDER`).
 
 ## runes 사용 방식
 
-| 위치                     | 사용                                                                   |
-| ------------------------ | ---------------------------------------------------------------------- |
-| `PlacedItem`             | 좌표·회전은 필드별 `$state`, 사각형과 범위는 `$derived`                |
-| `EditorSession.analysis` | 방과 물건에서 파생되는 점검 결과 `$derived`                            |
-| 되돌리기                 | `$state.snapshot`으로 기록하고, 기록 배열은 `$state.raw`로 통째로 교체 |
-| `NumberField`            | 외부 값에서 파생되지만 입력 중에는 덮어쓰는 `$derived`                 |
-| `EditorPage`             | 자동 저장은 `$effect`와 정리 함수로 지연                               |
+| 위치                     | 사용                                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `PlacedItem`             | 좌표·회전은 필드별 `$state`, 사각형과 범위는 `$derived`                                                       |
+| `EditorSession.analysis` | 방과 물건에서 파생되는 점검 결과 `$derived`                                                                   |
+| 되돌리기                 | `$state.snapshot`으로 기록하고, 기록 배열은 `$state.raw`로 통째로 교체                                        |
+| `NumberField`            | 외부 값에서 파생되지만 입력 중에는 덮어쓰는 `$derived`                                                        |
+| `EditorPage`             | 자동 저장은 `$effect`가 내용이 바뀔 때만 타이머를 다시 걸어 지연. 비교 문자열에서 평면도 이미지는 번호로 바꿈 |
 
 ## 좌표
 

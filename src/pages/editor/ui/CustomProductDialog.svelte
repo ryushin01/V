@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { Button, Dialog, NumberField, Select } from '#shared/ui';
+	import { Button, Dialog, LiveMessage, NumberField, Select } from '#shared/ui';
 	import {
 		createCustomEntry,
 		CustomProductLimitError,
@@ -230,12 +230,13 @@
 				><input type="checkbox" bind:checked={place} /> 등록하고 배치도에 놓기</label
 			>
 		{/if}
-		{#if saveError}<p class="error" role="alert">{saveError}</p>{/if}
-		{#if editing && confirmDelete}
-			<p class="error" role="alert">
-				삭제하면 목록에서 사라집니다. 이미 놓은 배치도는 그대로 열립니다.
-			</p>
-		{/if}
+		<LiveMessage message={saveError} size="0.8125rem" />
+		<LiveMessage
+			message={editing && confirmDelete
+				? '삭제하면 목록에서 사라집니다. 이미 놓은 배치도는 그대로 열립니다.'
+				: ''}
+			size="0.8125rem"
+		/>
 	</form>
 	{#snippet actions()}
 		{#if editing}

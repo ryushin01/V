@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Button, Icon } from '#shared/ui';
+	import { downloadText, readTextFile } from '#shared/lib/file';
+	import { Button, Icon, LiveMessage } from '#shared/ui';
 	import {
 		CATALOG,
 		CATEGORY_LABELS,
@@ -11,6 +12,7 @@
 		parseCustomProductsFile,
 		saveCustomProducts,
 		stringifyCustomProducts,
+		PLAN_FILE_MAX_BYTES,
 		PLAN_LIMITS,
 		type CatalogEntry,
 		type CatalogCategory
@@ -94,14 +96,7 @@
 
 	function exportMine() {
 		fileError = '';
-		const blob = new Blob([stringifyCustomProducts(mine)], { type: 'application/json' });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = 'v-custom-products.json';
-		link.click();
-		// 다운로드가 비동기로 시작하는 브라우저를 위해 주소 해제를 미룹니다.
-		setTimeout(() => URL.revokeObjectURL(url), 0);
+		downloadText('v-custom-products.json', stringifyCustomProducts(mine));
 		fileNote = `내 제품 ${mine.length}개를 파일로 내보냈습니다.`;
 		session.announcement = fileNote;
 	}
@@ -115,7 +110,12 @@
 		fileError = '';
 		fileNote = '';
 		try {
-			const parsed = parseCustomProductsFile(await file.text());
+			const read = await readTextFile(file, PLAN_FILE_MAX_BYTES);
+			if (!read.ok) {
+				fileError = read.error;
+				return;
+			}
+			const parsed = parseCustomProductsFile(read.text);
 			if (!parsed.ok) {
 				fileError = parsed.error;
 				return;
@@ -199,7 +199,7 @@
 			bind:value={query}
 			aria-describedby="catalog-count"
 		/>
-		<p id="catalog-count" class="measure" aria-live="polite">{count}개</p>
+		<p id="catalog-count" class="measure" role="status">{count}개</p>
 	</div>
 	<details open class="mine">
 		<summary>내 제품 <span class="measure">{mine.length}</span></summary>
@@ -247,7 +247,7 @@
 				><Icon name="upload" size={16} /> 파일에서 가져오기</Button
 			>
 		</div>
-		{#if fileError}<p class="file-error" role="alert">{fileError}</p>{/if}
+		<LiveMessage message={fileError} size="0.8125rem" gap="0.75rem" />
 		{#if fileNote}<p class="hint">{fileNote}</p>{/if}
 	</details>
 	{#if count === 0}
@@ -358,13 +358,6 @@
 		flex-wrap: wrap;
 		gap: 0.375rem;
 		padding-bottom: 0.75rem;
-	}
-
-	.file-error {
-		margin-bottom: 0.75rem;
-		font-size: 0.8125rem;
-		font-weight: 500;
-		color: var(--accent-deep);
 	}
 
 	details {

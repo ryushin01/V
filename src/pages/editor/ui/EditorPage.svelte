@@ -9,7 +9,7 @@
 		savePlan,
 		type PlanData
 	} from '#entities/plan';
-	import { planFingerprint } from '../model/autosave';
+	import { createPlanFingerprint } from '../model/autosave';
 	import { EditorSession } from '../model/session.svelte';
 	import CatalogPanel from './CatalogPanel.svelte';
 	import EditorToolbar from './EditorToolbar.svelte';
@@ -59,7 +59,7 @@
 	/** 이 탭 사정(저장하지 않은 변경, 끌기)으로 다른 탭의 변경을 미뤄 두었는지 */
 	let syncWanted = false;
 
-	const fingerprint = planFingerprint;
+	const fingerprint = createPlanFingerprint();
 
 	function persist(plan: PlanData) {
 		pending = null;
@@ -232,7 +232,7 @@
 				<ItemList {session} />
 			</aside>
 		</main>
-		<p class="sr-only" role="status" aria-live="polite">{session.announcement}</p>
+		<p class="sr-only" role="status">{session.announcement}</p>
 	</div>
 {:else if loadState === 'loading'}
 	<main class="message" aria-busy="true"><h1>배치도를 불러오는 중입니다</h1></main>
