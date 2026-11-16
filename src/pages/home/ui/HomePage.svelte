@@ -7,6 +7,7 @@
 		createEmptyPlan,
 		createSamplePlan,
 		deletePlan,
+		listCustomProducts,
 		listPlans,
 		onPlanChange,
 		parsePlan,
@@ -55,7 +56,10 @@
 
 	async function refresh() {
 		try {
-			plans = await listPlans();
+			const list = await listPlans();
+			// 미리보기가 배치도에 담긴 옛 사본 대신 저장소의 최신 내 제품 정의로 그리게 합니다.
+			await listCustomProducts().catch(() => []);
+			plans = list;
 			status = 'ready';
 		} catch {
 			status = 'failed';
