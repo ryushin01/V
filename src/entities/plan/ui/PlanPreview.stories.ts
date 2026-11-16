@@ -10,3 +10,5 @@ const meta = {
 export default meta;
 
 export const Sample = { args: { plan: createSamplePlan(), label: '예시 배치도' } };
+/** 그림 저장(PNG)에 쓰는 모습: 물건 이름을 함께 그립니다. */
+export const WithNames = { args: { plan: createSamplePlan(), label: '예시 배치도', names: true } };

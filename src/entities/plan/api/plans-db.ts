@@ -70,6 +70,25 @@ export class CustomProductLimitError extends Error {
 	}
 }
 
+/** 한도를 넘는지 확인한 뒤 내 제품을 넣습니다. 넘으면 트랜잭션을 되돌려 아무것도 저장하지 않습니다. */
+function putCustomProducts(
+	transaction: IDBTransaction,
+	entries: readonly CatalogEntry[],
+	onLimit: (error: CustomProductLimitError) => void
+) {
+	const store = transaction.objectStore(CUSTOM_STORE);
+	const keys = store.getAllKeys();
+	keys.onsuccess = () => {
+		const ids = new Set([...keys.result.map(String), ...entries.map((entry) => entry.id)]);
+		if (ids.size > CUSTOM_PRODUCT_LIMIT) {
+			onLimit(new CustomProductLimitError(ids.size));
+			transaction.abort();
+			return;
+		}
+		for (const entry of entries) store.put(entry);
+	};
+}
+
 export async function saveCustomProduct(entry: CatalogEntry): Promise<void> {
 	await saveCustomProducts([entry]);
 }
@@ -83,18 +102,8 @@ export async function saveCustomProducts(entries: readonly CatalogEntry[]): Prom
 	try {
 		await new Promise<void>((resolve, reject) => {
 			const transaction = database.transaction(CUSTOM_STORE, 'readwrite');
-			const store = transaction.objectStore(CUSTOM_STORE);
 			let limitError: CustomProductLimitError | null = null;
-			const keys = store.getAllKeys();
-			keys.onsuccess = () => {
-				const ids = new Set([...keys.result.map(String), ...entries.map((entry) => entry.id)]);
-				if (ids.size > CUSTOM_PRODUCT_LIMIT) {
-					limitError = new CustomProductLimitError(ids.size);
-					transaction.abort();
-					return;
-				}
-				for (const entry of entries) store.put(entry);
-			};
+			putCustomProducts(transaction, entries, (error) => (limitError = error));
 			transaction.oncomplete = () => resolve();
 			transaction.onerror = () => reject(limitError ?? transaction.error);
 			transaction.onabort = () => reject(limitError ?? transaction.error);
@@ -115,6 +124,37 @@ export async function deleteCustomProduct(id: string): Promise<void> {
 export async function savePlan(plan: PlanData): Promise<void> {
 	await run('readwrite', (store) => store.put(plan));
 	announcePlanChange({ type: 'saved', id: plan.id, updatedAt: plan.updatedAt });
+}
+
+/**
+ * 백업 파일의 배치도와 내 제품을 한 트랜잭션으로 저장합니다. 내 제품이 한도를 넘거나 저장 공간이 모자라
+ * 하나라도 실패하면 아무것도 저장하지 않습니다.
+ */
+export async function restoreBackup(
+	plans: readonly PlanData[],
+	products: readonly CatalogEntry[]
+): Promise<void> {
+	const database = await openDatabase();
+	try {
+		await new Promise<void>((resolve, reject) => {
+			const transaction = database.transaction([STORE, CUSTOM_STORE], 'readwrite');
+			let limitError: CustomProductLimitError | null = null;
+			putCustomProducts(transaction, products, (error) => (limitError = error));
+			const planStore = transaction.objectStore(STORE);
+			for (const plan of plans) planStore.put(plan);
+			transaction.oncomplete = () => resolve();
+			transaction.onerror = () => reject(limitError ?? transaction.error);
+			transaction.onabort = () => reject(limitError ?? transaction.error);
+		});
+	} finally {
+		database.close();
+	}
+	registerCustomEntries(products, true);
+	for (const plan of plans) {
+		registerCustomEntries(plan.customEntries);
+		announcePlanChange({ type: 'saved', id: plan.id, updatedAt: plan.updatedAt });
+	}
+	if (products.length > 0) announcePlanChange({ type: 'products' });
 }
 
 export async function deletePlan(id: string): Promise<void> {

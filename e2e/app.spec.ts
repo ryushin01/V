@@ -205,6 +205,26 @@ test.describe('포인터 조작', () => {
 	});
 });
 
+test.describe('거리 재기', () => {
+	test('두 점을 눌러 거리를 재고 Esc로 마칩니다', async ({ page }) => {
+		await openSample(page);
+		const toggle = page.getByRole('button', { name: '거리 재기' });
+		await toggle.click();
+		await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+		const canvas = page.getByRole('group', { name: /방 배치도/ });
+		const box = (await canvas.boundingBox())!;
+		await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.5);
+		await page.mouse.click(box.x + box.width * 0.6, box.y + box.height * 0.5);
+		await expect(page.getByTestId('measure-line')).toHaveText(/^\d+ cm$/);
+		await expect(page.locator('p.sr-only[role="status"]')).toContainText('두 점 사이');
+		// 거리를 재는 동안에는 물건이 선택되거나 옮겨지지 않습니다.
+		await expect(page.getByRole('heading', { name: '선택한 물건' })).toHaveCount(0);
+		await page.keyboard.press('Escape');
+		await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+		await expect(page.getByTestId('measure-line')).toHaveCount(0);
+	});
+});
+
 test.describe('점검과 저장', () => {
 	test('겹치면 글자와 아이콘으로 알립니다', async ({ page }) => {
 		await openEmpty(page);
@@ -313,6 +333,25 @@ test.describe('점검과 저장', () => {
 		await expect(
 			page.getByRole('alert').filter({ hasText: 'V 배치도 파일이 아닙니다' })
 		).toBeVisible();
+	});
+
+	test('평면도를 PNG 그림으로 저장합니다', async ({ page }) => {
+		await openSample(page);
+		const downloading = page.waitForEvent('download');
+		await page.getByRole('button', { name: '그림 저장' }).click();
+		const download = await downloading;
+		expect(download.suggestedFilename()).toMatch(/^예시.*\.png$/);
+		const { readFile } = await import('node:fs/promises');
+		const file = await readFile(await download.path());
+		// PNG 서명과 IHDR의 가로·세로(방 460×380cm → 1cm에 4px)
+		expect(file.subarray(1, 4).toString()).toBe('PNG');
+		expect(file.readUInt32BE(16)).toBe((460 + 16) * 4);
+		expect(file.readUInt32BE(20)).toBe((380 + 16) * 4);
+		expect(file.length).toBeGreaterThan(20_000);
+		await expect(page.locator('p.sr-only[role="status"]')).toContainText('PNG 그림으로 저장');
+		// 그림을 만든 뒤 화면 밖에 그린 미리보기를 남기지 않습니다.
+		await expect(page.locator('body > div[aria-hidden="true"]')).toHaveCount(0);
+		if (process.env.SAVE_PLAN_IMAGE) await download.saveAs(process.env.SAVE_PLAN_IMAGE);
 	});
 
 	test('내보낸 파일을 내려받습니다', async ({ page }) => {
@@ -745,5 +784,55 @@ test.describe('런칭 기본', () => {
 
 		await openEmpty(page);
 		await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+	});
+});
+
+test.describe('백업과 복제', () => {
+	test('복제한 배치도는 따로 열립니다', async ({ page }) => {
+		await openSample(page);
+		await page.goto('/');
+		await page.getByRole('button', { name: /^예시: .* 복제$/ }).click();
+		await expect(page.getByRole('status').filter({ hasText: '사본' })).toContainText(
+			'사본’을 만들었습니다.'
+		);
+		await page.getByRole('link', { name: /사본/ }).click();
+		await page.waitForURL(/\/plans\//);
+		await expect(page.locator('[data-item-id]')).toHaveCount(13);
+		await expect(page.getByLabel('배치도 이름')).toHaveValue(/ 사본$/);
+	});
+
+	test('전체 백업을 다른 브라우저에서 불러옵니다', async ({ page, browser }) => {
+		await openSample(page);
+		await page.getByRole('button', { name: '제품 등록' }).click();
+		const dialog = page.getByRole('dialog', { name: '제품 등록' });
+		await dialog.getByLabel('제품 이름 (필수)').fill('백업할 스피커');
+		await dialog.getByLabel('종류').selectOption({ label: '스피커' });
+		await dialog.getByLabel('등록하고 배치도에 놓기').uncheck();
+		await dialog.getByRole('button', { name: '등록' }).click();
+		await expect(dialog).toBeHidden();
+
+		await page.goto('/');
+		const downloading = page.waitForEvent('download');
+		await page.getByRole('button', { name: '전체 백업' }).click();
+		const download = await downloading;
+		expect(download.suggestedFilename()).toMatch(/^v-backup-\d{4}-\d{2}-\d{2}\.json$/);
+		await expect(page.getByRole('status').filter({ hasText: '백업 파일로' })).toContainText(
+			'배치도 1개와 내 제품 1개'
+		);
+
+		const fresh = await browser.newContext();
+		const other = await fresh.newPage();
+		await other.goto('/');
+		const choosing = other.waitForEvent('filechooser');
+		await other.getByRole('button', { name: 'JSON 불러오기' }).click();
+		await (await choosing).setFiles(await download.path());
+		await expect(other.getByRole('status').filter({ hasText: '백업에서' })).toContainText(
+			'배치도 1개와 내 제품 1개를 가져왔습니다.'
+		);
+		await other.getByRole('link', { name: /예시/ }).click();
+		await other.waitForURL(/\/plans\//);
+		await expect(other.locator('[data-item-id]')).toHaveCount(13);
+		await expect(other.getByRole('button', { name: '백업할 스피커 고치기' })).toBeVisible();
+		await fresh.close();
 	});
 });

@@ -6,10 +6,12 @@ import { createEmptyPlan } from '../model/factory';
 import { CUSTOM_PRODUCT_LIMIT } from '../model/custom-file';
 import {
 	CustomProductLimitError,
+	deleteCustomProduct,
 	deletePlan,
 	getPlan,
 	listCustomProducts,
 	listPlans,
+	restoreBackup,
 	saveCustomProducts,
 	savePlan
 } from './plans-db';
@@ -72,5 +74,34 @@ describe('IndexedDB 저장소', () => {
 		// 한도 안이면 저장합니다.
 		await saveCustomProducts(many.slice(1));
 		expect(await listCustomProducts()).toHaveLength(CUSTOM_PRODUCT_LIMIT);
+	});
+
+	it('백업은 배치도와 내 제품을 한 번에 저장하고, 내 제품이 한도를 넘으면 아무것도 저장하지 않습니다', async () => {
+		const product = (index: number) =>
+			createCustomEntry({
+				name: `백업 제품 ${index}`,
+				brand: '',
+				kind: 'decor',
+				width: 10,
+				depth: 10,
+				watts: 0,
+				cable: 0,
+				glyph: ''
+			});
+		// 앞선 시험이 채워 둔 내 제품을 비웁니다.
+		for (const entry of await listCustomProducts()) await deleteCustomProduct(entry.id);
+		const plan = { ...createEmptyPlan('백업 배치도'), updatedAt: 5 };
+		await restoreBackup([plan], [product(1)]);
+		expect((await getPlan(plan.id))?.name).toBe('백업 배치도');
+		expect((await listCustomProducts()).some((entry) => entry.name === '백업 제품 1')).toBe(true);
+
+		const existing = (await listCustomProducts()).length;
+		const tooMany = Array.from({ length: CUSTOM_PRODUCT_LIMIT - existing + 1 }, (_, index) =>
+			product(index + 2)
+		);
+		const blocked = { ...createEmptyPlan('막힌 배치도'), updatedAt: 6 };
+		await expect(restoreBackup([blocked], tooMany)).rejects.toBeInstanceOf(CustomProductLimitError);
+		expect(await getPlan(blocked.id)).toBeUndefined();
+		expect(await listCustomProducts()).toHaveLength(existing);
 	});
 });

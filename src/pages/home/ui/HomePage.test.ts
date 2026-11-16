@@ -2,7 +2,14 @@ import 'fake-indexeddb/auto';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createEmptyPlan, createSamplePlan, deletePlan, listPlans, savePlan } from '#entities/plan';
+import {
+	createEmptyPlan,
+	createSamplePlan,
+	deletePlan,
+	listPlans,
+	savePlan,
+	stringifyBackup
+} from '#entities/plan';
 import HomePage from './HomePage.svelte';
 import BuildStage from './BuildStage.svelte';
 import HeroRulers from './HeroRulers.svelte';
@@ -47,6 +54,45 @@ describe('HomePage', () => {
 		await userEvent.upload(input, new File(['not json'], 'a.json', { type: 'application/json' }));
 		// 오류 영역은 처음부터 있고 문구만 들어옵니다.
 		expect(await screen.findByText(/JSON 형식이 아닙니다/)).toHaveAttribute('role', 'alert');
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('복제하면 "사본"을 새로 만들고 결과를 알립니다', async () => {
+		await savePlan(createEmptyPlan('거실'));
+		render(HomePage);
+		await userEvent.click(await screen.findByRole('button', { name: '거실 복제' }));
+		expect(await screen.findByText('‘거실 사본’을 만들었습니다.')).toHaveAttribute(
+			'role',
+			'status'
+		);
+		expect((await listPlans()).map((plan) => plan.name).sort()).toEqual(['거실', '거실 사본']);
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('읽는 동안 같은 백업을 또 골라도 한 번만 가져옵니다', async () => {
+		const backup = stringifyBackup([createEmptyPlan('한 번만'), createSamplePlan()], []);
+		const { container } = render(HomePage);
+		const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+		const file = new File([backup], 'v-backup.json', { type: 'application/json' });
+		Object.defineProperty(input, 'files', { value: [file], configurable: true });
+		await Promise.all([fireEvent.change(input), fireEvent.change(input)]);
+		expect(await screen.findByText(/백업에서 배치도 2개/)).toBeInTheDocument();
+		expect(await listPlans()).toHaveLength(2);
+	});
+
+	it('백업 파일을 고르면 배치도를 모두 가져와 목록에 두고 결과를 알립니다', async () => {
+		const backup = stringifyBackup([createEmptyPlan('백업 1'), createSamplePlan()], []);
+		const { container } = render(HomePage);
+		const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+		await userEvent.upload(
+			input,
+			new File([backup], 'v-backup.json', { type: 'application/json' })
+		);
+		expect(
+			await screen.findByText('백업에서 배치도 2개와 내 제품 0개를 가져왔습니다.')
+		).toHaveAttribute('role', 'status');
+		expect(await screen.findByRole('link', { name: /백업 1/ })).toBeInTheDocument();
+		expect(await listPlans()).toHaveLength(2);
 		expect(goto).not.toHaveBeenCalled();
 	});
 });
