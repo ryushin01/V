@@ -1,16 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button } from '#shared/ui';
+	import { Button, PageMeta } from '#shared/ui';
 
 	let { status }: { status: number } = $props();
 
 	const notFound = $derived(status === 404);
 </script>
 
-<svelte:head>
-	<title>{notFound ? '페이지를 찾을 수 없습니다' : '문제가 생겼습니다'} | V</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
+<PageMeta title={`${notFound ? '페이지를 찾을 수 없습니다' : '문제가 생겼습니다'} | V`} noindex />
 
 <main class="page">
 	<p class="measure">ERROR <b>{status}</b></p>

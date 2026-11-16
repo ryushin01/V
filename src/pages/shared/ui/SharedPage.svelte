@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { BrandMark } from '#shared/ui';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Button } from '#shared/ui';
+	import { protectStorage } from '#shared/lib/storage';
+	import { BrandMark, Button, PageMeta } from '#shared/ui';
 	import { decodePlan, PlanPreview, savePlan, type PlanData } from '#entities/plan';
 	import { ThemeToggle } from '#features/toggle-theme';
 
@@ -24,6 +24,7 @@
 		if (!plan || saving) return;
 		saving = true;
 		saveError = '';
+		void protectStorage();
 		try {
 			await savePlan({ ...plan, updatedAt: Date.now() });
 			await goto(resolve('/plans/[id]', { id: plan.id }));
@@ -34,10 +35,12 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{plan ? `${plan.name} | 공유된 배치도 | V` : '공유된 배치도 | V'}</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
+<PageMeta
+	title={plan ? `${plan.name} | 공유된 배치도 | V` : '공유된 배치도 | V'}
+	description="V에서 만든 데스크·게이밍 셋업 배치도를 받았습니다. 열어 보고 내 배치도로 복사할 수 있습니다."
+	path="/shared"
+	noindex
+/>
 
 <header class="top">
 	<a class="mark" href={resolve('/')} aria-label="V 처음으로"><BrandMark /></a>
