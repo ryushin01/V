@@ -21,6 +21,30 @@ async function addFromCatalog(page: Page, name: string) {
 	await page.getByRole('button', { name: new RegExp(`^${name}`) }).click();
 }
 
+/** 지금 연 배치도가 IndexedDB에 저장된 물건 수입니다. 자동 저장이 끝났는지 고정 대기 없이 확인합니다. */
+function storedItemCount(page: Page): Promise<number> {
+	const id = page.url().split('/').pop();
+	return page.evaluate(
+		(planId) =>
+			new Promise<number>((resolve) => {
+				const request = indexedDB.open('v-setup-planner');
+				request.onsuccess = () => {
+					const database = request.result;
+					const get = database
+						.transaction('plans')
+						.objectStore('plans')
+						.get(planId ?? '');
+					get.onsuccess = () => {
+						resolve(get.result?.items.length ?? -1);
+						database.close();
+					};
+				};
+				request.onerror = () => resolve(-1);
+			}),
+		id
+	);
+}
+
 async function expectNoAxeViolations(page: Page) {
 	// 스크롤하면 나타나는 요소도 나타난 뒤의 대비로 검사합니다.
 	await page.evaluate(() => {
@@ -229,7 +253,7 @@ test.describe('점검과 저장', () => {
 	test('끌던 중에 다른 탭이 고친 내용은 놓은 뒤에 불러옵니다', async ({ page, context }) => {
 		await openEmpty(page);
 		await addFromCatalog(page, '사무용 의자');
-		await page.waitForTimeout(600);
+		await expect.poll(() => storedItemCount(page)).toBe(1);
 		const other = await context.newPage();
 		await other.goto(page.url());
 		await expect(other.locator('[data-item-id]')).toHaveCount(1);
@@ -537,7 +561,7 @@ test.describe('내 제품 등록', () => {
 		await dialog.getByLabel('가로', { exact: true }).press('Tab');
 		await dialog.getByRole('button', { name: '등록' }).click();
 		await expect(dialog).toBeHidden();
-		await page.waitForTimeout(600);
+		await expect.poll(() => storedItemCount(page)).toBe(1);
 
 		const other = await context.newPage();
 		await other.goto(page.url());
@@ -687,7 +711,7 @@ test.describe('런칭 기본', () => {
 		await expect(page.getByRole('heading', { name: '물건 추가' })).toBeVisible();
 		await addFromCatalog(page, '사무용 의자');
 		await expect(page.locator('[data-item-id]')).toHaveCount(1);
-		await page.waitForTimeout(600);
+		await expect.poll(() => storedItemCount(page)).toBe(1);
 		await page.reload();
 		await expect(page.locator('[data-item-id]')).toHaveCount(1);
 		await context.setOffline(false);
