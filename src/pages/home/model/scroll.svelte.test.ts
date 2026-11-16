@@ -28,14 +28,24 @@ describe('ScrollTracker', () => {
 			.mockImplementation((callback) => frames.push(callback));
 		const cancel = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
 		document.body.innerHTML = '<section data-section="점검"></section>';
+		const section = document.querySelector('section')!;
+		// 처음에는 화면 아래(기준선 밖)에 있습니다.
+		let top = window.innerHeight;
+		vi.spyOn(section, 'getBoundingClientRect').mockImplementation(() => ({ top }) as DOMRect);
 		const tracker = new ScrollTracker();
 		const stop = tracker.start();
+		expect(tracker.section).toBe('소개');
+
+		// 스크롤해 구간이 기준선 위로 올라와도, 다음 프레임 전에는 위치를 다시 읽지 않습니다.
+		top = 0;
 		window.dispatchEvent(new Event('scroll'));
 		window.dispatchEvent(new Event('scroll'));
 		window.dispatchEvent(new Event('scroll'));
 		expect(request).toHaveBeenCalledTimes(1);
+		expect(tracker.section).toBe('소개');
 		frames[0](0);
 		expect(tracker.section).toBe('점검');
+
 		window.dispatchEvent(new Event('scroll'));
 		expect(request).toHaveBeenCalledTimes(2);
 		stop();

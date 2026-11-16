@@ -48,8 +48,11 @@
 	});
 
 	const SAVE_DELAY_MS = 300;
-	/** 아직 저장소에 넘기지 않은 변경 */
-	let pending: PlanData | null = null;
+	/**
+	 * 아직 저장소에 넘기지 않은 변경과, 예약할 때 계산한 비교값입니다. 저장이 끝나면 이 비교값을 그대로
+	 * 확인값으로 씁니다(다시 계산하면 그사이 바뀐 이미지 번호 때문에 같은 내용도 다르게 나올 수 있음).
+	 */
+	let pending: { plan: PlanData; print: string } | null = null;
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	/** 저장 중인 요청 수 */
 	let inFlight = 0;
@@ -61,7 +64,7 @@
 
 	const fingerprint = createPlanFingerprint();
 
-	function persist(plan: PlanData) {
+	function persist({ plan, print }: { plan: PlanData; print: string }) {
 		pending = null;
 		inFlight += 1;
 		// 다른 탭과 저장 순서를 비교하도록, 변경을 캡처한 때가 아니라 저장소에 쓰는 때의 시각을 붙입니다.
@@ -70,7 +73,7 @@
 			.then(
 				() => {
 					knownUpdatedAt = Math.max(knownUpdatedAt, stamped.updatedAt);
-					confirmed = fingerprint(stamped);
+					confirmed = print;
 					saveStatus = pending ? 'saving' : 'saved';
 				},
 				// 실패한 변경은 confirmed와 달라 저장하지 않은 변경으로 남습니다(다른 탭 내용이 덮지 않음).
@@ -100,7 +103,7 @@
 		}
 		if (scheduled === current) return;
 		scheduled = current;
-		pending = plan;
+		pending = { plan, print: current };
 		untrack(() => (saveStatus = 'saving'));
 		clearTimeout(timer);
 		timer = setTimeout(flush, SAVE_DELAY_MS);
