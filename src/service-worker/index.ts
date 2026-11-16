@@ -5,14 +5,14 @@
  * - 설치할 때: 앱 코드·스타일, 첫 화면 글꼴, 페이지(첫 화면, 공유 화면, 편집 화면 대체 페이지), 아이콘을 저장합니다.
  * - 페이지 이동: 네트워크를 먼저 쓰고, 오프라인이거나 4초 안에 답이 없으면 저장본을 줍니다.
  * - 해시 파일(_app/immutable)과 한글 글꼴 조각: 저장본을 먼저 쓰고, 없으면 받아서 저장합니다.
- * - 새 버전이 설치되면 이전 버전의 저장본을 지웁니다. 글꼴 조각은 버전과 상관없이 둡니다.
+ * - 새 버전이 활성화되면 이전 버전의 저장본을 모두 지웁니다. 글꼴 조각 목록(sunflower-rest.css)은 화면 글자가
+ *   바뀌면 내용이 바뀌므로, 글꼴도 버전별 저장소에 두어 옛 목록이 남지 않게 합니다(쓴 조각만 다시 받음).
  */
 import { dev, version } from '$app/env';
 import { assets, immutable, prerendered } from '$app/manifest';
 import { self } from '$app/service-worker';
 
 const APP_CACHE = `v-app-${version}`;
-const FONT_CACHE = 'v-fonts';
 const NAVIGATION_TIMEOUT_MS = 4000;
 /** 편집 화면(/plans/…)처럼 미리 그리지 않은 주소에 줄 대체 페이지입니다. */
 const FALLBACK_PAGE = '/spa.html';
@@ -44,11 +44,7 @@ self.addEventListener('activate', (event) => {
 		caches
 			.keys()
 			.then((keys) =>
-				Promise.all(
-					keys
-						.filter((key) => key !== APP_CACHE && key !== FONT_CACHE)
-						.map((key) => caches.delete(key))
-				)
+				Promise.all(keys.filter((key) => key !== APP_CACHE).map((key) => caches.delete(key)))
 			)
 	);
 });
@@ -90,10 +86,8 @@ self.addEventListener('fetch', (event) => {
 
 	if (request.mode === 'navigate') {
 		event.respondWith(navigate(request, url));
-	} else if (url.pathname.startsWith('/_app/immutable/')) {
+	} else if (url.pathname.startsWith('/_app/immutable/') || url.pathname.startsWith('/fonts/')) {
 		event.respondWith(cacheFirst(request, APP_CACHE));
-	} else if (url.pathname.startsWith('/fonts/')) {
-		event.respondWith(cacheFirst(request, FONT_CACHE));
 	} else if (PRECACHE.includes(url.pathname)) {
 		event.respondWith(caches.match(url.pathname).then((saved) => saved ?? fetch(request)));
 	}

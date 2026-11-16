@@ -133,7 +133,7 @@ Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합
 
 - **매니페스트**: `static/manifest.webmanifest`(이름, `standalone`, 아이콘 192·512·마스크용 512). 512 아이콘은 `pnpm icons`가 `scripts/brand/letter-v-512.png`(Flaticon 원본 512px)로 지금 아이콘과 같은 비율로 만듭니다.
 - **서비스 워커**: `src/service-worker/index.ts`. SvelteKit 3에서는 `$app/service-worker`(`self`), `$app/manifest`(`immutable`·`assets`·`prerendered`), `$app/env`(`version`)를 씁니다. 타입 검사는 따로 둔 `src/service-worker/tsconfig.json`(`$app/tsconfig/service-worker`)으로 하고(`pnpm check`에 포함), 루트 `tsconfig.json`과 Steiger에서는 뺍니다.
-  - 설치할 때 앱 코드·스타일, 영문·라틴 확장 글꼴과 한글 화면 글자 글꼴, 첫 화면·공유 화면·`spa.html`, 아이콘을 저장합니다(약 0.7MB). 한글 글꼴 조각(`/fonts/sunflower/*`)과 다른 문자 묶음 글꼴은 쓸 때 받아 `v-fonts`에 둡니다.
+  - 설치할 때 앱 코드·스타일, 영문·라틴 확장 글꼴과 한글 화면 글자 글꼴, 첫 화면·공유 화면·`spa.html`, 아이콘을 저장합니다(약 0.7MB). 한글 글꼴 조각(`/fonts/sunflower/*`)과 다른 문자 묶음 글꼴은 쓸 때 받아 같은 버전 저장소에 둡니다(조각 목록 CSS는 화면 글자가 바뀌면 내용이 바뀌므로 버전과 함께 정리).
   - 페이지 이동은 네트워크를 먼저 쓰고, 오프라인이거나 4초 안에 답이 없으면 저장본을 줍니다(`/plans/*`는 `spa.html`). 온라인이면 새로 고칠 때 바로 새 버전을 받습니다.
   - 해시 파일은 저장본을 먼저 씁니다. 새 버전이 활성화되면 이전 버전의 저장본을 지웁니다(`v-app-<version>`).
   - 개발 서버(`pnpm dev`)에서는 요청을 가로채지 않습니다.
