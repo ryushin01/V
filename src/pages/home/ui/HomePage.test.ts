@@ -69,6 +69,17 @@ describe('HomePage', () => {
 		expect(goto).not.toHaveBeenCalled();
 	});
 
+	it('읽는 동안 같은 백업을 또 골라도 한 번만 가져옵니다', async () => {
+		const backup = stringifyBackup([createEmptyPlan('한 번만'), createSamplePlan()], []);
+		const { container } = render(HomePage);
+		const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+		const file = new File([backup], 'v-backup.json', { type: 'application/json' });
+		Object.defineProperty(input, 'files', { value: [file], configurable: true });
+		await Promise.all([fireEvent.change(input), fireEvent.change(input)]);
+		expect(await screen.findByText(/백업에서 배치도 2개/)).toBeInTheDocument();
+		expect(await listPlans()).toHaveLength(2);
+	});
+
 	it('백업 파일을 고르면 배치도를 모두 가져와 목록에 두고 결과를 알립니다', async () => {
 		const backup = stringifyBackup([createEmptyPlan('백업 1'), createSamplePlan()], []);
 		const { container } = render(HomePage);

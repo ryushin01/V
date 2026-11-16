@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BACKUP_PLAN_LIMIT, parseImportFile, stringifyBackup } from './backup';
+import { BACKUP_PLAN_LIMIT, parseImportFile, splitBackup, stringifyBackup } from './backup';
 import { createCustomEntry } from './custom';
 import { copyPlan, createEmptyPlan, createSamplePlan } from './factory';
 import { stringifyPlan } from './serialize';
@@ -28,6 +28,16 @@ describe('백업 파일', () => {
 		expect(result.plans[0].items).toHaveLength(sample.items.length);
 		expect(result.products).toEqual([desk]);
 		expect(result.skipped).toBe(0);
+	});
+
+	it('날짜로 쓸 수 없거나 미래인 저장 시각은 지금으로 바꿉니다', () => {
+		const before = Date.now();
+		for (const updatedAt of [1e20, -5, Number.MAX_SAFE_INTEGER, before + 86_400_000]) {
+			const result = parseImportFile(stringifyBackup([{ ...createEmptyPlan(), updatedAt }], []));
+			if (!result.ok || result.kind !== 'backup') throw new Error('백업으로 읽지 못함');
+			expect(result.plans[0].updatedAt).toBeGreaterThanOrEqual(before);
+			expect(result.plans[0].updatedAt).toBeLessThanOrEqual(Date.now());
+		}
 	});
 
 	it('잘못된 배치도와 내 제품은 건너뛰고 수를 셉니다', () => {
@@ -81,5 +91,34 @@ describe('copyPlan', () => {
 		copy.items[0].x = 999;
 		expect(original.items[0].x).not.toBe(999);
 		expect(copyPlan({ ...original, name: '가'.repeat(60) }).name).toHaveLength(60);
+	});
+});
+
+describe('splitBackup', () => {
+	it('보통은 파일 하나에 모두 담습니다', () => {
+		const files = splitBackup([createEmptyPlan('하나'), createSamplePlan()], [desk]);
+		expect(files).toHaveLength(1);
+		expect(parseImportFile(files[0])).toMatchObject({ ok: true, kind: 'backup', skipped: 0 });
+	});
+
+	it('배치도 수나 파일 크기 한도를 넘으면 빠짐없이 다시 가져올 수 있는 파일로 나눕니다', () => {
+		const plans = Array.from({ length: 7 }, (_, index) => createEmptyPlan(`배치도 ${index + 1}`));
+		const byCount = splitBackup(plans, [desk], { plans: 3, bytes: 10_000_000 });
+		expect(byCount).toHaveLength(3);
+		const one = new Blob([JSON.stringify(plans[0])]).size;
+		const bySize = splitBackup(plans, [desk], { plans: 500, bytes: one * 3 + 600 });
+		expect(bySize.length).toBeGreaterThan(1);
+		for (const files of [byCount, bySize]) {
+			const names = files.flatMap((text) => {
+				const result = parseImportFile(text);
+				if (!result.ok || result.kind !== 'backup') throw new Error('백업으로 읽지 못함');
+				return result.plans.map((plan) => plan.name);
+			});
+			expect(names).toEqual(plans.map((plan) => plan.name));
+			// 내 제품은 첫 파일에만 담습니다.
+			expect(JSON.parse(files[0]).products).toHaveLength(1);
+			expect(JSON.parse(files[1]).products).toHaveLength(0);
+		}
+		for (const text of bySize) expect(new Blob([text]).size).toBeLessThanOrEqual(one * 3 + 600);
 	});
 });

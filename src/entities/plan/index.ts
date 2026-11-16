@@ -42,6 +42,7 @@ export {
 	BACKUP_FILE_MAX_BYTES,
 	BACKUP_PLAN_LIMIT,
 	parseImportFile,
+	splitBackup,
 	stringifyBackup,
 	type ImportResult
 } from './model/backup';
