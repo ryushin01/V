@@ -1,6 +1,13 @@
 import { SvelteMap } from 'svelte/reactivity';
 import { MODEL_ENTRIES } from './catalog-models';
-import type { CatalogCategory, CatalogEntry, ItemData, SpecKey, WattsBasis } from './types';
+import type {
+	CatalogCategory,
+	CatalogEntry,
+	ItemData,
+	ItemLayer,
+	SpecKey,
+	WattsBasis
+} from './types';
 
 /** 치수와 전력은 흔한 제품을 기준으로 잡은 기본값입니다. 특정 제품의 사양이 아닙니다. */
 const GENERIC_ENTRIES: readonly CatalogEntry[] = [
@@ -255,6 +262,16 @@ const GENERIC_ENTRIES: readonly CatalogEntry[] = [
 
 /** 크기별 기본 물건 다음에 실제 제품을 둡니다. */
 export const CATALOG: readonly CatalogEntry[] = [...GENERIC_ENTRIES, ...MODEL_ENTRIES];
+
+/** 도면에 그리는 순서입니다. 바닥 물건 위에 배선, 벽, 패드, 책상 위 물건, 조명·암 순서로 겹칩니다. */
+export const LAYER_ORDER: Record<ItemLayer, number> = {
+	floor: 0,
+	cable: 1,
+	wall: 2,
+	mat: 3,
+	surface: 4,
+	mount: 5
+};
 
 export const CATEGORY_LABELS: Record<CatalogCategory, string> = {
 	furniture: '가구',

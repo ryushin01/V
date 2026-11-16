@@ -45,7 +45,8 @@ describe('HomePage', () => {
 		const { container } = render(HomePage);
 		const input = container.querySelector('input[type="file"]') as HTMLInputElement;
 		await userEvent.upload(input, new File(['not json'], 'a.json', { type: 'application/json' }));
-		expect(await screen.findByRole('alert')).toHaveTextContent('JSON 형식이 아닙니다');
+		// 오류 영역은 처음부터 있고 문구만 들어옵니다.
+		expect(await screen.findByText(/JSON 형식이 아닙니다/)).toHaveAttribute('role', 'alert');
 		expect(goto).not.toHaveBeenCalled();
 	});
 });

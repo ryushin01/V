@@ -26,10 +26,14 @@
 	}
 
 	const parsedDraft = $derived(parseDraft(draft));
-	/** 확정 전이라도 비었거나 숫자가 아니거나 범위를 벗어나면 오류 상태로 알립니다. */
 	const draftInRange = $derived(
 		Number.isFinite(parsedDraft) && parsedDraft >= min && parsedDraft <= max
 	);
+	/**
+	 * 확정 전이라도 숫자가 아니거나 범위를 벗어난 값은 오류 상태로 알립니다. 지우는 중인 빈 칸은
+	 * 잘못된 값이 아니라 오류로 보지 않고, 빈 칸으로 확정하면 오류 문구와 함께 알립니다.
+	 */
+	const invalid = $derived(error !== '' || (draft.trim() !== '' && !draftInRange));
 
 	/** type="number"는 '29.'처럼 입력 중인 소수를 비워 버려 글자 입력으로 받고, 위아래 방향키로 증감합니다. */
 	function stepWithArrows(event: KeyboardEvent) {
@@ -74,7 +78,8 @@
 			oninput={(event) => (draft = event.currentTarget.value)}
 			onchange={commit}
 			onkeydown={stepWithArrows}
-			aria-invalid={error || !draftInRange ? 'true' : undefined}
+			aria-invalid={invalid ? 'true' : undefined}
+			aria-errormessage={error ? `${id}-error` : undefined}
 			aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : '']
 				.filter(Boolean)
 				.join(' ') || undefined}

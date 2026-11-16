@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { analyzePlan } from '../model/analysis';
-	import { resolveEntry } from '../model/catalog';
+	import { LAYER_ORDER, resolveEntry } from '../model/catalog';
 	import type { PlanData } from '../model/types';
 	import ItemGlyph from './ItemGlyph.svelte';
 	import RoomOutline from './RoomOutline.svelte';
@@ -23,7 +23,6 @@
 	);
 	const connections = $derived(xray ? analyzePlan(plan.room, plan.items).connections : []);
 
-	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, mat: 3, surface: 4, mount: 5 } as const;
 	const items = $derived(
 		plan.items
 			.map((item) => ({ item, entry: resolveEntry(item) }))

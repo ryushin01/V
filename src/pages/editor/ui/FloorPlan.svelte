@@ -2,7 +2,7 @@
 	import { tick } from 'svelte';
 	import { corners, pointInConvex } from '#shared/lib/geometry';
 	import { Button, Icon, Ruler } from '#shared/ui';
-	import { RoomOutline, XrayOverlay } from '#entities/plan';
+	import { LAYER_ORDER, RoomOutline, XrayOverlay } from '#entities/plan';
 	import { xray } from '#features/toggle-xray';
 	import PlanItem from './PlanItem.svelte';
 	import type { PlacedItem } from '../model/placed-item.svelte';
@@ -45,7 +45,6 @@
 		});
 	});
 
-	const LAYER_ORDER = { floor: 0, cable: 1, wall: 2, mat: 3, surface: 4, mount: 5 } as const;
 	const orderedItems = $derived(
 		[...session.items].sort((a, b) => LAYER_ORDER[a.entry.layer] - LAYER_ORDER[b.entry.layer])
 	);

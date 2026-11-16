@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { protectStorage } from '#shared/lib/storage';
-	import { BrandMark, Button, PageMeta } from '#shared/ui';
+	import { BrandMark, Button, LiveMessage, PageMeta } from '#shared/ui';
 	import { decodePlan, PlanPreview, savePlan, type PlanData } from '#entities/plan';
 	import { ThemeToggle } from '#features/toggle-theme';
 
@@ -56,14 +56,13 @@
 			<PlanPreview {plan} label={`${plan.name}의 평면도, 물건 ${plan.items.length}개`} />
 		</div>
 		<Button variant="primary" arrow onclick={copyToMine}>내 배치도로 복사</Button>
-		{#if saveError}<p class="error" role="alert">{saveError}</p>{/if}
-	{:else if error}
-		<h1 class="display-2">배치도를 열 수 없습니다</h1>
-		<p class="error" role="alert">{error}</p>
-		<Button href={resolve('/')}>처음으로</Button>
+		<LiveMessage message={saveError} />
 	{:else}
-		<h1 class="display-2">배치도를 여는 중입니다</h1>
+		<h1 class="display-2">{error ? '배치도를 열 수 없습니다' : '배치도를 여는 중입니다'}</h1>
 	{/if}
+	<!-- 링크를 읽은 결과는 처음부터 둔 영역에 넣어야 화면 낭독기가 읽습니다. -->
+	<LiveMessage message={error} />
+	{#if error}<Button href={resolve('/')}>처음으로</Button>{/if}
 </main>
 
 <style>
@@ -98,10 +97,5 @@
 	.drawing {
 		width: min(100%, 44rem);
 		aspect-ratio: 5 / 4;
-	}
-
-	.error {
-		font-weight: 500;
-		color: var(--accent-deep);
 	}
 </style>

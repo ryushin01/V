@@ -1,5 +1,6 @@
 import { createId } from '#shared/lib/id';
 import { SPEC_LIMITS } from './catalog';
+import { finite, isRecord } from './guards';
 import type { CatalogCategory, CatalogEntry, ItemKind, ItemLayer } from './types';
 
 interface KindPreset {
@@ -385,11 +386,6 @@ export function createCustomEntry(input: CustomProductInput): CatalogEntry {
 		...(input.watts > 0 ? { wattsBasis: 'listed' as const } : {})
 	};
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === 'object' && value !== null && !Array.isArray(value);
-const finite = (value: unknown): value is number =>
-	typeof value === 'number' && Number.isFinite(value);
 
 /** 파일이나 공유 링크에서 온 직접 등록 제품을 검사합니다. */
 export function parseCustomEntry(raw: unknown): CatalogEntry | null {

@@ -70,7 +70,7 @@ describe('CustomProductDialog', () => {
 		await userEvent.type(width, 'abc');
 		expect(width).toHaveAttribute('aria-invalid', 'true');
 		await userEvent.click(screen.getByRole('button', { name: '등록' }));
-		expect(await screen.findByRole('alert')).toHaveTextContent('잘못 입력한 값을 고친 뒤');
+		expect(await screen.findByText(/잘못 입력한 값을 고친 뒤/)).toHaveAttribute('role', 'alert');
 		expect(width).toHaveFocus();
 		expect(onsaved).not.toHaveBeenCalled();
 	});
