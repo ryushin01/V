@@ -12,11 +12,14 @@
 		plan,
 		label = '',
 		xray = false,
-		names = false
+		names = false,
+		margin = 8
 	}: {
 		plan: PlanData;
 		label?: string;
 		xray?: boolean;
+		/** 방 둘레에 둘 여백(cm). 그림 저장은 X-ray 치수가 잘리지 않게 넓힙니다. */
+		margin?: number;
 		/** 물건 이름을 함께 그립니다(그림 저장). 편집 화면과 같은 규칙으로, 작아서 글자가 넘치는 물건은 뺍니다. */
 		names?: boolean;
 	} = $props();
@@ -26,7 +29,7 @@
 	/** SVG는 viewBox 비율을 유지하므로 가로·세로 중 작은 배율로 그려집니다. */
 	const scale = $derived(
 		width > 0 && height > 0
-			? Math.min(width / (plan.room.width + 16), height / (plan.room.depth + 16))
+			? Math.min(width / (plan.room.width + margin * 2), height / (plan.room.depth + margin * 2))
 			: 1
 	);
 	const connections = $derived(xray ? analyzePlan(plan.room, plan.items).connections : []);
@@ -76,7 +79,7 @@
 
 <svg
 	class="preview"
-	viewBox={`-8 -8 ${plan.room.width + 16} ${plan.room.depth + 16}`}
+	viewBox={`${-margin} ${-margin} ${plan.room.width + margin * 2} ${plan.room.depth + margin * 2}`}
 	role={label ? 'img' : undefined}
 	aria-label={label || undefined}
 	aria-hidden={label ? undefined : 'true'}

@@ -291,7 +291,7 @@ describe('FloorPlan', () => {
 		const toggle = screen.getByRole('button', { name: '거리 재기' });
 		await userEvent.click(toggle);
 		expect(toggle).toHaveAttribute('aria-pressed', 'true');
-		expect(session.announcement).toContain('두 점을 차례로 눌러');
+		expect(session.announcement).toContain('두 점을 차례로 누르거나');
 
 		// 기본 배율 1.6, 여백 0: 화면 (16, 16)은 (10, 10)cm, (176, 16)은 (110, 10)cm입니다.
 		const start = { x: session.items[0].x, y: session.items[0].y };
@@ -306,7 +306,7 @@ describe('FloorPlan', () => {
 				shiftKey
 			});
 		await press(16, 16);
-		expect(session.announcement).toBe('두 번째 점을 눌러 주세요.');
+		expect(session.announcement).toBe('두 번째 점을 찍어 주세요.');
 		await press(177, 16);
 		expect(session.announcement).toContain('두 점 사이 100cm');
 		expect(screen.getByTestId('measure-line')).toHaveTextContent('100 cm');
@@ -321,6 +321,51 @@ describe('FloorPlan', () => {
 		expect(toggle).toHaveAttribute('aria-pressed', 'false');
 		expect(screen.queryByTestId('measure-line')).toBeNull();
 		expect(session.announcement).toBe('거리 재기를 마쳤습니다.');
+	});
+
+	it('거리 재기를 키보드로: 켜면 십자선 버튼으로 초점이 가고, 방향키로 옮겨 Enter로 찍습니다', async () => {
+		const session = empty();
+		render(FloorPlan, { session });
+		const toggle = screen.getByRole('button', { name: '거리 재기' });
+		toggle.focus();
+		await userEvent.keyboard('{Enter}');
+		const cursor = await screen.findByRole('button', { name: /두 점을 찍어 거리를 잽니다/ });
+		await waitFor(() => expect(cursor).toHaveFocus());
+		expect(cursor).toHaveAccessibleDescription(/방향키로 십자선을/);
+		// 방 가운데(200, 160)에서 시작합니다.
+		await userEvent.keyboard('{Enter}');
+		expect(session.announcement).toBe('두 번째 점을 찍어 주세요.');
+		await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}');
+		expect(session.announcement).toBe('X 240, Y 160cm');
+		await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}{Enter}');
+		expect(session.announcement).toContain('두 점 사이 39cm');
+		await userEvent.keyboard('{Escape}');
+		expect(toggle).toHaveFocus();
+		expect(toggle).toHaveAttribute('aria-pressed', 'false');
+	});
+
+	it('거리를 재는 동안 두 번째 손가락은 화면을 옮기거나 선택을 풀지 않습니다', async () => {
+		const session = empty();
+		session.addItem('desk-140');
+		const { container } = render(FloorPlan, { session });
+		const svg = container.querySelector('.canvas svg') as SVGSVGElement;
+		svg.setPointerCapture = vi.fn();
+		await userEvent.click(screen.getByRole('button', { name: '거리 재기' }));
+		const touch = (pointerId: number, isPrimary: boolean, clientX: number) => ({
+			pointerId,
+			pointerType: 'touch',
+			isPrimary,
+			button: 0,
+			clientX,
+			clientY: 40
+		});
+		const before = { x: session.viewport.offsetX, selected: session.selectedId };
+		await fireEvent.pointerDown(svg, touch(1, true, 40));
+		await fireEvent.pointerDown(svg, touch(2, false, 200));
+		await fireEvent.pointerMove(svg, touch(2, false, 300));
+		expect(session.viewport.offsetX).toBe(before.x);
+		expect(session.selectedId).toBe(before.selected);
+		expect(session.announcement).toBe('두 번째 점을 찍어 주세요.');
 	});
 
 	it('축척 맞추기를 시작하면 거리 재기를 끕니다', async () => {

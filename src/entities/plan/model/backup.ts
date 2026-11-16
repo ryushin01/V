@@ -7,7 +7,7 @@ import type { CatalogEntry, PlanData } from './types';
 /** 이 브라우저의 모든 배치도와 내 제품을 한 파일로 옮기는 형식입니다. */
 const BACKUP_FORMAT = 'v-backup';
 const BACKUP_VERSION = 1;
-/** 한 번에 가져올 배치도 수 */
+/** 백업 파일 하나에 담는(그리고 한 번에 가져오는) 배치도 수 */
 export const BACKUP_PLAN_LIMIT = 500;
 /**
  * 백업 파일 크기 한도. 평면도 이미지가 있는 배치도 수십 개를 담을 수 있고, 이보다 큰 파일은 읽기 전에
@@ -26,6 +26,44 @@ export function stringifyBackup(
 		plans,
 		products
 	});
+}
+
+const utf8Bytes = (text: string) => new TextEncoder().encode(text).length;
+
+/**
+ * 모든 배치도와 내 제품을, 각각 다시 가져올 수 있는(배치도 수·파일 크기 한도 안의) 백업 파일로 나눕니다.
+ * 보통은 파일 하나이고, 평면도 이미지가 많아 한도를 넘으면 배치도를 빠짐없이 여러 파일에 나눠 담습니다.
+ * 내 제품은 첫 파일에 담습니다.
+ */
+export function splitBackup(
+	plans: readonly PlanData[],
+	products: readonly CatalogEntry[],
+	limits = { plans: BACKUP_PLAN_LIMIT, bytes: BACKUP_FILE_MAX_BYTES }
+): string[] {
+	// 여유: 머리글(형식·버전·시각)과 배열의 쉼표
+	const overhead = utf8Bytes(stringifyBackup([], [])) + 64;
+	const files: { plans: PlanData[]; bytes: number }[] = [];
+	let current = { plans: [] as PlanData[], bytes: overhead + utf8Bytes(JSON.stringify(products)) };
+	for (const plan of plans) {
+		const size = utf8Bytes(JSON.stringify(plan)) + 1;
+		if (
+			current.plans.length > 0 &&
+			(current.plans.length >= limits.plans || current.bytes + size > limits.bytes)
+		) {
+			files.push(current);
+			current = { plans: [], bytes: overhead };
+		}
+		current.plans.push(plan);
+		current.bytes += size;
+	}
+	files.push(current);
+	return files.map((file, index) => stringifyBackup(file.plans, index === 0 ? products : []));
+}
+
+/** 날짜로 보여 줄 수 있는 저장 시각인지 봅니다. 미래 시각은 지금으로 바꿉니다. */
+function importedTime(value: unknown): number {
+	const now = Date.now();
+	return finite(value) && value > 0 && value <= now ? value : now;
 }
 
 export type ImportResult =
@@ -76,8 +114,7 @@ export function parseImportFile(text: string): ImportResult {
 			skipped += 1;
 			continue;
 		}
-		const updatedAt = isRecord(item) && finite(item.updatedAt) ? item.updatedAt : Date.now();
-		plans.push({ ...result.plan, updatedAt });
+		plans.push({ ...result.plan, updatedAt: importedTime(isRecord(item) && item.updatedAt) });
 	}
 	// 같은 id가 여러 번 있으면 마지막 것을 씁니다.
 	const products = new Map<string, CatalogEntry>();

@@ -18,7 +18,7 @@
 		PlanPreview,
 		restoreBackup,
 		savePlan,
-		stringifyBackup,
+		splitBackup,
 		type CatalogEntry,
 		type PlanData
 	} from '#entities/plan';
@@ -61,6 +61,9 @@
 	/** 백업·복제처럼 이 화면에 머무는 동작의 결과 안내 */
 	let notice = $state('');
 	let importing = false;
+	let exporting = false;
+	/** 저장된 내 제품 수. 배치도가 없어도 내 제품이 있으면 전체 백업을 둡니다. */
+	let productCount = $state(0);
 	let copying = false;
 	let pendingDelete = $state.raw<PlanData | null>(null);
 	let deleteOpen = $state(false);
@@ -75,8 +78,9 @@
 		try {
 			const list = await listPlans();
 			// 미리보기가 배치도에 담긴 옛 사본 대신 저장소의 최신 내 제품 정의로 그리게 합니다.
-			await listCustomProducts().catch(() => []);
+			const products = await listCustomProducts().catch(() => []);
 			if (run !== refreshRun) return;
+			productCount = products.length;
 			plans = list;
 			status = 'ready';
 		} catch {
@@ -134,25 +138,26 @@
 		const file = input.files?.[0];
 		input.value = '';
 		if (!file || importing) return;
+		// 읽기 전에 잠가, 읽는 동안 같은 파일을 또 골라도 두 번 가져오지 않습니다.
+		importing = true;
 		importError = '';
 		notice = '';
-		const read = await readTextFile(file, BACKUP_FILE_MAX_BYTES);
-		if (!read.ok) {
-			importError = read.error;
-			return;
-		}
-		const parsed = parseImportFile(read.text);
-		if (!parsed.ok) {
-			importError = parsed.error;
-			return;
-		}
-		if (parsed.kind === 'plan') {
-			await openNewPlan(() => parsed.plan);
-			return;
-		}
-		importing = true;
-		void protectStorage();
 		try {
+			const read = await readTextFile(file, BACKUP_FILE_MAX_BYTES);
+			if (!read.ok) {
+				importError = read.error;
+				return;
+			}
+			const parsed = parseImportFile(read.text);
+			if (!parsed.ok) {
+				importError = parsed.error;
+				return;
+			}
+			if (parsed.kind === 'plan') {
+				await openNewPlan(() => parsed.plan);
+				return;
+			}
+			void protectStorage();
 			await restoreBackup(parsed.plans, parsed.products);
 			await refresh();
 			const skipped = parsed.skipped > 0 ? ` 읽을 수 없어 건너뛴 항목 ${parsed.skipped}개.` : '';
@@ -167,26 +172,43 @@
 		}
 	}
 
-	/** 이 브라우저의 모든 배치도(평면도 이미지 포함)와 내 제품을 한 파일로 내려받습니다. */
+	/**
+	 * 이 브라우저의 모든 배치도(평면도 이미지 포함)와 내 제품을 백업 파일로 내려받습니다. 보통은 파일 하나이고,
+	 * 다시 가져올 수 있는 한도(배치도 500개, 256MB)를 넘으면 빠짐없이 여러 파일로 나눕니다. 내 제품을 읽지
+	 * 못하면 빠진 백업이 되므로 내려받지 않습니다.
+	 */
 	async function exportBackup() {
+		if (exporting) return;
+		exporting = true;
 		importError = '';
+		actionError = '';
 		notice = '';
-		let all: PlanData[];
-		let products: CatalogEntry[] = [];
 		try {
-			all = await listPlans();
-		} catch {
-			actionError = '브라우저 저장소를 읽지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
-			return;
+			let all: PlanData[];
+			let products: CatalogEntry[];
+			try {
+				[all, products] = await Promise.all([listPlans(), listCustomProducts()]);
+			} catch {
+				actionError =
+					'브라우저 저장소를 읽지 못해 백업하지 않았습니다. 잠시 뒤 다시 시도해 주세요.';
+				return;
+			}
+			const files = splitBackup(all, products);
+			const date = new Intl.DateTimeFormat('sv-SE').format(new Date());
+			files.forEach((text, index) =>
+				downloadText(
+					files.length === 1 ? `v-backup-${date}.json` : `v-backup-${date}-${index + 1}.json`,
+					text
+				)
+			);
+			const counts = `배치도 ${all.length}개와 내 제품 ${products.length}개를`;
+			notice =
+				files.length === 1
+					? `${counts} 백업 파일로 내려받았습니다.`
+					: `${counts} 백업 파일 ${files.length}개로 나눠 내려받았습니다. 옮길 때 모두 불러와 주세요.`;
+		} finally {
+			exporting = false;
 		}
-		try {
-			products = await listCustomProducts();
-		} catch {
-			// 내 제품을 읽지 못해도 배치도는 백업합니다(배치도에 쓰인 내 제품은 배치도에 함께 담겨 있음).
-		}
-		const date = new Intl.DateTimeFormat('sv-SE').format(new Date());
-		downloadText(`v-backup-${date}.json`, stringifyBackup(all, products));
-		notice = `배치도 ${all.length}개와 내 제품 ${products.length}개를 백업 파일로 내려받았습니다.`;
 	}
 
 	async function duplicate(plan: PlanData) {
@@ -224,8 +246,11 @@
 		pendingDelete = null;
 	}
 
+	/** 날짜로 바꿀 수 없는 시각(손상된 기록)이면 비워 목록이 멈추지 않게 합니다. */
 	const formatDate = (time: number) =>
-		new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(time);
+		Number.isFinite(new Date(time).getTime())
+			? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(time)
+			: '';
 
 	const CHECKS = [
 		['겹침과 문', '회전한 물건끼리의 겹침, 문이 여닫히는 공간, 방 밖으로 나간 물건을 찾습니다.'],
@@ -327,7 +352,7 @@
 					hidden
 					onchange={importFile}
 				/>
-				{#if plans.length > 0}
+				{#if plans.length > 0 || productCount > 0}
 					<Button onclick={exportBackup}><Icon name="download" size={16} /> 전체 백업</Button>
 				{/if}
 				<Button onclick={() => fileInput?.click()}

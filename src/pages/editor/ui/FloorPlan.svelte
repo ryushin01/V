@@ -118,22 +118,36 @@
 	const isItemGesture = (value: Gesture | null) =>
 		value !== null && (value.type === 'move' || value.type === 'rotate');
 
-	/** 두 손가락이 닿으면 물건 끌기를 취소하고 확대로 바꿉니다. */
-	/** 거리 재기: 두 점을 차례로 누르면 그 사이를 잽니다. 저장하지 않는 화면 도구입니다. */
+	/**
+	 * 거리 재기: 두 점을 차례로 누르면 그 사이를 잽니다. 저장하지 않는 화면 도구입니다. 키보드로는 도면에
+	 * 초점을 두고 방향키로 십자선을 옮겨 Enter로 점을 찍습니다.
+	 */
 	let measuring = $state(false);
 	let measurePoints = $state.raw<Point[]>([]);
+	/** 키보드로 옮기는 십자선(cm). 처음에는 방 가운데입니다. */
+	let measureCursor = $state.raw<Point | null>(null);
 	const MEASURE_SNAP_CM = 5;
+	/** 방향키 한 번에 옮기는 거리(cm). Shift를 누르면 1cm입니다. */
+	const MEASURE_KEY_STEP_CM = 10;
 	const measured = $derived(
 		measurePoints.length === 2 ? Math.round(distance(measurePoints[0], measurePoints[1])) : null
 	);
 
+	let measureButton = $state<HTMLButtonElement>();
+	let canvas = $state<HTMLDivElement>();
+	const measureHelpId = $props.id();
+
 	function stopMeasure() {
+		// 십자선 버튼에 있던 초점은 사라지기 전에 켜기 버튼으로 돌려줍니다.
+		const hadFocus = measureButton !== undefined && document.activeElement === measureButton;
 		measuring = false;
 		measurePoints = [];
+		measureCursor = null;
 		session.announcement = '거리 재기를 마쳤습니다.';
+		if (hadFocus) canvas?.querySelector<HTMLElement>('.measure-toggle')?.focus();
 	}
 
-	function toggleMeasure() {
+	function toggleMeasure(event: MouseEvent) {
 		if (measuring) {
 			stopMeasure();
 			return;
@@ -141,7 +155,19 @@
 		if (session.calibration) session.cancelCalibration();
 		measuring = true;
 		measurePoints = [];
-		session.announcement = '거리 재기: 도면에서 두 점을 차례로 눌러 주세요. Esc로 마칩니다.';
+		measureCursor = { x: session.room.width / 2, y: session.room.depth / 2 };
+		session.announcement =
+			'거리 재기: 도면에서 두 점을 차례로 누르거나, 방향키로 십자선을 옮기고 Enter로 찍어 주세요. Esc로 마칩니다.';
+		// 키보드로 켰으면(누른 위치가 없는 클릭) 십자선을 옮길 수 있게 십자선 버튼으로 초점을 옮깁니다.
+		if (event.detail === 0) void tick().then(() => measureButton?.focus());
+	}
+
+	function placeMeasurePoint(point: Point) {
+		measurePoints = measurePoints.length === 1 ? [measurePoints[0], point] : [point];
+		session.announcement =
+			measurePoints.length === 1
+				? '두 번째 점을 찍어 주세요.'
+				: `두 점 사이 ${Math.round(distance(measurePoints[0], point))}cm. 다른 곳을 찍으면 새로 잽니다.`;
 	}
 
 	/** 5cm 격자에 맞추고, Shift를 누르면 누른 자리 그대로 씁니다. */
@@ -151,28 +177,64 @@
 		const snap = (value: number) =>
 			event.shiftKey ? value : Math.round(value / MEASURE_SNAP_CM) * MEASURE_SNAP_CM;
 		const point = { x: snap(raw.x), y: snap(raw.y) };
-		measurePoints = measurePoints.length === 1 ? [measurePoints[0], point] : [point];
-		session.announcement =
-			measurePoints.length === 1
-				? '두 번째 점을 눌러 주세요.'
-				: `두 점 사이 ${Math.round(distance(measurePoints[0], point))}cm. 다른 곳을 누르면 새로 잽니다.`;
+		measureCursor = point;
+		placeMeasurePoint(point);
 	}
+
+	const MEASURE_KEYS: Record<string, [number, number]> = {
+		ArrowLeft: [-1, 0],
+		ArrowRight: [1, 0],
+		ArrowUp: [0, -1],
+		ArrowDown: [0, 1]
+	};
+
+	const cursorOrCenter = () =>
+		measureCursor ?? { x: session.room.width / 2, y: session.room.depth / 2 };
+
+	/** 십자선 버튼에서 방향키로 십자선을 옮깁니다(Enter·Space는 버튼 누르기로 점을 찍음). */
+	function handleMeasureKeydown(event: KeyboardEvent) {
+		const move = MEASURE_KEYS[event.key];
+		if (!move || event.ctrlKey || event.metaKey || event.altKey) return;
+		event.preventDefault();
+		const cursor = cursorOrCenter();
+		const step = event.shiftKey ? 1 : MEASURE_KEY_STEP_CM;
+		const clamp = (value: number, max: number) => Math.min(max, Math.max(0, value));
+		measureCursor = {
+			x: clamp(cursor.x + move[0] * step, session.room.width),
+			y: clamp(cursor.y + move[1] * step, session.room.depth)
+		};
+		session.announcement = `X ${Math.round(measureCursor.x)}, Y ${Math.round(measureCursor.y)}cm`;
+	}
+
+	/** 마우스 위치가 없으면 키보드 십자선을 같은 모양으로 보여 줍니다. */
+	const shownPointer = $derived(
+		pointer ??
+			(measuring && measureCursor
+				? {
+						x: measureCursor.x,
+						y: measureCursor.y,
+						sx: measureCursor.x * view.scale + view.offsetX,
+						sy: measureCursor.y * view.scale + view.offsetY
+					}
+				: null)
+	);
 
 	// 축척 맞추기를 시작하면(평면도 이미지 패널) 거리 재기를 끕니다.
 	$effect(() => {
 		if (session.calibration && untrack(() => measuring)) {
 			measuring = false;
 			measurePoints = [];
+			measureCursor = null;
 		}
 	});
 
 	function trackTouch(event: PointerEvent) {
-		if (measuring && event.button === 0 && event.isPrimary) {
-			// 거리를 재는 동안에는 물건을 잡거나 화면을 옮기지 않고 점만 찍습니다. 누른 물건에 초점이 가서
-			// 선택되지 않도록 기본 동작도 막습니다.
+		if (measuring && event.button === 0) {
+			// 거리를 재는 동안에는 물건을 잡거나 화면을 옮기지 않습니다. 누른 물건에 초점이 가서 선택되지
+			// 않도록 기본 동작도 막고, 두 번째 손가락은 받지 않으며 첫 손가락(주 포인터)만 점을 찍습니다.
 			event.stopPropagation();
 			event.preventDefault();
-			addMeasurePoint(event);
+			if (event.isPrimary) addMeasurePoint(event);
 			return;
 		}
 		if (session.calibration && event.button === 0) {
@@ -319,7 +381,7 @@
 		length={view.width}
 		scale={view.scale}
 		offset={view.offsetX}
-		pointer={pointer?.x ?? null}
+		pointer={shownPointer?.x ?? null}
 		range={selectedBounds ? { start: selectedBounds.minX, end: selectedBounds.maxX } : null}
 		onpan={(delta) => view.panBy(delta, 0)}
 	/>
@@ -328,11 +390,16 @@
 		length={view.height}
 		scale={view.scale}
 		offset={view.offsetY}
-		pointer={pointer?.y ?? null}
+		pointer={shownPointer?.y ?? null}
 		range={selectedBounds ? { start: selectedBounds.minY, end: selectedBounds.maxY } : null}
 		onpan={(delta) => view.panBy(0, delta)}
 	/>
-	<div class="canvas" bind:clientWidth={view.width} bind:clientHeight={view.height}>
+	<div
+		class="canvas"
+		bind:this={canvas}
+		bind:clientWidth={view.width}
+		bind:clientHeight={view.height}
+	>
 		<svg
 			bind:this={svg}
 			width="100%"
@@ -473,30 +540,40 @@
 				{/if}
 			</g>
 		</svg>
-		{#if pointer}
+		{#if shownPointer}
 			<div
 				class="cross h"
-				style:transform={`translate3d(0, ${pointer.sy}px, 0)`}
+				style:transform={`translate3d(0, ${shownPointer.sy}px, 0)`}
 				aria-hidden="true"
 			></div>
 			<div
 				class="cross v"
-				style:transform={`translate3d(${pointer.sx}px, 0, 0)`}
+				style:transform={`translate3d(${shownPointer.sx}px, 0, 0)`}
 				aria-hidden="true"
 			></div>
 			<div
 				class="coords measure"
-				style:transform={`translate3d(${pointer.sx + 10}px, ${pointer.sy + 10}px, 0)`}
+				style:transform={`translate3d(${shownPointer.sx + 10}px, ${shownPointer.sy + 10}px, 0)`}
 				aria-hidden="true"
 			>
-				X {Math.round(pointer.x)} · Y {Math.round(pointer.y)}
+				X {Math.round(shownPointer.x)} · Y {Math.round(shownPointer.y)}
 			</div>
 		{/if}
 		{#if measuring}
-			<!-- 같은 안내를 화면 낭독기에는 편집 안내 영역으로 읽어 줍니다. -->
-			<div class="measure-hint coords measure" aria-hidden="true">
-				{measured === null ? '두 점을 눌러 거리를 잽니다' : `${measured} cm`} · Esc로 마침
-			</div>
+			<!-- 키보드로 거리를 재는 십자선 버튼입니다. 포인터는 도면을 직접 눌러 찍으므로 이 버튼을 지나쳐 갑니다. -->
+			<button
+				bind:this={measureButton}
+				type="button"
+				class="measure-hint coords measure"
+				aria-describedby={measureHelpId}
+				onkeydown={handleMeasureKeydown}
+				onclick={() => placeMeasurePoint(cursorOrCenter())}
+			>
+				{measured === null ? '두 점을 찍어 거리를 잽니다' : `${measured} cm`} · Esc로 마침
+			</button>
+			<span id={measureHelpId} class="sr-only"
+				>방향키로 십자선을 10cm씩, Shift와 함께 1cm씩 옮기고 Enter로 점을 찍습니다.</span
+			>
 		{/if}
 		<div class="controls" role="group" aria-label="화면 조작">
 			<Button size="sm" aria-label="축소" title="축소" onclick={() => view.zoomCenter(1 / 1.25)}
@@ -703,6 +780,13 @@
 	.measure-hint {
 		top: 0.75rem;
 		left: 0.75rem;
+		font: inherit;
+		font-family: var(--font-mono);
+	}
+
+	.measure-hint:focus-visible {
+		outline: 2px solid var(--ink);
+		outline-offset: 2px;
 	}
 
 	.controls :global(.measure-toggle[aria-pressed='true']) {

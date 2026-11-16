@@ -43,8 +43,17 @@ export function inlineStyles(source: Element, target: Element): void {
 	}
 }
 
+/**
+ * 방 둘레 여백(cm). X-ray는 방 바깥(화면 기준 약 32px)까지 치수를 그리므로 1cm에 2px에서 잘리지 않게
+ * 20cm를 둡니다.
+ */
+export const imageMargin = (xray: boolean) => (xray ? 20 : 8);
+
 /** 그림의 크기입니다. 1cm에 4px(2배 해상도)로 그리되, 긴 변이 4096px을 넘지 않게 줄입니다. */
-export function planImageSize(plan: Pick<PlanData, 'room'>): {
+export function planImageSize(
+	plan: Pick<PlanData, 'room'>,
+	margin = 8
+): {
 	width: number;
 	height: number;
 	/** 화면에 그릴 때(1배)의 1cm당 픽셀 */
@@ -54,8 +63,8 @@ export function planImageSize(plan: Pick<PlanData, 'room'>): {
 } {
 	const MAX_EDGE = 4096;
 	const pixelsPerCm = 2;
-	const width = (plan.room.width + 16) * pixelsPerCm;
-	const height = (plan.room.depth + 16) * pixelsPerCm;
+	const width = (plan.room.width + margin * 2) * pixelsPerCm;
+	const height = (plan.room.depth + margin * 2) * pixelsPerCm;
 	const density = Math.min(2, MAX_EDGE / Math.max(width, height));
 	return { width, height, pixelsPerCm, density };
 }
@@ -70,14 +79,15 @@ export async function renderPlanImage(
 	plan: PlanData,
 	options: { xray: boolean; background: string }
 ): Promise<Blob> {
-	const { width, height, density } = planImageSize(plan);
+	const margin = imageMargin(options.xray);
+	const { width, height, density } = planImageSize(plan, margin);
 	const host = document.createElement('div');
 	host.setAttribute('aria-hidden', 'true');
 	host.style.cssText = `position:fixed;left:-100000px;top:0;width:${width}px;height:${height}px;pointer-events:none;`;
 	document.body.append(host);
 	const preview = mount(PlanPreview, {
 		target: host,
-		props: { plan, xray: options.xray, names: true }
+		props: { plan, xray: options.xray, names: true, margin }
 	});
 	let url = '';
 	try {
@@ -93,10 +103,10 @@ export async function renderPlanImage(
 		svg.setAttribute('width', String(width));
 		svg.setAttribute('height', String(height));
 		const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-		background.setAttribute('x', '-8');
-		background.setAttribute('y', '-8');
-		background.setAttribute('width', String(plan.room.width + 16));
-		background.setAttribute('height', String(plan.room.depth + 16));
+		background.setAttribute('x', String(-margin));
+		background.setAttribute('y', String(-margin));
+		background.setAttribute('width', String(plan.room.width + margin * 2));
+		background.setAttribute('height', String(plan.room.depth + margin * 2));
 		background.setAttribute('fill', options.background);
 		svg.prepend(background);
 
