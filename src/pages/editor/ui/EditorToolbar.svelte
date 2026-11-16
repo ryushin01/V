@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { downloadText } from '#shared/lib/file';
+	import { downloadBlob, downloadText } from '#shared/lib/file';
 	import { BrandMark, Button, Dialog, Icon, LiveMessage } from '#shared/ui';
-	import { encodePlan, stringifyPlan } from '#entities/plan';
+	import { encodePlan, renderPlanImage, stringifyPlan } from '#entities/plan';
 	import { ThemeToggle } from '#features/toggle-theme';
-	import { XrayToggle } from '#features/toggle-xray';
+	import { xray, XrayToggle } from '#features/toggle-xray';
 	import type { EditorSession } from '../model/session.svelte';
 
 	type SaveStatus = 'saved' | 'saving' | 'error';
@@ -58,10 +58,32 @@
 		}
 	}
 
+	/** 파일 이름에 쓸 수 없는 글자를 바꾼 배치도 이름 */
+	const fileName = $derived(session.savedName.replace(/[\\/:*?"<>|]/g, '_'));
+
 	function exportFile() {
-		const name = session.savedName.replace(/[\\/:*?"<>|]/g, '_');
-		downloadText(`${name}.json`, stringifyPlan(session.toData()));
+		downloadText(`${fileName}.json`, stringifyPlan(session.toData()));
 		session.announcement = 'JSON 파일로 내보냈습니다.';
+	}
+
+	let drawing = $state(false);
+
+	/** 지금 테마·X-ray 색 그대로 방 전체를 PNG로 내려받습니다(금액은 그림에 없음). */
+	async function exportImage() {
+		if (drawing) return;
+		drawing = true;
+		try {
+			const background = getComputedStyle(document.documentElement)
+				.getPropertyValue('--paper')
+				.trim();
+			const blob = await renderPlanImage(session.toData(), { xray: xray.on, background });
+			downloadBlob(`${fileName}.png`, blob);
+			session.announcement = '평면도를 PNG 그림으로 저장했습니다.';
+		} catch {
+			session.announcement = '그림을 만들지 못했습니다. 내보내기로 파일을 받아 주세요.';
+		} finally {
+			drawing = false;
+		}
 	}
 </script>
 
@@ -105,6 +127,9 @@
 		>
 		<Button size="sm" onclick={openShare}><Icon name="share" size={16} /> 공유</Button>
 		<Button size="sm" onclick={exportFile}><Icon name="download" size={16} /> 내보내기</Button>
+		<Button size="sm" disabled={drawing} onclick={exportImage}
+			><Icon name="image" size={16} /> 그림 저장</Button
+		>
 		<Button size="sm" aria-label="단축키 안내" title="단축키 안내" onclick={() => (helpOpen = true)}
 			><Icon name="keyboard" /></Button
 		>
