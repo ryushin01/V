@@ -118,13 +118,25 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 
 ## 글꼴
 
-제목과 본문은 Barlow Condensed(영문·숫자)와 해바라기(한글), 치수는 IBM Plex Mono입니다. `src/app/styles/global.css`의 `--font-sans`·`--font-display`가 `'Barlow Condensed', 'Sunflower', …` 순서입니다.
+My First Gear 쇼핑몰의 HUD 개편(1.2.0)과 같은 조합입니다. 큰 제목은 Bodoni Moda(영문, 광학 크기 축)와 본명조(Noto Serif KR, 한글), 본문은 IBM Plex Sans KR, 라벨·치수는 IBM Plex Mono(영문·숫자)와 나눔고딕코딩(한글)입니다. `src/app/styles/global.css`의 `--font-display`·`--font-sans`·`--font-mono`가 영문 글꼴, 한글 글꼴, 운영체제 대체 글꼴 순서입니다.
 
-- 해바라기는 저장소에 넣어 제공합니다. 원본(500·700)과 라이선스는 `scripts/fonts/sunflower/`, 설정은 `scripts/fonts/config.json`에 있습니다.
-- `pnpm fonts`가 두 가지를 만듭니다.
-  - `src/app/styles/fonts/sunflower.css`, `sunflower/sunflower-<굵기>-ui.woff2`: 소스(`.ts` 문자열, `.svelte`, JSON)에 쓰인 한글·기호만 담은 파일입니다. `+layout.svelte`가 불러와 첫 화면과 함께 받습니다.
-  - `static/fonts/sunflower-rest.css`, `sunflower/sunflower-<굵기>-<번호>.woff2`: 나머지 글자를 Google Fonts 한국어 글꼴과 같은 글자 묶음으로 나눈 조각입니다. `attachRestFonts`가 페이지를 다 받고 1초 뒤 한가할 때 붙이고, 브라우저는 화면에 쓴 글자(사용자가 입력한 제품 이름 등)가 든 조각만 받습니다.
-- 화면 글자를 바꾸면 `pnpm fonts`를 다시 실행합니다. 빠진 글자가 있으면 `src/app/styles/fonts.test.ts`가 실패합니다(`.svelte`는 주석 글자도 셉니다).
+- 영문 글꼴은 Fontsource 패키지(`@fontsource-variable/bodoni-moda/standard.css`, `@fontsource/ibm-plex-mono` 400·500)를 `+layout.svelte`가 불러옵니다. 가변 글꼴의 이름은 `'Bodoni Moda Variable'`입니다.
+- 한글 글꼴 셋은 저장소에 넣어 제공합니다. 원본(woff2로 줄인 것)과 라이선스는 `scripts/fonts/<글꼴>/`, 설정은 `scripts/fonts/config.json`에 있습니다(본명조 500, IBM Plex Sans KR 400·500, 나눔고딕코딩 400). 본명조 원본은 notofonts/noto-cjk의 한국어 부분집합 OTF, 나머지는 google/fonts의 TTF입니다.
+- `pnpm fonts`가 글꼴마다 두 가지를 만듭니다.
+  - `src/app/styles/fonts/<글꼴>.css`, `<글꼴>/<글꼴>-<굵기>-ui.woff2`: 소스(`.ts` 문자열, `.svelte`, JSON)에 쓰인 한글·기호만 담은 파일입니다. `+layout.svelte`가 불러와 첫 화면과 함께 받습니다.
+  - `static/fonts/<글꼴>-rest.css`, `<글꼴>/<글꼴>-<굵기>-<번호>.woff2`: 나머지 글자를 Google Fonts 한국어 글꼴과 같은 글자 묶음으로 나눈 조각입니다. `attachRestFonts`가 페이지를 다 받고 1초 뒤 한가할 때 글꼴마다 붙이고, 브라우저는 화면에 쓴 글자(사용자가 입력한 제품 이름 등)가 든 조각만 받습니다.
+- 화면 글자를 바꾸면 `pnpm fonts`를 다시 실행합니다. 빠진 글자가 있으면 `src/app/styles/fonts.test.ts`가 실패합니다(`.svelte`는 주석 글자도 셉니다). 원본 글꼴을 바꾸면 `pnpm fonts --all`로 조각까지 다시 만듭니다.
+- 한글은 쓰는 굵기만 둡니다. 화면의 굵기는 500까지만 쓰고(HUD 개편), 그보다 굵게 쓰면 브라우저가 500을 굵게 합성합니다.
+
+## 디자인 (HUD)
+
+1.3.0에서 My First Gear 쇼핑몰의 HUD 화면(레퍼런스 The Spark)에 맞췄습니다. 로고와 홈 인트로(흰 역정삼각형)는 그대로입니다.
+
+- 색: 어두운 테마는 검은 바탕 `#050505`에 흰 글자 `#f5f5f2`, 회색 `#bbbbbb`, 빨강 `#ff3131`. 밝은 테마는 그 흑백을 뒤집은 화면입니다. X-ray는 청사진 색 그대로입니다.
+- 바탕: `body::before`에 120px마다 작은 + 표시를 둔 십자 격자(`--crosshair`, 테마마다 선 색이 다름), `body::after`에 쇼핑몰과 같은 결의 필름 노이즈를 깝니다. 오래 켜 두고 쓰는 편집 화면이라 노이즈는 움직이지 않습니다.
+- 모서리: `--radius-media`·`--radius-field`를 0으로 두고, 알약 모양 메뉴·버튼도 각진 상자로 바꿨습니다. 메뉴는 올리면 흑백이 뒤집힙니다. 헤더 로고의 테두리는 투명 그대로입니다.
+- 공용 표시: `.hud-tag`(뒤집은 라벨), `.hud-frame`(왼쪽 위·오른쪽 아래 모서리 조준선).
+- 홈 인트로의 삼각형은 종이색이 흰색이 아니게 되어 `--white: #ffffff`로 고정했습니다(테마와 상관없이 흰 삼각형·검은 로고).
 
 ## CI
 
@@ -156,7 +168,7 @@ Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합
 
 - **매니페스트**: `static/manifest.webmanifest`(이름, `standalone`, 아이콘 192·512·마스크용 512). 512 아이콘은 `pnpm icons`가 `scripts/brand/letter-v-512.png`(Flaticon 원본 512px)로 지금 아이콘과 같은 비율로 만듭니다.
 - **서비스 워커**: `src/service-worker/index.ts`. SvelteKit 3에서는 `$app/service-worker`(`self`), `$app/manifest`(`immutable`·`assets`·`prerendered`), `$app/env`(`version`)를 씁니다. 타입 검사는 따로 둔 `src/service-worker/tsconfig.json`(`$app/tsconfig/service-worker`)으로 하고(`pnpm check`에 포함), 루트 `tsconfig.json`과 Steiger에서는 뺍니다.
-  - 설치할 때 앱 코드·스타일, 영문·라틴 확장 글꼴과 한글 화면 글자 글꼴, 첫 화면·공유 화면·`spa.html`, 아이콘을 저장합니다(약 0.7MB). 한글 글꼴 조각(`/fonts/sunflower/*`)과 다른 문자 묶음 글꼴은 쓸 때 받아 같은 버전 저장소에 둡니다(조각 목록 CSS는 화면 글자가 바뀌면 내용이 바뀌므로 버전과 함께 정리).
+  - 설치할 때 앱 코드·스타일, 영문·라틴 확장 글꼴과 한글 화면 글자 글꼴, 첫 화면·공유 화면·`spa.html`, 아이콘을 저장합니다(약 0.7MB). 한글 글꼴 조각(`/fonts/<글꼴>/*`)과 다른 문자 묶음 글꼴은 쓸 때 받아 같은 버전 저장소에 둡니다(조각 목록 CSS는 화면 글자가 바뀌면 내용이 바뀌므로 버전과 함께 정리).
   - 페이지 이동은 네트워크를 먼저 쓰고, 오프라인이거나 4초 안에 답이 없으면 저장본을 줍니다(`/plans/*`는 `spa.html`). 온라인이면 새로 고칠 때 바로 새 버전을 받습니다.
   - 해시 파일은 저장본을 먼저 씁니다. 새 버전이 활성화되면 이전 버전의 저장본을 지웁니다(`v-app-<version>`).
   - 개발 서버(`pnpm dev`)에서는 요청을 가로채지 않습니다.
