@@ -368,7 +368,7 @@
 	summary {
 		padding: 0.625rem 0;
 		font-size: 0.8125rem;
-		font-weight: 600;
+		font-weight: 500;
 		color: var(--ink-2);
 		cursor: pointer;
 	}

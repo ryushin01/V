@@ -5,7 +5,7 @@
  * - 설치할 때: 앱 코드·스타일, 첫 화면 글꼴, 페이지(첫 화면, 공유 화면, 편집 화면 대체 페이지), 아이콘을 저장합니다.
  * - 페이지 이동: 네트워크를 먼저 쓰고, 오프라인이거나 4초 안에 답이 없으면 저장본을 줍니다.
  * - 해시 파일(_app/immutable)과 한글 글꼴 조각: 저장본을 먼저 쓰고, 없으면 받아서 저장합니다.
- * - 새 버전이 활성화되면 이전 버전의 저장본을 모두 지웁니다. 글꼴 조각 목록(sunflower-rest.css)은 화면 글자가
+ * - 새 버전이 활성화되면 이전 버전의 저장본을 모두 지웁니다. 글꼴 조각 목록(<글꼴>-rest.css)은 화면 글자가
  *   바뀌면 내용이 바뀌므로, 글꼴도 버전별 저장소에 두어 옛 목록이 남지 않게 합니다(쓴 조각만 다시 받음).
  */
 import { dev, version } from '$app/env';
@@ -32,7 +32,7 @@ const PRECACHE = [
 	// static 폴더에서는 아이콘·매니페스트·글꼴 조각 목록 CSS만 (글꼴 조각 파일 100여 개는 쓸 때 받음)
 	...assets
 		.map(({ path }) => toUrl(path))
-		.filter((path) => !path.startsWith('/fonts/sunflower/') && !/\.(txt|xml|jpg)$/.test(path))
+		.filter((path) => !/^\/fonts\/[^/]+\//.test(path) && !/\.(txt|xml|jpg)$/.test(path))
 ];
 
 self.addEventListener('install', (event) => {
