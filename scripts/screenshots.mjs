@@ -19,6 +19,8 @@ async function open({
 		colorScheme,
 		locale: 'ko-KR'
 	});
+	// 홈 인트로는 아래에서 따로 찍습니다. 나머지 화면은 인트로를 이미 본 것으로 둡니다.
+	await context.addInitScript(() => sessionStorage.setItem('v-intro', 'seen'));
 	const page = await context.newPage();
 	await page.goto(BASE + '/', { waitUntil: 'networkidle' });
 	await page.evaluate(() => document.fonts.ready);
@@ -228,6 +230,39 @@ async function samplePlan(page) {
 	const { page, context } = await open({ viewport: { width: 390, height: 844 } });
 	await openSample(page);
 	await shot(page, 'mobile');
+	await context.close();
+}
+
+// 홈 인트로: 탭에서 처음 홈에 들어올 때 재생됩니다. 흰 역정삼각형에 로고가 얹힌 순간(0.9초)에 멈춰 찍습니다.
+{
+	const context = await browser.newContext({
+		viewport: { width: 1440, height: 900 },
+		deviceScaleFactor: 1.5,
+		colorScheme: 'light',
+		locale: 'ko-KR'
+	});
+	const page = await context.newPage();
+	await page.goto(BASE + '/', { waitUntil: 'commit' });
+	const intro = page.getByTestId('home-intro');
+	await page.waitForFunction(
+		() =>
+			(document.querySelector('[data-testid="home-intro"]')?.getAnimations({ subtree: true })
+				.length ?? 0) > 0
+	);
+	await intro.evaluate((el) => el.getAnimations({ subtree: true }).forEach((a) => a.pause()));
+	// 로고는 CSS 배경 그림이라 미리 받아 둔 뒤 찍습니다.
+	await page.evaluate(
+		() =>
+			new Promise((resolve) => {
+				const logo = new Image();
+				logo.onload = logo.onerror = resolve;
+				logo.src = '/brand/logo-512.png';
+			})
+	);
+	await intro.evaluate((el) =>
+		el.getAnimations({ subtree: true }).forEach((a) => (a.currentTime = 900))
+	);
+	await shot(page, 'intro', 100);
 	await context.close();
 }
 
