@@ -32,6 +32,14 @@ Feature-Sliced Design v2.1을 따르며 `pnpm lint:fsd`(Steiger)로 검사합니
 - 첫 화면: 잔눈금 8px, 중간 눈금 32px, 큰 눈금과 숫자 64px로 고정합니다(`fixedStep`, `bare`). 숫자는 가독성을 위해 11px입니다.
 - 오른쪽 `PageScale`은 스크롤바를 대신하며, 휠·터치·키보드 스크롤은 그대로 동작합니다.
 
+## 홈 인트로
+
+첫 화면의 인트로(`pages/home/ui/HomeIntro.svelte`)는 CSS 애니메이션만으로 돕니다. 등록한 사용자 정의 속성 `--intro-a`(역정삼각형 한 변의 절반) 하나를 키우면 흰 삼각형, 카드 구멍(`clip-path: shape()`, 모르는 브라우저는 `polygon()`), 로고 크기가 함께 커집니다.
+
+- 재생 여부는 `src/app.html`의 인라인 스크립트가 첫 페인트 전에 정해 `<html data-intro="play">`를 붙입니다. 탭에서 처음 `/`에 들어오고(sessionStorage `v-intro`), 주소에 `#`이 없고, 동작 줄이기가 꺼져 있을 때입니다. 미리 그린 HTML에 덮개가 들어 있고 이 속성이 있을 때만 보여 홈이 비쳤다가 가려지지 않습니다.
+- 컴포넌트는 수화 뒤 애니메이션이 끝나면(또는 4초 안전장치, 아무 키·누르기로 건너뛰면) 덮개를 지우고 속성을 뗍니다. 다른 화면에서 돌아오면 속성이 없어 재생하지 않습니다.
+- `e2e/app.spec.ts`와 README 화면 찍기는 sessionStorage에 `v-intro`를 미리 넣어 인트로를 건너뛰고, 인트로 자체는 `e2e/intro.spec.ts`가 애니메이션을 멈춰 확인합니다.
+
 ## X-ray
 
 `features/toggle-xray`의 상태는 페이지를 옮겨도 유지됩니다. 켜면 `html[data-xray]`로 색 변수를 바꾸고 `XrayOverlay`가 도면 위에 치수를 그립니다. 같은 정보가 물건 이름과 점검 패널에 있어 오버레이는 보조기술에 숨깁니다.
@@ -137,7 +145,7 @@ Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합
 
 `vite.config.ts`의 `csp`(해시 방식)가 미리 그린 페이지와 대체 페이지(`spa.html`, `404.html`)마다 `<meta http-equiv="content-security-policy">`를 넣습니다.
 
-- 스크립트는 같은 출처와 해시만 허용합니다. SvelteKit이 만드는 인라인 스크립트(시작 코드, 서비스 워커 등록)의 해시는 SvelteKit이 더하고, `src/app.html`의 테마 스크립트 해시는 빌드할 때 다시 계산합니다.
+- 스크립트는 같은 출처와 해시만 허용합니다. SvelteKit이 만드는 인라인 스크립트(시작 코드, 서비스 워커 등록)의 해시는 SvelteKit이 더하고, `src/app.html`의 인라인 스크립트(테마, 홈 인트로 재생 판단) 해시는 빌드할 때 다시 계산합니다. 첫 `<script>`만 읽으므로 인라인 스크립트는 한 블록으로 둡니다.
 - 인라인 스타일은 허용합니다(미리 그린 HTML의 `style` 속성). 이미지는 `data:`(평면도 이미지)·`blob:`까지, 연결은 같은 출처만 허용하고 `VITE_SENTRY_DSN`이 있으면 그 수집 주소를 더합니다.
 - `<meta>`에서 쓸 수 없는 `frame-ancestors`는 응답 헤더로 보냅니다(위 표).
 - E2E가 첫 화면·편집 화면(평면도 이미지 포함)·공유 화면·오류 화면에서 `securitypolicyviolation`이 없는지 확인합니다. 외부 스크립트·이미지를 새로 쓰면 지시어를 함께 고칩니다.
