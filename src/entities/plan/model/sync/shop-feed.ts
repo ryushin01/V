@@ -137,6 +137,13 @@ export const SHOP_FEED: ShopFeed = {
 			"price": 449000
 		},
 		{
+			"id": "bang-olufsen-a8",
+			"name": "뱅앤올룹슨 A8",
+			"brand": "Bang & Olufsen",
+			"category": "earphone",
+			"price": 260000
+		},
+		{
 			"id": "sennheiser-hd-600",
 			"name": "젠하이저 HD 600",
 			"brand": "Sennheiser",
