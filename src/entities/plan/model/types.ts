@@ -137,6 +137,11 @@ export interface CatalogEntry {
 	keywords?: readonly string[];
 	/** 소비 전력 값의 기준. 없으면 카탈로그 기본값입니다. */
 	wattsBasis?: WattsBasis;
+	/**
+	 * My-First-Gear 쇼핑몰에서 파는 제품이면 상품 slug와 판매가(원)입니다. 놓을 때 가격 기본값으로 씁니다.
+	 * imported는 쇼핑몰 피드에서 가져온 항목(V 카탈로그에 원래 없던 제품)이라는 뜻입니다.
+	 */
+	shop?: { slug: string; price: number; imported?: boolean };
 }
 
 export type WattsBasis =
