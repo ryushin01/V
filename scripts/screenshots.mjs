@@ -242,13 +242,16 @@ async function samplePlan(page) {
 		locale: 'ko-KR'
 	});
 	const page = await context.newPage();
+	// 찍기 전에 4초 안전장치가 덮개를 지우지 않게 페이지 시계를 처음부터 멈춰 둡니다.
+	// 인트로 움직임은 CSS라 시계와 관계없고, 기다림은 페이지 타이머를 쓰지 않는 쪽(evaluate·waitForTimeout)으로 합니다.
+	await page.clock.install({ time: new Date('2026-01-01T00:00:00') });
+	await page.clock.pauseAt(new Date('2026-01-01T00:00:01'));
 	await page.goto(BASE + '/', { waitUntil: 'commit' });
 	const intro = page.getByTestId('home-intro');
-	await page.waitForFunction(
-		() =>
-			(document.querySelector('[data-testid="home-intro"]')?.getAnimations({ subtree: true })
-				.length ?? 0) > 0
-	);
+	await intro.waitFor({ state: 'attached' });
+	while (!(await intro.evaluate((el) => el.getAnimations({ subtree: true }).length))) {
+		await page.waitForTimeout(50);
+	}
 	await intro.evaluate((el) => el.getAnimations({ subtree: true }).forEach((a) => a.pause()));
 	// 로고는 CSS 배경 그림이라 미리 받아 둔 뒤 찍습니다.
 	await page.evaluate(
