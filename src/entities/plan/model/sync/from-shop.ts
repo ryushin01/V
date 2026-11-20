@@ -284,8 +284,16 @@ const BRAND_WORDS: Readonly<Record<string, readonly string[]>> = {
 
 const round = (value: number) => Math.round(value * 10) / 10;
 
+/**
+ * 표에서 자기 속성만 읽습니다. 피드 값이 'constructor'처럼 객체가 물려받은 이름이어도
+ * 상속 값을 돌려주지 않아, 이상한 피드 한 줄이 카탈로그 전체를 멈추지 않습니다.
+ */
+function own<T>(table: Readonly<Record<string, T>>, key: string | undefined): T | undefined {
+	return key !== undefined && Object.hasOwn(table, key) ? table[key] : undefined;
+}
+
 function modelName(item: ShopFeedItem): string {
-	for (const word of [item.brand, ...(BRAND_WORDS[item.brand] ?? [])]) {
+	for (const word of [item.brand, ...(own(BRAND_WORDS, item.brand) ?? [])]) {
 		if (item.name.startsWith(`${word} `)) return item.name.slice(word.length + 1);
 	}
 	return item.name;
@@ -293,7 +301,7 @@ function modelName(item: ShopFeedItem): string {
 
 /** 카테고리 기본 모양에 상품 이름과 쇼핑몰 값을 맞춥니다. */
 function shape(item: ShopFeedItem): ShopBase | undefined {
-	const base = BASES[item.category];
+	const base = own(BASES, item.category);
 	if (!base) return undefined;
 	const name = item.name;
 	switch (item.category) {
@@ -301,7 +309,7 @@ function shape(item: ShopFeedItem): ShopBase | undefined {
 			const inch = item.diagonalInch;
 			if (!inch) return base;
 			const width = round(
-				inch * 2.54 * (ASPECT_WIDTH[item.aspect ?? '16:9'] ?? ASPECT_WIDTH['16:9']) + 2
+				inch * 2.54 * (own(ASPECT_WIDTH, item.aspect) ?? ASPECT_WIDTH['16:9']) + 2
 			);
 			return { ...base, width, depth: 25, watts: inch >= 40 ? 120 : inch >= 30 ? 70 : 45 };
 		}

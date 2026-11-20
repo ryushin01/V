@@ -86,6 +86,29 @@ describe('쇼핑몰 제품 동기화', () => {
 		expect(synth.dimsBasis).toBeUndefined();
 	});
 
+	it('객체가 물려받은 이름(constructor 등)이 와도 멈추지 않고 건너뜁니다', () => {
+		const entries = shopEntries(
+			feed([
+				{
+					id: 'acme-odd',
+					name: 'ACME 이상한 상품',
+					brand: 'ACME',
+					category: 'constructor',
+					price: 1
+				},
+				{
+					id: 'acme-mon',
+					name: 'constructor 모니터',
+					brand: 'constructor',
+					category: 'monitor',
+					price: 1
+				}
+			]),
+			MODEL_ENTRIES
+		);
+		expect(entries.map((entry) => [entry.id, entry.name])).toEqual([['acme-mon', '모니터']]);
+	});
+
 	it('이름 앞의 제조사 이름을 뺍니다', () => {
 		const [entry] = shopEntries(
 			feed([
