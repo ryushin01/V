@@ -41,28 +41,56 @@ export const PLACEABLE = new Set([
 const ID = /^[a-z0-9][a-z0-9-]{0,99}$/;
 const WORD = /^[a-z][a-z-]{0,39}$/;
 
+/**
+ * @param {unknown} value
+ * @param {string} field
+ * @param {number} [max]
+ * @returns {string}
+ */
 function text(value, field, max = 200) {
 	if (typeof value !== 'string' || value.trim() === '' || value.length > max)
 		throw new Error(`${field}: 1~${max}자 문자열이 아닙니다`);
 	return value;
 }
 
+/**
+ * @param {unknown} value
+ * @param {string} field
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
 function number(value, field, min, max) {
 	if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max)
 		throw new Error(`${field}: ${min}~${max} 사이 숫자가 아닙니다`);
 	return value;
 }
 
+/**
+ * @param {unknown} value
+ * @param {string} field
+ * @param {RegExp} re
+ * @returns {string}
+ */
 function pattern(value, field, re) {
 	if (typeof value !== 'string' || !re.test(value))
 		throw new Error(`${field}: 형식이 맞지 않습니다 (${JSON.stringify(value)})`);
 	return value;
 }
 
-/** 정해 둔 필드만 골라 새 객체를 만듭니다. 모르는 필드는 버립니다. */
+/** @typedef {import('../src/entities/plan/model/sync/feeds').ShopFeedItem} ShopFeedItem */
+/** @typedef {import('../src/entities/plan/model/sync/feeds').ShopFeed} ShopFeed */
+
+/**
+ * 정해 둔 필드만 골라 새 객체를 만듭니다. 모르는 필드는 버립니다.
+ * @param {any} raw
+ * @param {number} index
+ * @returns {ShopFeedItem}
+ */
 function item(raw, index) {
 	const at = `items[${index}]`;
 	if (!raw || typeof raw !== 'object') throw new Error(`${at}: 객체가 아닙니다`);
+	/** @type {ShopFeedItem} */
 	const out = {
 		id: pattern(raw.id, `${at}.id`, ID),
 		name: text(raw.name, `${at}.name`),
@@ -73,7 +101,9 @@ function item(raw, index) {
 	if (raw.aliases !== undefined) {
 		if (!Array.isArray(raw.aliases) || raw.aliases.length > 10)
 			throw new Error(`${at}.aliases: 10개 이하 배열이 아닙니다`);
-		out.aliases = raw.aliases.map((alias, i) => pattern(alias, `${at}.aliases[${i}]`, ID));
+		out.aliases = raw.aliases.map((/** @type {unknown} */ alias, /** @type {number} */ i) =>
+			pattern(alias, `${at}.aliases[${i}]`, ID)
+		);
 	}
 	if (raw.widthCm !== undefined) out.widthCm = number(raw.widthCm, `${at}.widthCm`, 0.1, 1000);
 	if (raw.depthCm !== undefined) out.depthCm = number(raw.depthCm, `${at}.depthCm`, 0.1, 1000);
@@ -85,6 +115,10 @@ function item(raw, index) {
 	return out;
 }
 
+/**
+ * @param {any} raw
+ * @returns {ShopFeed}
+ */
 export function parseFeed(raw) {
 	if (!raw || typeof raw !== 'object') throw new Error('피드가 객체가 아닙니다');
 	if (raw.version !== 1) throw new Error(`모르는 피드 버전입니다: ${raw.version}`);
@@ -92,6 +126,7 @@ export function parseFeed(raw) {
 	if (!Array.isArray(raw.items) || raw.items.length === 0 || raw.items.length > 5000)
 		throw new Error('items는 1~5000개여야 합니다');
 	const items = raw.items.map(item);
+	/** @type {Set<string>} */
 	const seen = new Set();
 	for (const { id } of items) {
 		if (seen.has(id)) throw new Error(`id가 겹칩니다: ${id}`);
@@ -100,6 +135,7 @@ export function parseFeed(raw) {
 	return { version: 1, source: 'my-first-gear', items };
 }
 
+/** @returns {Promise<unknown>} */
 async function load() {
 	const from = process.argv.indexOf('--from');
 	if (from !== -1) return JSON.parse(await readFile(process.argv[from + 1], 'utf8'));
