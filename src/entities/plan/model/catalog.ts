@@ -1,5 +1,7 @@
 import { SvelteMap } from 'svelte/reactivity';
 import { MODEL_ENTRIES } from './catalog-models';
+import { shopEntries, withShop } from './sync/from-shop';
+import { SHOP_FEED } from './sync/shop-feed';
 import type {
 	CatalogCategory,
 	CatalogEntry,
@@ -260,8 +262,20 @@ const GENERIC_ENTRIES: readonly CatalogEntry[] = [
 	}
 ];
 
-/** 크기별 기본 물건 다음에 실제 제품을 둡니다. */
-export const CATALOG: readonly CatalogEntry[] = [...GENERIC_ENTRIES, ...MODEL_ENTRIES];
+/** 쇼핑몰에서 가져온 제품입니다. 쇼핑몰 피드는 매일 동기화합니다(scripts/sync-shop-feed.mjs). */
+export const SHOP_ENTRIES: readonly CatalogEntry[] = shopEntries(SHOP_FEED, MODEL_ENTRIES);
+
+/** 크기별 기본 물건 다음에 실제 제품, 그다음에 쇼핑몰에서 가져온 제품을 둡니다. */
+export const CATALOG: readonly CatalogEntry[] = [
+	...GENERIC_ENTRIES,
+	...withShop(MODEL_ENTRIES, SHOP_FEED),
+	...SHOP_ENTRIES
+];
+
+/** 물건 추가 목록에 보이는 항목입니다. 쇼핑몰에서 판매를 마친 제품은 이미 놓은 배치도에서만 씁니다. */
+export const LISTED_CATALOG: readonly CatalogEntry[] = CATALOG.filter(
+	(entry) => !entry.shop?.discontinued
+);
 
 /** 도면에 그리는 순서입니다. 바닥 물건 위에 배선, 벽, 패드, 책상 위 물건, 조명·암 순서로 겹칩니다. */
 export const LAYER_ORDER: Record<ItemLayer, number> = {

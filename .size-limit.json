@@ -1,4 +1,4 @@
 [
-	{ "name": "전체 JS", "path": "build/_app/immutable/**/*.js", "gzip": true, "limit": "120 kB" },
+	{ "name": "전체 JS", "path": "build/_app/immutable/**/*.js", "gzip": true, "limit": "125 kB" },
 	{ "name": "CSS", "path": "build/_app/immutable/**/*.css", "gzip": true, "limit": "42 kB" }
 ]

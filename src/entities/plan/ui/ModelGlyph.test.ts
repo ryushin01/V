@@ -5,7 +5,8 @@ import ItemGlyphGallery from './ItemGlyphGallery.svelte';
 import { MODEL_GLYPHS } from './model-glyphs';
 
 describe('모델별 일러스트', () => {
-	const models = CATALOG.filter((entry) => entry.brand);
+	// 쇼핑몰에서 가져온 제품은 일러스트가 없어 종류별 그림을 씁니다.
+	const models = CATALOG.filter((entry) => entry.brand && !entry.shop?.imported);
 
 	it('실제 모델마다 등록된 일러스트를 씁니다', () => {
 		for (const entry of models) expect(Object.keys(MODEL_GLYPHS), entry.id).toContain(entry.glyph);
