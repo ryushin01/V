@@ -30,6 +30,7 @@
 	import { ScrollTracker } from '../model/scroll.svelte';
 	import BuildStage from './BuildStage.svelte';
 	import HeroRulers from './HeroRulers.svelte';
+	import HomeIntro from './HomeIntro.svelte';
 	import PageScale from './PageScale.svelte';
 	import SiteNav from './SiteNav.svelte';
 
@@ -266,6 +267,7 @@
 <a class="skip-link" href="#plans">내 배치도로 바로가기</a>
 <SiteNav {tracker} />
 <PageScale {tracker} />
+<HomeIntro />
 
 <main>
 	<section class="hero" data-section="소개">
