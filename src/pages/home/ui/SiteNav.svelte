@@ -52,7 +52,7 @@
 		gap: 0.125rem;
 		padding: 0.25rem;
 		border: 1px solid var(--line);
-		border-radius: 999px;
+		border-radius: 0;
 		background: var(--paper);
 		pointer-events: auto;
 	}
@@ -70,7 +70,7 @@
 		padding: 0.5rem 0.875rem;
 		font-family: var(--font-display);
 		font-size: 1.375rem;
-		font-weight: 700;
+		font-weight: 500;
 		line-height: 1.2;
 		color: inherit;
 		text-decoration: none;
@@ -81,7 +81,7 @@
 		align-items: center;
 		height: 2.75rem;
 		padding: 0 0.8rem;
-		border-radius: 999px;
+		border-radius: 0;
 		font-size: 0.875rem;
 		font-weight: 500;
 		white-space: nowrap;
@@ -90,8 +90,10 @@
 		transition: background-color 0.3s var(--ease);
 	}
 
+	/* HUD 메뉴: 올리면 흑백이 뒤집힙니다. */
 	.item:hover {
-		background: var(--paper-2);
+		color: var(--paper);
+		background: var(--ink);
 	}
 
 	.readout {

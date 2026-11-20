@@ -519,7 +519,7 @@
 		min-height: 2.75rem;
 		padding: 0.25rem 1rem 0.25rem 0.75rem;
 		border: 1px solid var(--line);
-		border-radius: 999px;
+		border-radius: 0;
 		font-size: 0.9375rem;
 		color: var(--ink-2);
 		background: var(--paper);
@@ -641,7 +641,7 @@
 
 	.title-text {
 		font-size: 1.125rem;
-		font-weight: 600;
+		font-weight: 500;
 	}
 
 	.card a:hover .title-text {

@@ -107,7 +107,7 @@
 
 	.summary {
 		font-size: 0.875rem;
-		font-weight: 600;
+		font-weight: 500;
 	}
 
 	.empty {
@@ -159,7 +159,7 @@
 	}
 
 	strong {
-		font-weight: 600;
+		font-weight: 500;
 	}
 
 	.tag {

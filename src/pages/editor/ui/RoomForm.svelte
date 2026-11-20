@@ -219,7 +219,7 @@
 	legend {
 		padding: 0 0.25rem;
 		font-size: 0.8125rem;
-		font-weight: 600;
+		font-weight: 500;
 	}
 
 	.grid {

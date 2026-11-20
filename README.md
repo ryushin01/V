@@ -59,7 +59,7 @@
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | 프레임워크 | Svelte 5 (runes mode), SvelteKit 3, adapter-static, TypeScript                                                                      |
 | 상태       | class 기반 `$state`·`$derived`, `$state.raw`, `$state.snapshot`(되돌리기), `svelte/motion`, `{@attach}`                             |
-| 그리기     | SVG 2D, Scoped CSS와 CSS 변수, 웹 폰트(Barlow Condensed, 해바라기, IBM Plex Mono)                                                   |
+| 그리기     | SVG 2D, Scoped CSS와 CSS 변수, 웹 폰트(Bodoni Moda, 본명조, IBM Plex Sans KR, IBM Plex Mono, 나눔고딕코딩)                          |
 | 저장       | IndexedDB, JSON 파일                                                                                                                |
 | 품질       | Feature-Sliced Design(Steiger), ESLint, Prettier, svelte-check, Vitest, Testing Library, Playwright, axe, size-limit, Lighthouse CI |
 | 보안       | CSP(해시 방식), 보안 응답 헤더                                                                                                      |
@@ -116,13 +116,15 @@ src/
 
 ## 웹 폰트
 
-| 글꼴             | 쓰는 곳               | 굵기            | 저작자                | 라이선스    | 원본                                                                                                                                  |
-| ---------------- | --------------------- | --------------- | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Barlow Condensed | 영문·숫자 (제목·본문) | 400·500·600·700 | Jeremy Tribby         | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Barlow+Condensed) · [jpt/barlow](https://github.com/jpt/barlow)                      |
-| 해바라기         | 한글 (제목·본문)      | 500·700         | 직지소프트(JIKJISOFT) | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Sunflower) · [google/fonts](https://github.com/google/fonts/tree/main/ofl/sunflower) |
-| IBM Plex Mono    | 치수 (영문·숫자)      | 400             | IBM Corp.             | SIL OFL 1.1 | [IBM/plex](https://github.com/IBM/plex)                                                                                               |
+| 글꼴                  | 쓰는 곳               | 굵기                       | 저작자                         | 라이선스    | 원본                                                                                                                                                    |
+| --------------------- | --------------------- | -------------------------- | ------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bodoni Moda           | 영문 큰 제목          | 400~900 가변(광학 크기 축) | Owen Earl(indestructible type) | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Bodoni+Moda) · [indestructible-type/Bodoni](https://github.com/indestructible-type/Bodoni)             |
+| 본명조(Noto Serif KR) | 한글 큰 제목          | 500                        | Adobe, Google                  | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/noto/specimen/Noto+Serif+KR) · [notofonts/noto-cjk](https://github.com/notofonts/noto-cjk)                      |
+| IBM Plex Sans KR      | 본문 (한글·영문)      | 400·500                    | IBM Corp.                      | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/IBM+Plex+Sans+KR) · [IBM/plex](https://github.com/IBM/plex)                                            |
+| IBM Plex Mono         | 라벨·치수 (영문·숫자) | 400·500                    | IBM Corp.                      | SIL OFL 1.1 | [IBM/plex](https://github.com/IBM/plex)                                                                                                                 |
+| 나눔고딕코딩          | 라벨·치수 (한글)      | 400                        | NAVER Corp.                    | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Nanum+Gothic+Coding) · [google/fonts](https://github.com/google/fonts/tree/main/ofl/nanumgothiccoding) |
 
-모두 같은 사이트에서 제공합니다(외부 글꼴 CDN 없음). 해바라기는 화면에 쓰는 글자만 담은 작은 파일을 먼저 받고, 나머지 글자는 글자 묶음별 조각(`static/fonts/`)으로 나눠 그 글자를 쓸 때만 받습니다([개발 가이드](docs/development.md#글꼴)). 라이선스 전문은 `scripts/fonts/sunflower/OFL.txt`에 있습니다.
+My First Gear 쇼핑몰의 HUD 개편과 같은 조합입니다. 모두 같은 사이트에서 제공합니다(외부 글꼴 CDN 없음). 영문 글꼴은 Fontsource 패키지(`@fontsource-variable/bodoni-moda`, `@fontsource/ibm-plex-mono`)로 넣고, 한글 글꼴은 화면에 쓰는 글자만 담은 작은 파일을 먼저 받고 나머지 글자는 글자 묶음별 조각(`static/fonts/`)으로 나눠 그 글자를 쓸 때만 받습니다([개발 가이드](docs/development.md#글꼴)). 한글 글꼴의 라이선스 전문은 `scripts/fonts/<글꼴>/OFL.txt`에 있습니다.
 
 ## 출처
 

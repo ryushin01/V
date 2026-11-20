@@ -90,8 +90,8 @@
 		/* 처음 크기와 다 열린 크기: 두 변이 카드 아래 모서리 바깥으로 지나갈 만큼(a ≥ 폭/2 + 높이/√3) */
 		--a0: clamp(90px, 17vmin, 180px);
 		--a1: calc(50vw + 58vh + 4rem);
-		/* 삼각형은 테마와 관계없이 흰색, 로고는 검정입니다. */
-		--white: var(--paper);
+		/* 삼각형은 테마와 관계없이 흰색, 로고는 검정입니다(HUD 개편의 종이색은 흰색이 아니라서 따로 고정). */
+		--white: #ffffff;
 		--card: var(--ink);
 		--open-at: 1150ms;
 		display: none;
@@ -112,13 +112,11 @@
 
 	@media (prefers-color-scheme: dark) {
 		:global(:root:not([data-theme='light'])) .intro {
-			--white: var(--ink);
 			--card: color-mix(in oklab, var(--ink) 8%, var(--paper));
 		}
 	}
 
 	:global(:root[data-theme='dark']) .intro {
-		--white: var(--ink);
 		--card: color-mix(in oklab, var(--ink) 8%, var(--paper));
 	}
 

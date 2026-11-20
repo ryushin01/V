@@ -51,7 +51,7 @@
 		min-height: 3.25rem;
 		padding: 0 1.5rem;
 		border: 1px solid transparent;
-		border-radius: 999px;
+		border-radius: 0;
 		font: inherit;
 		font-size: 0.9375rem;
 		font-weight: 500;
@@ -76,7 +76,7 @@
 		place-items: center;
 		width: 2.25rem;
 		height: 2.25rem;
-		border-radius: 50%;
+		border-radius: 0;
 		color: #fff;
 		background: #d92c2c;
 		transition: transform 0.25s var(--ease);

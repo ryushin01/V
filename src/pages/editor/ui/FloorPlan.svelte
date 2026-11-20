@@ -769,7 +769,7 @@
 		max-width: calc(100% - 1.5rem);
 		padding: 0.25rem;
 		border: 1px solid var(--line);
-		border-radius: 1.5rem;
+		border-radius: 0;
 		background: var(--paper);
 	}
 
