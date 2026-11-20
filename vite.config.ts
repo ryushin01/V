@@ -7,12 +7,13 @@ import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
 /**
- * app.html의 인라인 테마 스크립트 해시입니다. 스크립트를 고쳐도 빌드할 때 다시 계산해 CSP가 맞습니다.
+ * app.html의 인라인 스크립트(테마, 홈 인트로 재생 판단) 해시입니다. 스크립트를 고쳐도 빌드할 때 다시 계산해
+ * CSP가 맞습니다. 첫 <script>만 읽으므로 인라인 스크립트는 한 블록으로 둡니다.
  * SvelteKit이 만드는 인라인 스크립트(시작 코드, 서비스 워커 등록)의 해시는 SvelteKit이 직접 더합니다.
  */
-function themeScriptHash(): `sha256-${string}` {
+function inlineScriptHash(): `sha256-${string}` {
 	const script = readFileSync('src/app.html', 'utf8').match(/<script>([\s\S]*?)<\/script>/)?.[1];
-	if (!script) throw new Error('src/app.html에서 테마 스크립트를 찾지 못했습니다.');
+	if (!script) throw new Error('src/app.html에서 인라인 스크립트를 찾지 못했습니다.');
 	return `sha256-${createHash('sha256').update(script).digest('base64')}`;
 }
 
@@ -43,7 +44,7 @@ export default defineConfig(({ mode }) => {
 					mode: 'hash',
 					directives: {
 						'default-src': ['self'],
-						'script-src': ['self', themeScriptHash()],
+						'script-src': ['self', inlineScriptHash()],
 						// Svelte가 그리는 style 속성(style:--i 등)이 있어 인라인 스타일은 허용합니다.
 						'style-src': ['self', 'unsafe-inline'],
 						// 평면도 이미지는 data: 주소로 저장하고, 그림 저장은 blob:을 씁니다.

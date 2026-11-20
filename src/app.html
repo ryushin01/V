@@ -18,6 +18,21 @@
 			} catch (error) {
 				// 저장소를 막은 브라우저는 운영체제 테마를 따릅니다.
 			}
+			try {
+				// 홈 인트로: 탭에서 처음 홈(/)에 들어올 때 한 번만 재생합니다. 주소에 #이 있거나 동작 줄이기를 켰으면 건너뜁니다.
+				// 첫 페인트 전에 정해야 홈이 잠깐 비쳤다가 가려지지 않습니다(pages/home/ui/HomeIntro.svelte).
+				if (
+					location.pathname === '/' &&
+					!location.hash &&
+					!sessionStorage.getItem('v-intro') &&
+					!matchMedia('(prefers-reduced-motion: reduce)').matches
+				) {
+					sessionStorage.setItem('v-intro', 'seen');
+					document.documentElement.dataset.intro = 'play';
+				}
+			} catch (error) {
+				// 저장소를 막은 브라우저는 인트로 없이 시작합니다.
+			}
 		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
