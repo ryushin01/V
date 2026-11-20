@@ -6,11 +6,25 @@
 	"extra": "년월일시분초오전후요화수목금토만억조",
 	"fonts": [
 		{
-			"family": "Sunflower",
-			"slug": "sunflower",
+			"family": "Noto Serif KR",
+			"slug": "noto-serif-kr",
 			"weights": {
-				"500": "scripts/fonts/sunflower/Sunflower-Medium.woff2",
-				"700": "scripts/fonts/sunflower/Sunflower-Bold.woff2"
+				"500": "scripts/fonts/noto-serif-kr/NotoSerifKR-Medium.woff2"
+			}
+		},
+		{
+			"family": "IBM Plex Sans KR",
+			"slug": "ibm-plex-sans-kr",
+			"weights": {
+				"400": "scripts/fonts/ibm-plex-sans-kr/IBMPlexSansKR-Regular.woff2",
+				"500": "scripts/fonts/ibm-plex-sans-kr/IBMPlexSansKR-Medium.woff2"
+			}
+		},
+		{
+			"family": "Nanum Gothic Coding",
+			"slug": "nanum-gothic-coding",
+			"weights": {
+				"400": "scripts/fonts/nanum-gothic-coding/NanumGothicCoding-Regular.woff2"
 			}
 		}
 	]
