@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { createEmptyPlan, createSamplePlan } from '#entities/plan';
+import { createEmptyPlan, createSamplePlan, getCatalogEntry } from '#entities/plan';
 import { EditorSession } from '../model/session.svelte';
 import CatalogPanel from './CatalogPanel.svelte';
 import EditorToolbar from './EditorToolbar.svelte';
@@ -33,12 +33,26 @@ describe('CatalogPanel 검색', () => {
 	it('검색어로 거르고 개수를 알립니다', async () => {
 		const session = empty();
 		render(CatalogPanel, { session });
-		await userEvent.type(screen.getByLabelText('모델명이나 제조사로 찾기'), 'G9');
+		await userEvent.type(screen.getByLabelText('모델명이나 제조사로 찾기'), 'G95SC');
 		const button = screen.getByRole('button', { name: /Odyssey OLED G9/ });
 		expect(screen.getAllByRole('button', { name: /배치도에 추가/ })).toHaveLength(1);
 		expect(screen.getByText('1개')).toBeInTheDocument();
 		await userEvent.click(button);
 		expect(session.items[0].entry.diagonalInch).toBe(49);
+		// 쇼핑몰에서도 파는 모델은 쇼핑몰 판매가를 가격 기본값으로 씁니다.
+		expect(session.items[0].price).toBe(getCatalogEntry('samsung-odyssey-oled-g9').shop?.price);
+	});
+
+	it('쇼핑몰에서 가져온 제품도 찾아 놓을 수 있습니다', async () => {
+		const session = empty();
+		render(CatalogPanel, { session });
+		await userEvent.type(screen.getByLabelText('모델명이나 제조사로 찾기'), 'FANTOM-08');
+		await userEvent.click(screen.getByRole('button', { name: /FANTOM-08/ }));
+		expect(session.items[0].entry).toMatchObject({
+			width: 139.3,
+			shop: { slug: 'roland-fantom-08' }
+		});
+		expect(session.items[0].price).toBeGreaterThan(0);
 	});
 
 	it('결과가 없으면 대안을 안내합니다', async () => {

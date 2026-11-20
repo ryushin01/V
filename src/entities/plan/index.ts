@@ -27,6 +27,7 @@ export {
 export { analyzePlan, CHAIR_CLEARANCE_CM, viewingRange } from './model/analysis';
 export {
 	CATALOG,
+	SHOP_ENTRIES,
 	CATEGORY_LABELS,
 	getCatalogEntry,
 	LAYER_ORDER,
@@ -87,3 +88,4 @@ export { default as PlanPreview } from './ui/PlanPreview.svelte';
 export { renderPlanImage } from './lib/plan-image';
 export { default as RoomOutline } from './ui/RoomOutline.svelte';
 export { default as XrayOverlay } from './ui/XrayOverlay.svelte';
+export { SHOP_URL, shopProductUrl, type PlannerFeed, type ShopFeed } from './model/sync/feeds';

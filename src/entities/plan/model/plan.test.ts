@@ -332,7 +332,8 @@ describe('실제 모델 카탈로그', () => {
 	});
 
 	it('실제 모델은 제조사와 전력 기준을 가집니다', () => {
-		const models = CATALOG.filter((entry) => entry.brand);
+		// 쇼핑몰에서 가져온 제품은 일러스트 없이 종류별 그림을 쓰므로 아래에서 따로 봅니다.
+		const models = CATALOG.filter((entry) => entry.brand && !entry.shop?.imported);
 		expect(models.length).toBeGreaterThan(20);
 		for (const entry of models) {
 			expect(entry.width).toBeGreaterThan(0);
@@ -340,6 +341,21 @@ describe('실제 모델 카탈로그', () => {
 			if (entry.watts > 0) expect(entry.wattsBasis).toBeDefined();
 			expect(entry.glyph, entry.id).toBeDefined();
 		}
+	});
+
+	it('쇼핑몰에서 가져온 제품은 크기와 판매가가 있고, 크기를 모르면 추정이라고 표시합니다', () => {
+		const imported = CATALOG.filter((entry) => entry.shop?.imported);
+		expect(imported.length).toBeGreaterThan(0);
+		for (const entry of imported) {
+			expect(entry.brand, entry.id).toBeTruthy();
+			expect(entry.width).toBeGreaterThan(0);
+			expect(entry.depth).toBeGreaterThan(0);
+			expect(entry.shop?.price).toBeGreaterThan(0);
+			if (entry.watts > 0) expect(entry.wattsBasis, entry.id).toBeDefined();
+		}
+		expect(getCatalogEntry('lg-ultragear-oled-45gx950a').dimsBasis).toBe('estimate');
+		expect(getCatalogEntry('roland-fantom-08')).toMatchObject({ width: 139.3, depth: 35.4 });
+		expect(getCatalogEntry('roland-fantom-08').dimsBasis).toBeUndefined();
 	});
 
 	it('49인치 G9는 실제 크기와 화면 크기로 시청 거리를 계산합니다', () => {
