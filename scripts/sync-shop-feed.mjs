@@ -135,6 +135,45 @@ export function parseFeed(raw) {
 	return { version: 1, source: 'my-first-gear', items };
 }
 
+/**
+ * 쇼핑몰에서 빠진 상품도 판매 종료로 남깁니다. 이미 놓은 배치도에서 물건이 사라지지 않게 합니다.
+ * 다시 피드에 나오면 판매 중으로 돌아갑니다.
+ * @param {ShopFeedItem[]} previous 이전 스냅샷의 상품
+ * @param {ShopFeedItem[]} current 이번 피드의 상품(놓을 수 있는 것만)
+ * @returns {ShopFeedItem[]}
+ */
+export function keepDiscontinued(previous, current) {
+	const ids = new Set(current.map((entry) => entry.id));
+	const gone = previous
+		.filter((entry) => !ids.has(entry.id))
+		.map((entry) => ({ ...entry, discontinued: true }));
+	return [...current, ...gone];
+}
+
+/**
+ * 저장해 둔 스냅샷 파일의 상품을 읽습니다. 파일이 없거나 읽을 수 없으면 빈 목록입니다.
+ * @param {string} text 스냅샷 파일 내용
+ * @returns {ShopFeedItem[]}
+ */
+export function snapshotItems(text) {
+	const start = text.indexOf('= {');
+	if (start === -1) return [];
+	try {
+		const raw = JSON.parse(text.slice(start + 2, text.lastIndexOf('}') + 1));
+		if (!Array.isArray(raw.items)) return [];
+		// 직접 쓴 파일이지만 다시 검사해, 손상된 항목은 남기지 않습니다.
+		return raw.items.flatMap((/** @type {unknown} */ entry, /** @type {number} */ index) => {
+			try {
+				return [item(entry, index)];
+			} catch {
+				return [];
+			}
+		});
+	} catch {
+		return [];
+	}
+}
+
 /** @returns {Promise<unknown>} */
 async function load() {
 	const from = process.argv.indexOf('--from');
@@ -158,9 +197,10 @@ if (import.meta.url.startsWith('file:') && process.argv[1] === fileURLToPath(imp
 	);
 	try {
 		const parsed = parseFeed(await load());
-		const feed = { ...parsed, items: parsed.items.filter((item) => PLACEABLE.has(item.category)) };
-		const next = `${HEADER}${JSON.stringify(feed, null, '\t')};\n`;
 		const prev = await readFile(OUT, 'utf8').catch(() => '');
+		const current = parsed.items.filter((entry) => PLACEABLE.has(entry.category));
+		const feed = { ...parsed, items: keepDiscontinued(snapshotItems(prev), current) };
+		const next = `${HEADER}${JSON.stringify(feed, null, '\t')};\n`;
 		if (prev === next) {
 			console.log(
 				`쇼핑몰 피드 그대로: 상품 ${feed.items.length}개 (전체 ${parsed.items.length}개)`

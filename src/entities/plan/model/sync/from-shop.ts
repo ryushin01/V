@@ -354,6 +354,8 @@ function shape(item: ShopFeedItem): ShopBase | undefined {
 function shopByModelId(feed: ShopFeed): Map<string, ShopFeedItem> {
 	const map = new Map<string, ShopFeedItem>();
 	for (const item of feed.items) {
+		// 판매를 마친 상품은 판매가·링크를 달지 않습니다.
+		if (item.discontinued) continue;
 		map.set(item.id, item);
 		for (const alias of item.aliases ?? []) map.set(alias, item);
 	}
@@ -395,7 +397,12 @@ export function shopEntries(feed: ShopFeed, models: readonly CatalogEntry[]): Ca
 			...(item.diagonalInch ? { diagonalInch: item.diagonalInch } : {}),
 			...(measured ? {} : { dimsBasis: 'estimate' as const }),
 			keywords: ['쇼핑몰', 'My-First-Gear'],
-			shop: { slug: item.id, price: item.price, imported: true }
+			shop: {
+				slug: item.id,
+				price: item.price,
+				imported: true,
+				...(item.discontinued ? { discontinued: true } : {})
+			}
 		});
 		known.add(item.id);
 	}

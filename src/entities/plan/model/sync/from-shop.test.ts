@@ -118,3 +118,44 @@ describe('쇼핑몰 피드 스냅샷', () => {
 		expect(SHOP_FEED.items.every((item) => item.category in BASES)).toBe(true);
 	});
 });
+
+describe('쇼핑몰에서 판매를 마친 제품', () => {
+	const ended: ShopFeedItem = {
+		id: 'acme-ended',
+		name: 'ACME 판매 종료 모니터',
+		brand: 'ACME',
+		category: 'monitor',
+		price: 1,
+		discontinued: true
+	};
+
+	it('카탈로그 항목은 남기고(이미 놓은 배치도), 판매 종료로 표시합니다', () => {
+		const [entry] = shopEntries(feed([ended]), MODEL_ENTRIES);
+		expect(entry.shop).toEqual({
+			slug: 'acme-ended',
+			price: 1,
+			imported: true,
+			discontinued: true
+		});
+	});
+
+	it('V 모델에는 판매가·링크를 달지 않습니다', () => {
+		const linked = withShop(MODEL_ENTRIES, feed([{ ...ended, id: 'samsung-odyssey-oled-g9' }]));
+		expect(linked.find((entry) => entry.id === 'samsung-odyssey-oled-g9')?.shop).toBeUndefined();
+	});
+
+	it('동기화는 피드에서 빠진 상품을 판매 종료로 남기고, 다시 나오면 판매 중으로 돌립니다', async () => {
+		const { keepDiscontinued, snapshotItems } =
+			await import('../../../../../scripts/sync-shop-feed.mjs');
+		const kept = keepDiscontinued(
+			[{ ...ended, discontinued: undefined }],
+			[{ id: 'acme-new', name: 'ACME 새 모니터', brand: 'ACME', category: 'monitor', price: 2 }]
+		);
+		expect(kept.map((entry: ShopFeedItem) => [entry.id, entry.discontinued])).toEqual([
+			['acme-new', undefined],
+			['acme-ended', true]
+		]);
+		expect(keepDiscontinued([ended], [{ ...ended, discontinued: undefined }])).toHaveLength(1);
+		expect(snapshotItems('export const SHOP_FEED: ShopFeed = {"items":[{"id":"x"}]};')).toEqual([]);
+	});
+});
