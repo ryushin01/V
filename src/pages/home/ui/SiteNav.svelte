@@ -15,7 +15,7 @@
 </script>
 
 <header class="nav">
-	<div class="pill">
+	<div class="pill brand">
 		<a class="mark" href={resolve('/')} aria-label="V 처음으로"><BrandMark /></a>
 	</div>
 	<div class="readout" aria-hidden="true">
@@ -55,6 +55,11 @@
 		border-radius: 999px;
 		background: var(--paper);
 		pointer-events: auto;
+	}
+
+	/* 로고는 회색 테두리 없이 둡니다(인트로의 로고와 이어지게). 두께는 남겨 자리가 그대로이고, 바탕은 남겨 스크롤한 내용 위에서도 잘 보입니다. */
+	.brand {
+		border-color: transparent;
 	}
 
 	.mark {
