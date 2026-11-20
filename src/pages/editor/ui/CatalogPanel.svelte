@@ -3,7 +3,7 @@
 	import { downloadText, readTextFile } from '#shared/lib/file';
 	import { Button, Icon, LiveMessage } from '#shared/ui';
 	import {
-		CATALOG,
+		LISTED_CATALOG,
 		CATEGORY_LABELS,
 		CustomProductLimitError,
 		matchesCatalogQuery,
@@ -143,7 +143,8 @@
 	const recent = $derived(
 		recentIds
 			.map(
-				(id) => CATALOG.find((entry) => entry.id === id) ?? mine.find((entry) => entry.id === id)
+				(id) =>
+					LISTED_CATALOG.find((entry) => entry.id === id) ?? mine.find((entry) => entry.id === id)
 			)
 			.filter((entry): entry is CatalogEntry => entry !== undefined)
 	);
@@ -155,7 +156,7 @@
 			.map((category) => ({
 				category,
 				label: CATEGORY_LABELS[category],
-				entries: CATALOG.filter(
+				entries: LISTED_CATALOG.filter(
 					(entry) => entry.category === category && matchesCatalogQuery(entry, query)
 				)
 			}))

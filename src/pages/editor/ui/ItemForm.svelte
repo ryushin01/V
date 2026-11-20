@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { Button, Icon, NumberField } from '#shared/ui';
-	import { getCatalogEntry, SPEC_LIMITS, WATTS_BASIS_LABELS, type SpecKey } from '#entities/plan';
+	import {
+		getCatalogEntry,
+		shopProductUrl,
+		SPEC_LIMITS,
+		WATTS_BASIS_LABELS,
+		type SpecKey
+	} from '#entities/plan';
 	import type { PlacedItem } from '../model/placed-item.svelte';
 	import type { EditorSession } from '../model/session.svelte';
 
@@ -35,6 +41,18 @@
 <section class="panel" aria-labelledby="item-heading">
 	<h2 id="item-heading">선택한 물건</h2>
 	{#if base.brand}<p class="brand measure">{base.brand} · {base.name}</p>{/if}
+	{#if base.shop?.discontinued}
+		<p class="shop">쇼핑몰 판매를 마친 제품입니다.</p>
+	{:else if base.shop}
+		<p class="shop">
+			쇼핑몰 판매가 {base.shop.price.toLocaleString('ko-KR')}원 ·
+			<!-- 다른 사이트(쇼핑몰) 주소라 앱 경로를 만드는 resolve()를 쓰지 않습니다. -->
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+			<a href={shopProductUrl(base.shop.slug)} target="_blank" rel="noopener noreferrer"
+				>My-First-Gear에서 보기<span class="sr-only"> (새 창)</span></a
+			>
+		</p>
+	{/if}
 
 	<div class="field">
 		<label for="item-name">이름</label>
@@ -167,6 +185,19 @@
 
 	.brand {
 		color: var(--ink-2);
+	}
+
+	.shop {
+		margin: 0;
+		font-size: 0.8125rem;
+		color: var(--ink-2);
+	}
+
+	.shop a {
+		display: inline-block;
+		min-height: 1.5rem;
+		line-height: 1.5rem;
+		color: var(--ink);
 	}
 
 	fieldset {

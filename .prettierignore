@@ -9,3 +9,4 @@ docs/images
 .lighthouseci
 src/app/styles/fonts/
 static/fonts/
+src/entities/plan/model/sync/shop-feed.ts

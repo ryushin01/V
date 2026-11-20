@@ -175,7 +175,7 @@ Vercel 프로젝트 `v-setup-planner`에 정적 결과물(`build/`)을 배포합
 
 ## 품질 예산
 
-- **번들 크기:** `pnpm size`가 전체 JS 120 kB, CSS 42 kB(gzip)를 넘으면 실패합니다. 기준은 `.size-limit.json`에 있습니다. 모든 조각의 합계라 지연 로딩으로는 줄지 않습니다. 0.12.0에서 오프라인·탭 동기화·백업·그림 저장·거리 재기로 115 kB를 넘어 120 kB로 올렸습니다(화면별 첫 로딩은 첫 화면 약 88 kB, 편집 약 87 kB로 Lighthouse 100점 그대로).
+- **번들 크기:** `pnpm size`가 전체 JS 125 kB, CSS 42 kB(gzip)를 넘으면 실패합니다. 기준은 `.size-limit.json`에 있습니다. 모든 조각의 합계라 지연 로딩으로는 줄지 않습니다. 0.12.0에서 오프라인·탭 동기화·백업·그림 저장·거리 재기로 115 kB를 넘어 120 kB로 올렸습니다(화면별 첫 로딩은 첫 화면 약 88 kB, 편집 약 87 kB로 Lighthouse 100점 그대로). 1.2.0에서 쇼핑몰 제품 스냅샷(놓을 수 있는 카테고리 85개만)과 가져오기 코드로 117 → 122 kB가 되어 125 kB로 올렸습니다.
 - **Lighthouse:** `pnpm lhci`가 첫 화면과 공유 화면이 데스크톱 기준 성능 90·접근성 100·권장 사항 95·SEO 90점(공유 화면은 noindex라 SEO 제외), LCP 2.5초·TBT 200ms·CLS 0.1 이하인지 3번씩 재서 확인합니다. 기준은 `lighthouserc.json`에 있습니다.
 
 Svelte 컴파일러의 접근성 경고는 `eslint-plugin-svelte`의 `svelte/valid-compile`과 `svelte-check`가 이미 검사합니다.

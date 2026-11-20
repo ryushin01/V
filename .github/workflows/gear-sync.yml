@@ -1,0 +1,57 @@
+name: 쇼핑몰 제품 동기화
+
+# My-First-Gear 쇼핑몰의 상품 목록(/feed/gear.json)을 매일 받아, V에 없는 제품을 카탈로그에 들입니다.
+# 바뀐 게 있으면 글꼴(새 한글)을 다시 만들고 검사·시험 뒤 main에 바로 올립니다(운영 배포는 Vercel이 main을 받아 합니다).
+on:
+  schedule:
+    - cron: '50 18 * * *' # 매일 03:50 (KST)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gear-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # 다른 브랜치에서 수동으로 돌려도 그 브랜치 커밋이 main에 섞이지 않게 늘 main을 받습니다.
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: 쇼핑몰 피드 받기
+        run: node scripts/sync-shop-feed.mjs
+      - name: 바뀐 게 있는지 보기
+        id: diff
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "쇼핑몰 상품 목록이 그대로입니다."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat
+          fi
+      - if: steps.diff.outputs.changed == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: 글꼴·검사·시험
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          pnpm fonts
+          pnpm check
+          pnpm test
+      - name: main에 반영
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A src static
+          git commit -m "chore: 쇼핑몰 제품 동기화"
+          git push origin HEAD:main

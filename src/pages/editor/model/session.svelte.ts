@@ -256,7 +256,9 @@ export class EditorSession {
 		const entry = getCatalogEntry(catalogId);
 		const before = this.#problemCount();
 		const spot = findFreeSpot(this.room, this.items, entry);
-		const item = new PlacedItem({ id: createId(), catalogId, label: '', price: 0, ...spot });
+		// 쇼핑몰에서 파는 제품은 쇼핑몰 판매가를 가격 기본값으로 씁니다.
+		const price = entry.shop?.price ?? 0;
+		const item = new PlacedItem({ id: createId(), catalogId, label: '', price, ...spot });
 		this.#transact(() => {
 			this.items.push(item);
 		});
