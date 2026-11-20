@@ -32,7 +32,7 @@ export const SHOP_FEED: ShopFeed = {
 			"brand": "Phoenix",
 			"category": "keyboard",
 			"price": 239000,
-			"layout": "텐키리스 (87키)"
+			"layout": "텐키리스 F13 (88키)"
 		},
 		{
 			"id": "samsung-odyssey-oled-g9",
@@ -554,7 +554,8 @@ export const SHOP_FEED: ShopFeed = {
 			"brand": "LG전자",
 			"category": "monitor",
 			"price": 2590000,
-			"diagonalInch": 45,
+			"widthCm": 99.2,
+			"diagonalInch": 44.5,
 			"aspect": "21:9"
 		},
 		{
@@ -563,6 +564,7 @@ export const SHOP_FEED: ShopFeed = {
 			"brand": "LG전자",
 			"category": "monitor",
 			"price": 1990000,
+			"widthCm": 88.8,
 			"diagonalInch": 39,
 			"aspect": "21:9"
 		},
@@ -572,6 +574,7 @@ export const SHOP_FEED: ShopFeed = {
 			"brand": "LG전자",
 			"category": "monitor",
 			"price": 1590000,
+			"widthCm": 71.4,
 			"diagonalInch": 31.5,
 			"aspect": "16:9"
 		},
@@ -581,6 +584,7 @@ export const SHOP_FEED: ShopFeed = {
 			"brand": "Samsung",
 			"category": "monitor",
 			"price": 2990000,
+			"widthCm": 132.8,
 			"diagonalInch": 57,
 			"aspect": "32:9"
 		},
@@ -590,6 +594,7 @@ export const SHOP_FEED: ShopFeed = {
 			"brand": "Samsung",
 			"category": "monitor",
 			"price": 2790000,
+			"widthCm": 117.5,
 			"diagonalInch": 55,
 			"aspect": "16:9"
 		},
@@ -599,6 +604,7 @@ export const SHOP_FEED: ShopFeed = {
 			"brand": "Samsung",
 			"category": "monitor",
 			"price": 2190000,
+			"widthCm": 61.4,
 			"diagonalInch": 27,
 			"aspect": "16:9"
 		},
