@@ -43,6 +43,7 @@ describe('HomeIntro', () => {
 		await renderPlaying();
 		const intro = screen.getByTestId('home-intro');
 		expect(intro).toHaveAttribute('aria-hidden', 'true');
+		expect(intro).toHaveAttribute('data-ready', '');
 
 		await fireEvent.keyDown(window, { key: 'Tab' });
 		expect(intro).toHaveClass('is-leaving');

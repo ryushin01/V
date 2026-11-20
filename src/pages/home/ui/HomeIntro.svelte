@@ -7,6 +7,7 @@
 	 * 탭에서 처음 홈(/)에 들어올 때 한 번(sessionStorage `v-intro`)이고, 주소에 #이 있거나 동작 줄이기를 켰으면
 	 * 재생하지 않습니다. 미리 그린 HTML에 덮개가 들어 있어 홈이 잠깐 비쳤다가 가려지는 일이 없습니다.
 	 * 덮개는 장식이라 `aria-hidden`이고 초점을 받지 않으며, 아무 키나 누르거나 화면을 누르면 바로 걷힙니다.
+	 * 건너뛰기 처리기를 붙이면 `data-ready`를 달아, E2E가 수화가 끝났는지 알 수 있게 합니다.
 	 */
 	import { onMount } from 'svelte';
 
@@ -17,6 +18,7 @@
 
 	let playing = $state(true);
 	let leaving = $state(false);
+	let ready = $state(false);
 	let root = $state<HTMLDivElement>();
 
 	onMount(() => {
@@ -42,6 +44,7 @@
 
 		window.addEventListener('keydown', skip);
 		window.addEventListener('click', skip);
+		ready = true;
 		// 수화(hydration) 전에 이미 끝났다면 finished가 바로 풀려 곧장 정리됩니다.
 		const animations = root.getAnimations?.({ subtree: true }) ?? [];
 		Promise.all(animations.map((animation) => animation.finished)).then(finish, finish);
@@ -65,6 +68,7 @@
 		class:is-leaving={leaving}
 		aria-hidden="true"
 		data-testid="home-intro"
+		data-ready={ready ? '' : undefined}
 	>
 		<div class="intro__tri"></div>
 		<div class="intro__card"></div>
