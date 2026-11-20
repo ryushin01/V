@@ -1,6 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+/** 홈 인트로는 e2e/intro.spec.ts에서 따로 확인합니다. 여기서는 이미 본 것으로 두고 본 화면만 확인합니다. */
+const skipIntro = () => sessionStorage.setItem('v-intro', 'seen');
+
+test.beforeEach(async ({ context }) => {
+	await context.addInitScript(skipIntro);
+});
+
 async function openSample(page: Page) {
 	await page.goto('/');
 	await page.getByRole('button', { name: '예시로 시작하기' }).click();
@@ -579,6 +586,7 @@ test.describe('내 제품 등록', () => {
 		await page.getByRole('button', { name: '공유' }).click();
 		const url = await page.getByLabel('주소').inputValue();
 		const fresh = await page.context().browser()!.newContext();
+		await fresh.addInitScript(skipIntro);
 		const other = await fresh.newPage();
 		await other.goto(url);
 		await expect(other.getByRole('img', { name: /물건 1개/ })).toBeVisible();
@@ -642,6 +650,7 @@ test.describe('내 제품 등록', () => {
 		const file = await (await downloading).path();
 
 		const fresh = await page.context().browser()!.newContext();
+		await fresh.addInitScript(skipIntro);
 		const other = await fresh.newPage();
 		await openEmpty(other);
 		await other.locator('input[type="file"][accept*="json"]').setInputFiles(file);
@@ -821,6 +830,7 @@ test.describe('백업과 복제', () => {
 		);
 
 		const fresh = await browser.newContext();
+		await fresh.addInitScript(skipIntro);
 		const other = await fresh.newPage();
 		await other.goto('/');
 		const choosing = other.waitForEvent('filechooser');
