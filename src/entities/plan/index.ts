@@ -27,6 +27,7 @@ export {
 export { analyzePlan, CHAIR_CLEARANCE_CM, viewingRange } from './model/analysis';
 export {
 	CATALOG,
+	LISTED_CATALOG,
 	SHOP_ENTRIES,
 	CATEGORY_LABELS,
 	getCatalogEntry,

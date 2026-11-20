@@ -272,6 +272,11 @@ export const CATALOG: readonly CatalogEntry[] = [
 	...SHOP_ENTRIES
 ];
 
+/** 물건 추가 목록에 보이는 항목입니다. 쇼핑몰에서 판매를 마친 제품은 이미 놓은 배치도에서만 씁니다. */
+export const LISTED_CATALOG: readonly CatalogEntry[] = CATALOG.filter(
+	(entry) => !entry.shop?.discontinued
+);
+
 /** 도면에 그리는 순서입니다. 바닥 물건 위에 배선, 벽, 패드, 책상 위 물건, 조명·암 순서로 겹칩니다. */
 export const LAYER_ORDER: Record<ItemLayer, number> = {
 	floor: 0,

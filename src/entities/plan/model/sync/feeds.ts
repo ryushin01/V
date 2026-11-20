@@ -30,6 +30,11 @@ export interface ShopFeedItem {
 	aspect?: string;
 	/** 키보드 배열 (예: '텐키리스 (87키)') */
 	layout?: string;
+	/**
+	 * 쇼핑몰에서 빠졌지만 V 스냅샷에 남겨 둔 상품입니다(쇼핑몰 피드에는 없는 값).
+	 * 이미 놓은 배치도가 그대로 열리도록 카탈로그에는 두고 목록과 쇼핑몰 링크에서만 뺍니다.
+	 */
+	discontinued?: boolean;
 }
 
 export interface ShopFeed {

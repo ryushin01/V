@@ -41,7 +41,9 @@
 <section class="panel" aria-labelledby="item-heading">
 	<h2 id="item-heading">선택한 물건</h2>
 	{#if base.brand}<p class="brand measure">{base.brand} · {base.name}</p>{/if}
-	{#if base.shop}
+	{#if base.shop?.discontinued}
+		<p class="shop">쇼핑몰 판매를 마친 제품입니다.</p>
+	{:else if base.shop}
 		<p class="shop">
 			쇼핑몰 판매가 {base.shop.price.toLocaleString('ko-KR')}원 ·
 			<!-- 다른 사이트(쇼핑몰) 주소라 앱 경로를 만드는 resolve()를 쓰지 않습니다. -->
