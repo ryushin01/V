@@ -45,20 +45,19 @@ pnpm dev   # http://localhost:5173
 | `pnpm lhci`                         | 성능 90·접근성 100·권장 95·SEO 90 등(`lighthouserc.json`)               |
 
 - CI(`.github/workflows/ci.yml`, PR·main 푸시) 순서: `format:check` → `lint` → `lint:fsd` → `check` → `test` → `build` → `build-storybook` → Chromium 설치 → `test:e2e` → `size` → `lhci`.
-- 커밋 훅(husky 등)은 없으므로 PR 전에 위 검사를 직접 돌립니다.
+- 오프라인 검사: `e2e/offline.spec.ts`는 서비스 워커 없이 처음 방문부터 localhost 밖 요청을 모두 막은 채 첫 화면·예시 배치도·공유 보기가 뜨고 axe 통과·바깥 요청 0건인지, `e2e/app.spec.ts`는 서비스 워커 저장 뒤 오프라인(`setOffline`)을 봅니다. 실행 중 바깥 API·CDN을 새로 부르지 않습니다(쇼핑몰 피드는 `gear-sync`만, 자세한 것은 `docs/development.md`).
+- 커밋 훅(husky 등)은 없으므로 PR 전에 위 검사를 직접 돌립니다. CI·배포·릴리스 상태는 명령 결과(`gh pr checks`, `gh run list`, 주소 200 확인)로 확인한 뒤에만 말합니다.
 - **테스트 원칙: Testing Library.** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 도구: 단위·컴포넌트는 Vitest + Testing Library(`@testing-library/svelte`·`user-event`), 화면 흐름은 Playwright E2E, 접근성은 axe(`@axe-core/playwright`, Storybook addon-a11y). 스토리는 addon-a11y로 보지만 CI는 Storybook을 빌드만 합니다.
 
 ## 5. 코드 스타일
 
-- Prettier: 탭 들여쓰기, 작은따옴표, 끝 쉼표 없음, 한 줄 100자, `prettier-plugin-svelte`. Markdown도 Prettier 검사 대상입니다(표 정렬 포함).
+- 서식: Prettier(`.prettierrc`, Biome 없음) — 탭 들여쓰기, 작은따옴표, 끝 쉼표 없음, 한 줄 100자, `prettier-plugin-svelte`. Markdown도 Prettier 검사 대상입니다(표 정렬 포함).
 - `localStorage`·IndexedDB 읽기·쓰기는 실패해도 화면이 멈추지 않게 감쌉니다. 파일·공유 링크에서 온 값은 `entities/plan/model/guards.ts`로 검사합니다.
 - 화면 글자를 바꾸면 `pnpm fonts`를 다시 돌립니다(빠지면 `fonts.test.ts` 실패, `.svelte`는 주석 글자도 셈). 한글 굵기는 500까지만 씁니다.
 - 외부 스크립트·이미지를 새로 쓰면 CSP 지시어(`vite.config.ts`의 `csp`)를 함께 고칩니다. `src/app.html`의 인라인 스크립트는 한 블록으로 둡니다.
 - 버그를 고치면 고치기 전에 실패하는 테스트를 함께 넣습니다.
-- 접근성(KWCAG 2.2, `docs/accessibility.md`): 네이티브 요소 우선, 텍스트 대비 4.5:1 이상, 배치·룰러 조작을 포함한 모든 기능 키보드, 초점 표시 유지(`outline: none` 단독 금지), 조작 크기 24px 이상, 입력 레이블과 오류의 `aria-invalid`·`aria-describedby` 연결, 바뀌는 안내는 `shared/ui`의 `LiveMessage`(`role="status"`), 화면마다 고유 제목(`PageMeta`). Svelte 접근성 경고는 `svelte/valid-compile`·`svelte-check`가 잡습니다.
-- **타입: TypeScript strict.** `tsconfig.json`(`$app/tsconfig` 확장)에서 `strict`를 켭니다. `any`·`as` 단언·`@ts-ignore`는 피하고, 외부 입력(배치도 파일, 공유 링크, 쇼핑몰 피드)은 `guards.ts` 등으로 검사합니다.
-- **서식:** Prettier(`.prettierrc`)를 그대로 따릅니다(Biome 없음).
-- **접근성 기준: WCAG 2.2·KWCAG 2.2.** 자동 검사는 Svelte 컴파일러 접근성 경고(eslint-plugin-svelte `svelte/valid-compile`, `svelte-check`)와 axe(Playwright E2E, Storybook addon-a11y), Lighthouse 접근성 100점입니다. React가 아니라 eslint-plugin-jsx-a11y는 쓰지 않습니다.
+- **타입: TypeScript strict**(`tsconfig.json`, `$app/tsconfig` 확장). `any`·`as` 단언·`@ts-ignore`는 피하고, 외부 입력(배치도 파일, 공유 링크, 쇼핑몰 피드)은 `guards.ts` 등으로 검사합니다.
+- **접근성: WCAG 2.2·KWCAG 2.2**(`docs/accessibility.md`). 네이티브 요소 우선, 텍스트 대비 4.5:1 이상, 배치·룰러 조작을 포함한 모든 기능 키보드, 초점 표시 유지(`outline: none` 단독 금지), 조작 크기 24px 이상, 입력 레이블과 오류의 `aria-invalid`·`aria-describedby` 연결, 바뀌는 안내는 `shared/ui`의 `LiveMessage`(`role="status"`), 화면마다 고유 제목(`PageMeta`). 자동 검사는 Svelte 컴파일러 접근성 경고(eslint-plugin-svelte `svelte/valid-compile`, `svelte-check`), axe(Playwright E2E, Storybook addon-a11y), Lighthouse 접근성 100점입니다(React가 아니라 eslint-plugin-jsx-a11y는 쓰지 않음).
 
 ## 6. Git·PR
 
@@ -68,10 +67,10 @@ pnpm dev   # http://localhost:5173
   - 표준과 다른 점: 버전은 커밋 제목 끝에 `, x.y.z`로 붙이거나(표준은 `(x.y.z)`), PR 제목 앞에 `1.3.0: …`·`feat: 1.1.0 — …`처럼 붙여 왔습니다. 새 PR은 표준 `(x.y.z)`를 써도 됩니다.
 - **기여자는 ryushin01만 남깁니다(2026-11-21 사용자 결정).** 커밋 작성자는 늘 `ryushin0 <141554987+ryushin01@users.noreply.github.com>`입니다. 이 저장소는 백엔드 코드가 없으므로 `Co-Authored-By` 줄을 넣지 않습니다(백엔드 저장소만 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`). PR 본문 끝에는 `🤖 Generated with [Claude Code](https://claude.com/claude-code)`를 적습니다.
   - GitHub Actions가 커밋하는 워크플로는 작성자를 ryushin01로 설정합니다(`github-actions[bot]` 금지): `gear-sync.yml`의 `git config user.name/user.email`.
-  - Dependabot PR은 그대로 병합하지 않고, 같은 변경을 ryushin01 커밋으로 다시 만들어 PR로 병합합니다.
-- **버전: Semantic Versioning.** 호환이 깨지면 주, 기능 추가는 부, 버그 수정·작은 개선은 수. `package.json`의 `version`, README 버전 배지(`version-x.y.z`), `CHANGELOG.md`를 한 번에 맞춥니다(지금 README 배지가 1.2.0으로 `package.json` 1.3.0보다 뒤처져 있음). 문서만 바뀐 PR은 보통 버전을 올리지 않습니다.
+  - Dependabot PR은 그대로 병합하지 않고, 같은 변경을 ryushin01 커밋으로 다시 만들어 PR로 병합합니다(주 버전은 변경 내역 확인).
+- **버전: Semantic Versioning.** 호환이 깨지면 주, 기능 추가는 부, 버그 수정·작은 개선은 수. `package.json`의 `version`, README 버전 배지(`version-x.y.z`), `CHANGELOG.md`를 한 번에 맞춥니다. 문서만 바뀐 PR은 보통 버전을 올리지 않습니다.
 - **변경 기록: Keep a Changelog.** `CHANGELOG.md`에 최신 버전을 위에 `## x.y.z - YYYY-MM-DD`로 적습니다. 표준과 다른 점: 추가·변경·수정·제거 소제목 대신 요약 한 문단과 목록으로 적고, `[Unreleased]` 절은 쓰지 않습니다.
-- 병합은 **merge commit**(`Merge pull request #번호 …`, 표준 squash가 아닌 이 저장소 관례). **CI가 통과하면 바로 병합**하고 CodeRabbit 리뷰는 기다리지 않습니다(이미 달린 맞는 지적은 반영). Dependabot PR(주 버전은 변경 내역 확인)은 아래 기여자 규칙대로 다시 만듭니다.
+- 병합은 **merge commit**(`Merge pull request #번호 …`, 표준 squash가 아닌 이 저장소 관례). **CI가 통과하면 바로 병합**하고 CodeRabbit 리뷰는 기다리지 않습니다(이미 달린 맞는 지적은 반영).
 - 공개 저장소라 Actions가 돕니다. Actions가 막히면 CI와 같은 검사를 로컬에서 돌려 대신합니다.
 
 ## 7. 배포·릴리스
@@ -88,6 +87,8 @@ pnpm dev   # http://localhost:5173
 ## 8. 보안·주의사항
 
 - 비밀값·`.env`(`.env.local` 포함)를 커밋하지 않습니다. 유료 API 키를 쓰지 않습니다.
+- **먼저 묻기:** 새 런타임 의존성 추가, 빌드·배포 설정(`vite.config.ts`, `vercel.json`, 워크플로) 변경.
+- **절대 금지:** 비밀값을 `VITE_*` 변수에 넣기(`VITE_SENTRY_DSN`처럼 공개돼도 되는 값만), `.env` 커밋, `eslint-disable`·`--no-verify`로 검사 우회, `main` 직접 푸시(`gear-sync.yml` 제외).
 - 보안 헤더(`vercel.json`)와 해시 방식 CSP를 유지합니다. E2E가 `securitypolicyviolation`이 없는지 확인합니다.
 - Sentry에는 오류 내용만 보내고 사용자 정보·쿠키·쿼리·브레드크럼은 모으지 않습니다.
 - 운영 주소가 바뀌면 `shared/config`의 `SITE.url`, `static/robots.txt`, `static/sitemap.xml`을 함께 고칩니다.
