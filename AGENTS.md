@@ -62,14 +62,16 @@ pnpm dev   # http://localhost:5173
 
 ## 6. Git·PR
 
-- **흐름: GitHub Flow.** `main`에 직접 커밋·푸시하지 않습니다(예외: `gear-sync.yml` 봇이 매일 `chore: 쇼핑몰 제품 동기화`를 main에 올림). 최신 `main`에서 브랜치를 만들어 PR로만 병합합니다. PR은 목적 하나로 작게, 본문에 무엇·왜·검사 결과를 적습니다.
+- **흐름: GitHub Flow.** `main`에 직접 커밋·푸시하지 않습니다(예외: `gear-sync.yml` 워크플로가(작성자 ryushin01) 매일 `chore: 쇼핑몰 제품 동기화`를 main에 올림). 최신 `main`에서 브랜치를 만들어 PR로만 병합합니다. PR은 목적 하나로 작게, 본문에 무엇·왜·검사 결과를 적습니다.
 - **브랜치 이름:** `feat/…`, `fix/…`, `refactor/…`, `docs/…`, `test/…`, `chore/…`, `release/…`. 이 저장소는 버전을 브랜치 이름에 넣어 왔습니다(예: `feat/v1.3.0-hud-redesign`, `fix/v1.1.1-logo-border`).
 - **커밋 메시지: Conventional Commits.** `<타입>: <한국어 요약>`, 타입은 `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `style`, `chore`, `ci`, `build`. 호환이 깨지면 본문에 `BREAKING CHANGE:`. 실제 예: `feat: 디자인을 My First Gear 쇼핑몰의 HUD 개편에 맞춤, 1.3.0`, `fix: 첫 화면 헤더 로고의 회색 테두리 없앰`.
   - 표준과 다른 점: 버전은 커밋 제목 끝에 `, x.y.z`로 붙이거나(표준은 `(x.y.z)`), PR 제목 앞에 `1.3.0: …`·`feat: 1.1.0 — …`처럼 붙여 왔습니다. 새 PR은 표준 `(x.y.z)`를 써도 됩니다.
-  - 커밋 끝에 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`, PR 본문 끝에 `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
+- **기여자는 ryushin01만 남깁니다(2026-11-21 사용자 결정).** 커밋 작성자는 늘 `ryushin0 <141554987+ryushin01@users.noreply.github.com>`입니다. 이 저장소는 백엔드 코드가 없으므로 `Co-Authored-By` 줄을 넣지 않습니다(백엔드 저장소만 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`). PR 본문 끝에는 `🤖 Generated with [Claude Code](https://claude.com/claude-code)`를 적습니다.
+  - GitHub Actions가 커밋하는 워크플로는 작성자를 ryushin01로 설정합니다(`github-actions[bot]` 금지): `gear-sync.yml`의 `git config user.name/user.email`.
+  - Dependabot PR은 그대로 병합하지 않고, 같은 변경을 ryushin01 커밋으로 다시 만들어 PR로 병합합니다.
 - **버전: Semantic Versioning.** 호환이 깨지면 주, 기능 추가는 부, 버그 수정·작은 개선은 수. `package.json`의 `version`, README 버전 배지(`version-x.y.z`), `CHANGELOG.md`를 한 번에 맞춥니다(지금 README 배지가 1.2.0으로 `package.json` 1.3.0보다 뒤처져 있음). 문서만 바뀐 PR은 보통 버전을 올리지 않습니다.
 - **변경 기록: Keep a Changelog.** `CHANGELOG.md`에 최신 버전을 위에 `## x.y.z - YYYY-MM-DD`로 적습니다. 표준과 다른 점: 추가·변경·수정·제거 소제목 대신 요약 한 문단과 목록으로 적고, `[Unreleased]` 절은 쓰지 않습니다.
-- 병합은 **merge commit**(`Merge pull request #번호 …`, 표준 squash가 아닌 이 저장소 관례). **CI가 통과하면 바로 병합**하고 CodeRabbit 리뷰는 기다리지 않습니다(이미 달린 맞는 지적은 반영). Dependabot 주 버전 PR은 변경 내역을 보고 CI 통과 때만 병합합니다.
+- 병합은 **merge commit**(`Merge pull request #번호 …`, 표준 squash가 아닌 이 저장소 관례). **CI가 통과하면 바로 병합**하고 CodeRabbit 리뷰는 기다리지 않습니다(이미 달린 맞는 지적은 반영). Dependabot PR(주 버전은 변경 내역 확인)은 아래 기여자 규칙대로 다시 만듭니다.
 - 공개 저장소라 Actions가 돕니다. Actions가 막히면 CI와 같은 검사를 로컬에서 돌려 대신합니다.
 
 ## 7. 배포·릴리스
