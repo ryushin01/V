@@ -46,6 +46,7 @@ pnpm dev   # http://localhost:5173
 
 - CI(`.github/workflows/ci.yml`, PR·main 푸시) 순서: `format:check` → `lint` → `lint:fsd` → `check` → `test` → `build` → `build-storybook` → Chromium 설치 → `test:e2e` → `size` → `lhci`.
 - 커밋 훅(husky 등)은 없으므로 PR 전에 위 검사를 직접 돌립니다.
+- **테스트 원칙: Testing Library.** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 도구: 단위·컴포넌트는 Vitest + Testing Library(`@testing-library/svelte`·`user-event`), 화면 흐름은 Playwright E2E, 접근성은 axe(`@axe-core/playwright`, Storybook addon-a11y). 스토리는 addon-a11y로 보지만 CI는 Storybook을 빌드만 합니다.
 
 ## 5. 코드 스타일
 
@@ -55,13 +56,20 @@ pnpm dev   # http://localhost:5173
 - 외부 스크립트·이미지를 새로 쓰면 CSP 지시어(`vite.config.ts`의 `csp`)를 함께 고칩니다. `src/app.html`의 인라인 스크립트는 한 블록으로 둡니다.
 - 버그를 고치면 고치기 전에 실패하는 테스트를 함께 넣습니다.
 - 접근성(KWCAG 2.2, `docs/accessibility.md`): 네이티브 요소 우선, 텍스트 대비 4.5:1 이상, 배치·룰러 조작을 포함한 모든 기능 키보드, 초점 표시 유지(`outline: none` 단독 금지), 조작 크기 24px 이상, 입력 레이블과 오류의 `aria-invalid`·`aria-describedby` 연결, 바뀌는 안내는 `shared/ui`의 `LiveMessage`(`role="status"`), 화면마다 고유 제목(`PageMeta`). Svelte 접근성 경고는 `svelte/valid-compile`·`svelte-check`가 잡습니다.
+- **타입: TypeScript strict.** `tsconfig.json`(`$app/tsconfig` 확장)에서 `strict`를 켭니다. `any`·`as` 단언·`@ts-ignore`는 피하고, 외부 입력(배치도 파일, 공유 링크, 쇼핑몰 피드)은 `guards.ts` 등으로 검사합니다.
+- **서식:** Prettier(`.prettierrc`)를 그대로 따릅니다(Biome 없음).
+- **접근성 기준: WCAG 2.2·KWCAG 2.2.** 자동 검사는 Svelte 컴파일러 접근성 경고(eslint-plugin-svelte `svelte/valid-compile`, `svelte-check`)와 axe(Playwright E2E, Storybook addon-a11y), Lighthouse 접근성 100점입니다. React가 아니라 eslint-plugin-jsx-a11y는 쓰지 않습니다.
 
 ## 6. Git·PR
 
-- `main`에 직접 커밋·푸시하지 않습니다(예외: `gear-sync.yml` 봇이 매일 `chore: 쇼핑몰 제품 동기화`를 main에 올림). 최신 `main`에서 `feat/v1.x.y-…`, `fix/v1.x.y-…`, `docs/…` 브랜치를 만들고 PR을 올립니다.
-- 커밋: `<type>: 한국어 요약` 예) `feat: 디자인을 My First Gear 쇼핑몰의 HUD 개편에 맞춤, 1.3.0`. PR 제목은 버전을 앞에 둡니다 예) `1.3.0: 디자인을 My First Gear 쇼핑몰의 HUD 개편에 맞춤`. 커밋 끝에 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`, PR 본문 끝에 `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
-- 버전: 기능·수정 PR은 `CHANGELOG.md`에 `## x.y.z - YYYY-MM-DD` 절을 더하고 README 버전 배지를 맞춥니다. 문서만 바뀐 PR은 보통 버전을 올리지 않습니다.
-- 병합은 **merge commit**(`Merge pull request #번호 …`). **CI가 통과하면 바로 병합**하고 CodeRabbit 리뷰는 기다리지 않습니다(이미 달린 맞는 지적은 반영). Dependabot 주 버전 PR은 변경 내역을 보고 CI 통과 때만 병합합니다.
+- **흐름: GitHub Flow.** `main`에 직접 커밋·푸시하지 않습니다(예외: `gear-sync.yml` 봇이 매일 `chore: 쇼핑몰 제품 동기화`를 main에 올림). 최신 `main`에서 브랜치를 만들어 PR로만 병합합니다. PR은 목적 하나로 작게, 본문에 무엇·왜·검사 결과를 적습니다.
+- **브랜치 이름:** `feat/…`, `fix/…`, `refactor/…`, `docs/…`, `test/…`, `chore/…`, `release/…`. 이 저장소는 버전을 브랜치 이름에 넣어 왔습니다(예: `feat/v1.3.0-hud-redesign`, `fix/v1.1.1-logo-border`).
+- **커밋 메시지: Conventional Commits.** `<타입>: <한국어 요약>`, 타입은 `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `style`, `chore`, `ci`, `build`. 호환이 깨지면 본문에 `BREAKING CHANGE:`. 실제 예: `feat: 디자인을 My First Gear 쇼핑몰의 HUD 개편에 맞춤, 1.3.0`, `fix: 첫 화면 헤더 로고의 회색 테두리 없앰`.
+  - 표준과 다른 점: 버전은 커밋 제목 끝에 `, x.y.z`로 붙이거나(표준은 `(x.y.z)`), PR 제목 앞에 `1.3.0: …`·`feat: 1.1.0 — …`처럼 붙여 왔습니다. 새 PR은 표준 `(x.y.z)`를 써도 됩니다.
+  - 커밋 끝에 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`, PR 본문 끝에 `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
+- **버전: Semantic Versioning.** 호환이 깨지면 주, 기능 추가는 부, 버그 수정·작은 개선은 수. `package.json`의 `version`, README 버전 배지(`version-x.y.z`), `CHANGELOG.md`를 한 번에 맞춥니다(지금 README 배지가 1.2.0으로 `package.json` 1.3.0보다 뒤처져 있음). 문서만 바뀐 PR은 보통 버전을 올리지 않습니다.
+- **변경 기록: Keep a Changelog.** `CHANGELOG.md`에 최신 버전을 위에 `## x.y.z - YYYY-MM-DD`로 적습니다. 표준과 다른 점: 추가·변경·수정·제거 소제목 대신 요약 한 문단과 목록으로 적고, `[Unreleased]` 절은 쓰지 않습니다.
+- 병합은 **merge commit**(`Merge pull request #번호 …`, 표준 squash가 아닌 이 저장소 관례). **CI가 통과하면 바로 병합**하고 CodeRabbit 리뷰는 기다리지 않습니다(이미 달린 맞는 지적은 반영). Dependabot 주 버전 PR은 변경 내역을 보고 CI 통과 때만 병합합니다.
 - 공개 저장소라 Actions가 돕니다. Actions가 막히면 CI와 같은 검사를 로컬에서 돌려 대신합니다.
 
 ## 7. 배포·릴리스
