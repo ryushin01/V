@@ -1,7 +1,7 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.2.0-121214)
+![version](https://img.shields.io/badge/version-1.3.1-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
@@ -76,6 +76,8 @@ corepack enable pnpm
 pnpm install
 pnpm dev        # http://localhost:5173
 ```
+
+`.env` 없이 바로 실행됩니다(`.env.example`의 `VITE_SENTRY_DSN`은 오류 수집용 선택 값). 제품 카탈로그(쇼핑몰 제품 스냅샷 포함), 글꼴, 아이콘은 모두 저장소에 들어 있고 쇼핑몰 피드는 `gear-sync` 워크플로가 받을 때만 쓰므로, 인터넷이 끊겨도 `pnpm dev`나 `pnpm build && pnpm preview`로 모든 화면을 그대로 볼 수 있습니다. 바깥 주소는 저장소·쇼핑몰 링크뿐입니다.
 
 | 명령                                         | 설명                                                                                                                                  |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
