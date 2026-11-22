@@ -1,5 +1,13 @@
 # 변경 기록
 
+## 1.3.2 - 2026-11-22
+
+운영 주소를 다른 프로젝트와 같은 `<프로젝트>-ryushin01.vercel.app` 형식으로 맞췄습니다. Vercel 프로젝트 이름을 `v-setup-planner`에서 `v`로 바꿔 주소가 `https://v-ryushin01.vercel.app`이 되었습니다.
+
+- 사이트 주소 설정(`src/shared/config`), `robots.txt`, `sitemap.xml`, README·AGENTS.md·개발 문서와 테스트의 주소를 새 주소로 바꿈
+- 옛 주소(`v-setup-planner-ryushin01.vercel.app`)도 한동안 함께 열림
+- 브라우저에 저장된 배치도 데이터베이스 이름(`v-setup-planner`)은 그대로 둠(바꾸면 저장된 배치도가 사라짐)
+
 ## 1.3.1 - 2026-11-21
 
 인터넷이 없는 곳에서도 포트폴리오가 그대로 보이는지 검사를 더했습니다. 실행 중에 부르는 바깥 API·CDN은 원래 없어 앱 코드는 그대로입니다.

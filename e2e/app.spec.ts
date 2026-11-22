@@ -782,11 +782,11 @@ test.describe('런칭 기본', () => {
 		await page.goto('/');
 		await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
 			'content',
-			'https://v-setup-planner-ryushin01.vercel.app/og-image.jpg'
+			'https://v-ryushin01.vercel.app/og-image.jpg'
 		);
 		await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
 			'href',
-			'https://v-setup-planner-ryushin01.vercel.app/'
+			'https://v-ryushin01.vercel.app/'
 		);
 		expect((await request.get('/og-image.jpg')).status()).toBe(200);
 		expect(await (await request.get('/robots.txt')).text()).toContain('Disallow: /plans/');
