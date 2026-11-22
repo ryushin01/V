@@ -55,6 +55,7 @@
 | iMac 24인치 (M4)                       | 54.7×14.7              | 143      | 어댑터      |
 | Apple Studio Display 27인치            | 62.3×16.8              | 21       | 일반 사용   |
 | Antec Torque 오픈 프레임 케이스        | 28.5×62.1              | 550      | 추정        |
+| COUGAR CONQUER 오픈 프레임 케이스      | 25.5×68.5              | 550      | 추정        |
 
 ## 추가 모델 (2026-11-10)
 
@@ -149,3 +150,4 @@ My-First-Gear 쇼핑몰의 상품 목록(`https://my-first-gear-ryushin01.vercel
 - iMac 24인치: [Apple 사양](https://hn.jakechampion.name/reader/https://www.apple.com/imac-24/specs), [Multitronic](https://multitronic.fi/en/products/4408291)
 - Apple Studio Display: [Apple 사양](https://apple.com/kg/studio-display/specs)
 - Antec Torque: [TechPowerUp](https://www.techpowerup.com/248923/antec-presents-futuristic-angular-frame-open-air-chassis), [bit-tech](https://bit-tech.net/reviews/tech/cases/antec-torque-review/1/)
+- COUGAR CONQUER(2017): [KitGuru 리뷰](https://www.kitguru.net/components/cases/dominic-moass/cougar-conquer-aluminiumglass-case-review-the-300-case/), [GamersNexus 리뷰](https://www.gamersnexus.net/hwreviews/3178-cougar-conquer-case-review), [TechPowerUp 리뷰](https://techpowerup.com/review/cougar-conquer) — 255 × 580 × 685mm(너비 × 높이 × 깊이)

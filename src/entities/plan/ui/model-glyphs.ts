@@ -25,6 +25,7 @@ export type GlyphId =
 	| 'h9-flow'
 	| 'north'
 	| 'torque'
+	| 'conquer'
 	| 'uppspel'
 	| 'magnus-pro'
 	| 'besta'
@@ -477,6 +478,23 @@ export const MODEL_GLYPHS: Record<GlyphId, Draw> = {
 		),
 		rect(-w * 0.28, -d * 0.18, w * 0.56, d * 0.36, 0.8, 'body')
 	],
+	// 양쪽 강화유리 판 안의 각진 알루미늄 골격, 가운데 메인보드 판과 위쪽 360mm 라디에이터 팬 세 개
+	conquer: (w, d) => {
+		const fan = Math.min(w * 0.3, d * 0.08);
+		return [
+			rect(-w / 2, -d / 2, w, d, 0.6, 'faint'),
+			rect(-w / 2, -d / 2, 0.8, d, 0, 'faint'),
+			rect(w / 2 - 0.8, -d / 2, 0.8, d, 0, 'faint'),
+			path(
+				`M${-w / 2 + 0.8} ${-d / 2}L${-w * 0.3} ${-d * 0.32}L${-w * 0.3} ${d * 0.32}L${-w / 2 + 0.8} ${d / 2}M${w / 2 - 0.8} ${-d / 2}L${w * 0.3} ${-d * 0.32}L${w * 0.3} ${d * 0.32}L${w / 2 - 0.8} ${d / 2}`
+			),
+			rect(-w / 2 + 0.8, -d / 2, w - 1.6, 2, 0.4, 'solid'),
+			rect(-w / 2 + 0.8, d / 2 - 2, w - 1.6, 2, 0.4, 'solid'),
+			rect(-w * 0.22, -d * 0.3, w * 0.44, d * 0.6, 0.8, 'body'),
+			...[-1, 0, 1].map((step) => circle(0, step * fan * 2.1, fan)),
+			...[-1, 0, 1].map((step) => circle(0, step * fan * 2.1, fan * 0.3, 'solid'))
+		];
+	},
 	// 뒤쪽 케이블 구멍 두 개
 	uppspel: (w, d) => [
 		rect(-w / 2, -d / 2, w, d, 1.5, 'body'),

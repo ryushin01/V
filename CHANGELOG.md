@@ -1,5 +1,14 @@
 # 변경 기록
 
+## 1.4.0 - 2026-11-22
+
+My First Gear 쇼핑몰(1.6.1)에 새로 올라온 쿠거 CONQUER(2017년 첫 모델, Conquer 2·Essence 아님) 케이스를 카탈로그에 더했습니다. id를 쇼핑몰 slug와 같은 `cougar-conquer`로 두어 판매가와 쇼핑몰 상품 링크가 이어집니다.
+
+- 카탈로그: COUGAR CONQUER 오픈 프레임 케이스 25.5×68.5cm(255 × 580 × 685mm 중 너비 × 깊이, KitGuru·GamersNexus·TechPowerUp 리뷰 사양). 전력은 다른 케이스와 같은 550W 추정값. '쿠거'·'컨커'로도 찾음
+- 그림: Antec Torque처럼 위에서 본 오픈 프레임. 양쪽 강화유리 판 안의 각진 알루미늄 골격, 가운데 메인보드 판, 위쪽 360mm 라디에이터 팬 세 개. 내 제품 정의의 PC 본체 모양에 '각진 오픈 프레임'으로도 고를 수 있음
+- 쇼핑몰 피드 스냅샷을 다시 받음(`cougar-conquer` 항목 추가)
+- 화면 글자 파일을 다시 만듦(`pnpm fonts`)
+
 ## 1.3.2 - 2026-11-22
 
 운영 주소를 다른 프로젝트와 같은 `<프로젝트>-ryushin01.vercel.app` 형식으로 맞췄습니다. Vercel 프로젝트 이름을 `v-setup-planner`에서 `v`로 바꿔 주소가 `https://v-ryushin01.vercel.app`이 되었습니다.
