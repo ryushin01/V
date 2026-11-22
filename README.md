@@ -1,12 +1,12 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.3.1-121214)
+![version](https://img.shields.io/badge/version-1.3.2-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
 
-**[데모 바로 보기](https://v-setup-planner-ryushin01.vercel.app/)** · 첫 화면에서 **예시로 시작하기**를 누르면 됩니다.
+**[데모 바로 보기](https://v-ryushin01.vercel.app/)** · 첫 화면에서 **예시로 시작하기**를 누르면 됩니다.
 
 > **프로젝트 상태:** Svelte 5 runes mode로 만든 **포트폴리오 프로젝트**이고, 실제 서비스 런칭을 가정해 **1.0.0**으로 고도화했습니다(점검 계산 가속, 탭 동기화, 오프라인·설치, 보안 헤더, 전체 백업). 2D 배치까지 구현했고, 서버 없이 브라우저의 IndexedDB에만 저장합니다(전체 백업 파일로 다른 기기에 옮김). 실제 모델의 치수와 소비 전력은 공개 자료에서 확인한 값을 우선 썼고, 확인하지 못한 값은 추정값으로 표시했습니다. 전력 점검에 쓰기 전에 실제 제품을 확인해 주세요. 기준과 출처는 [카탈로그 문서](docs/catalog.md)에 있습니다. 화면의 금액은 모두 가상 데이터입니다.
 

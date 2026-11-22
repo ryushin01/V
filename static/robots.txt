@@ -2,4 +2,4 @@
 User-agent: *
 Disallow: /plans/
 
-Sitemap: https://v-setup-planner-ryushin01.vercel.app/sitemap.xml
+Sitemap: https://v-ryushin01.vercel.app/sitemap.xml
