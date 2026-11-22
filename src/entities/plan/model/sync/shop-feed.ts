@@ -27,6 +27,15 @@ export const SHOP_FEED: ShopFeed = {
 			"price": 129000
 		},
 		{
+			"id": "cougar-conquer",
+			"name": "쿠거 CONQUER",
+			"brand": "COUGAR",
+			"category": "case",
+			"price": 389000,
+			"widthCm": 25.5,
+			"depthCm": 68.5
+		},
+		{
 			"id": "phoenix-keyboard",
 			"name": "피닉스 키보드",
 			"brand": "Phoenix",

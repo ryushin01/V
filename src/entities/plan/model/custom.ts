@@ -106,6 +106,7 @@ export const KIND_PRESETS: Record<ItemKind, KindPreset> = {
 			{ id: 'h9-flow', label: '통풍망 케이스' },
 			{ id: 'north', label: '나무 살 앞면' },
 			{ id: 'torque', label: '오픈 프레임' },
+			{ id: 'conquer', label: '각진 오픈 프레임' },
 			{ id: 'mac-mini', label: '작은 정사각' },
 			{ id: 'mac-studio', label: '둥근 정사각' }
 		]

@@ -388,6 +388,10 @@ const ENTRIES: CatalogEntry[] = [
 	model(PC, 'antec-torque', 'Antec', 'Torque 오픈 프레임 케이스', 28.5, 62.1, 550, 'estimate', {
 		keywords: ['토크']
 	}),
+	// 2017년 첫 CONQUER(Conquer 2·Essence 아님). 255 × 580 × 685mm(너비 × 높이 × 깊이)
+	model(PC, 'cougar-conquer', 'COUGAR', 'CONQUER 오픈 프레임 케이스', 25.5, 68.5, 550, 'estimate', {
+		keywords: ['쿠거', '컨커']
+	}),
 	// 사용자 요청 목록 (2026-11-10). 치수를 찾지 못한 제품은 dimsBasis: 'estimate'입니다.
 	model(
 		DESK,
@@ -1628,6 +1632,7 @@ const GLYPHS: Record<string, string> = {
 	'apple-imac-24': 'imac-24',
 	'apple-studio-display': 'studio-display',
 	'antec-torque': 'torque',
+	'cougar-conquer': 'conquer',
 	'bestpiece-mattz-1800': 'mattz',
 	'sizeof-footrest': 'footrest',
 	'pullizio-footrest': 'footrest-wave',
