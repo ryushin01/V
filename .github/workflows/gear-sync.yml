@@ -50,8 +50,8 @@ jobs:
       - name: main에 반영
         if: steps.diff.outputs.changed == 'true'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "ryushin0"
+          git config user.email "141554987+ryushin01@users.noreply.github.com"
           git add -A src static
           git commit -m "chore: 쇼핑몰 제품 동기화"
           git push origin HEAD:main
