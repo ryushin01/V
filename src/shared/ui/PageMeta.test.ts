@@ -13,12 +13,8 @@ describe('PageMeta', () => {
 		render(PageMeta, { title: '공유된 배치도 | V', path: '/shared' });
 		expect(document.title).toBe('공유된 배치도 | V');
 		expect(meta('meta[property="og:title"]')).toBe('공유된 배치도 | V');
-		expect(meta('meta[property="og:url"]')).toBe(
-			'https://v-ryushin01.vercel.app/shared'
-		);
-		expect(meta('meta[property="og:image"]')).toBe(
-			'https://v-ryushin01.vercel.app/og-image.jpg'
-		);
+		expect(meta('meta[property="og:url"]')).toBe('https://v-ryushin01.vercel.app/shared');
+		expect(meta('meta[property="og:image"]')).toBe('https://v-ryushin01.vercel.app/og-image.jpg');
 		expect(meta('meta[name="twitter:card"]')).toBe('summary_large_image');
 		expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
 			'href',
