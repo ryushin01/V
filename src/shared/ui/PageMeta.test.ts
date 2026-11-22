@@ -14,15 +14,15 @@ describe('PageMeta', () => {
 		expect(document.title).toBe('공유된 배치도 | V');
 		expect(meta('meta[property="og:title"]')).toBe('공유된 배치도 | V');
 		expect(meta('meta[property="og:url"]')).toBe(
-			'https://v-setup-planner-ryushin01.vercel.app/shared'
+			'https://v-ryushin01.vercel.app/shared'
 		);
 		expect(meta('meta[property="og:image"]')).toBe(
-			'https://v-setup-planner-ryushin01.vercel.app/og-image.jpg'
+			'https://v-ryushin01.vercel.app/og-image.jpg'
 		);
 		expect(meta('meta[name="twitter:card"]')).toBe('summary_large_image');
 		expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
 			'href',
-			'https://v-setup-planner-ryushin01.vercel.app/shared'
+			'https://v-ryushin01.vercel.app/shared'
 		);
 	});
 

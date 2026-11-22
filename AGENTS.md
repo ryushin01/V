@@ -6,7 +6,7 @@ AI 코딩 에이전트(Codex, Claude Code 등)가 이 저장소에서 일할 때
 
 - 책상·모니터·PC·게임기·의자·TV·오디오·콘센트를 실제 cm 크기로 방에 배치하고 겹침·동선·시청 거리·전력을 점검하는 웹 앱입니다. 서버 없이 브라우저 IndexedDB에만 저장하는 포트폴리오 프로젝트입니다.
 - 화면 축: 배치도 웹 앱(첫 화면·편집·공유 보기). 로그인 없음.
-- 운영: https://v-setup-planner-ryushin01.vercel.app/ (첫 화면의 **예시로 시작하기**).
+- 운영: https://v-ryushin01.vercel.app/ (첫 화면의 **예시로 시작하기**).
 
 ## 2. 기술 스택과 구조
 
@@ -75,7 +75,7 @@ pnpm dev   # http://localhost:5173
 
 ## 7. 배포·릴리스
 
-- Vercel 프로젝트 `v-setup-planner`(정적 결과물 `build/`). **main만 배포**하고 PR 미리보기는 끔(`vercel.json`의 `git.deploymentEnabled`). Ignored Build Step이 없어 문서만 바꿔도 병합하면 배포됩니다. Vercel Hobby는 계정 전체 하루 100회 한도라 푸시를 모읍니다.
+- Vercel 프로젝트 `v`(정적 결과물 `build/`). **main만 배포**하고 PR 미리보기는 끔(`vercel.json`의 `git.deploymentEnabled`). Ignored Build Step이 없어 문서만 바꿔도 병합하면 배포됩니다. Vercel Hobby는 계정 전체 하루 100회 한도라 푸시를 모읍니다.
 - 라우팅·응답 헤더는 `vercel.json`의 `routes`로 둡니다(`headers`와 함께 쓸 수 없음, 끝에 404를 명시).
 - 데모 모드: 별도 플래그 없이 늘 브라우저 저장소만 씁니다. 금액은 가상 데이터입니다.
 - `gear-sync.yml`: 매일 03:50(KST) My-First-Gear 쇼핑몰 피드(`/feed/gear.json`)를 받아 없는 제품을 카탈로그에 들이고, 바뀌면 `pnpm fonts`·`check`·`test` 뒤 main에 올립니다(→ 운영 배포).
