@@ -82,7 +82,7 @@ pnpm dev   # http://localhost:5173
 - 배포 뒤 운영 주소·공유·편집 화면이 200인지 확인합니다.
 - 릴리스: 병합 뒤 태그 `vX.Y.Z`, 제목 `vX.Y.Z`, 대상은 병합 커밋 전체 SHA, 본문은 CHANGELOG의 해당 절. 그 뒤 백업 `bash ~/Documents/Archive/Backup/backup.sh`.
 - 보관함 계획 문서: `~/Documents/Obsidian Vault/V v1.0.0 고도화 계획.md`. 진행 기록을 날짜와 함께 남깁니다.
-- 소개가 크게 바뀌면 프로필 저장소 `ryushin01/ryushin01` README 프로젝트 표(내용·기술·실행 칸)를 고칩니다. 버전 숫자는 Actions가 자동으로 고칩니다.
+- 소개가 크게 바뀌면 프로필 저장소 `ryushin01/ryushin01` README 프로젝트 표(내용·기술·확인 칸)를 고칩니다. 버전 숫자는 Actions가 자동으로 고칩니다.
 
 ## 8. 보안·주의사항
 
