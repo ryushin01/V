@@ -26,7 +26,7 @@ pnpm install
 pnpm dev   # http://localhost:5173
 ```
 
-- 환경 변수(이름만, `.env.example`): `VITE_SENTRY_DSN`(있을 때만 Sentry). `pnpm screenshots`는 `BASE_URL`을 씁니다.
+- 환경 변수(이름만, `.env.example`): `VITE_SENTRY_DSN`(있을 때만 Sentry). `pnpm screenshots`는 `BASE_URL`, E2E는 `PORT`(기본 4173, 다른 서버와 겹치면 바꿈)를 씁니다.
 - 자료 명령: `pnpm fonts`(화면 글자를 바꾼 뒤 한글 글꼴, 원본을 바꾸면 `--all`), `pnpm icons`(설치 아이콘), `pnpm screenshots`(`build`·`preview` 뒤 README 화면과 `static/og-image.jpg`).
 
 ## 4. 검사·테스트 명령
@@ -45,7 +45,7 @@ pnpm dev   # http://localhost:5173
 | `pnpm lhci`                         | 성능 90·접근성 100·권장 95·SEO 90 등(`lighthouserc.json`)               |
 
 - CI(`.github/workflows/ci.yml`, PR·main 푸시) 순서: `format:check` → `lint` → `lint:fsd` → `check` → `test` → `build` → `build-storybook` → Chromium 설치 → `test:e2e` → `size` → `lhci`.
-- 오프라인 검사: `e2e/offline.spec.ts`는 서비스 워커 없이 처음 방문부터 localhost 밖 요청을 모두 막은 채 첫 화면·예시 배치도·공유 보기가 뜨고 axe 통과·바깥 요청 0건인지, `e2e/app.spec.ts`는 서비스 워커 저장 뒤 오프라인(`setOffline`)을 봅니다. 실행 중 바깥 API·CDN을 새로 부르지 않습니다(쇼핑몰 피드는 `gear-sync`만, 자세한 것은 `docs/development.md`).
+- 오프라인 검사: `e2e/offline.spec.ts`는 localhost 밖 요청을 모두 막은 채 모든 화면·주요 상태(편집·카탈로그·X-ray·그림 저장·공유·축척·백업)를 처음 방문과 서비스 워커 저장 뒤 다시 방문 두 경우로 둘러보며 내용·axe·글꼴·바깥 요청 0건을 보고, `e2e/app.spec.ts`는 서비스 워커 저장 뒤 오프라인(`setOffline`)을 봅니다. 실행 중 바깥 API·CDN을 새로 부르지 않습니다(쇼핑몰 피드는 `gear-sync`만, 자세한 것은 `docs/development.md`).
 - 커밋 훅(husky 등)은 없으므로 PR 전에 위 검사를 직접 돌립니다. CI·배포·릴리스 상태는 명령 결과(`gh pr checks`, `gh run list`, 주소 200 확인)로 확인한 뒤에만 말합니다.
 - **테스트 원칙: Testing Library.** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 도구: 단위·컴포넌트는 Vitest + Testing Library(`@testing-library/svelte`·`user-event`), 화면 흐름은 Playwright E2E, 접근성은 axe(`@axe-core/playwright`, Storybook addon-a11y). 스토리는 addon-a11y로 보지만 CI는 Storybook을 빌드만 합니다.
 

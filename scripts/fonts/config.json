@@ -15,6 +15,7 @@
 		{
 			"family": "IBM Plex Sans KR",
 			"slug": "ibm-plex-sans-kr",
+			"ascii": true,
 			"weights": {
 				"400": "scripts/fonts/ibm-plex-sans-kr/IBMPlexSansKR-Regular.woff2",
 				"500": "scripts/fonts/ibm-plex-sans-kr/IBMPlexSansKR-Medium.woff2"

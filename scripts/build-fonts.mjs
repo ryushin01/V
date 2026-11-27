@@ -156,8 +156,8 @@ async function screenText() {
 	const set = new Set();
 	for (const ch of unescapeAll(parts.join(''))) {
 		const cp = ch.codePointAt(0);
-		// 영문·숫자(ASCII)는 영문 글꼴이 맡음
-		if (cp > 0x7e) set.add(cp);
+		// 영문·숫자(ASCII)는 글꼴 설정에 ascii: true가 있을 때만 화면 글자 파일에 넣습니다(아래 isScreenChar).
+		if (cp >= 0x20) set.add(cp);
 	}
 	return set;
 }
@@ -171,6 +171,13 @@ function cmapOf(sfnt) {
 const fontFace = (family, weight, url, range) =>
 	`@font-face{font-family:'${family}';font-style:normal;font-weight:${weight};font-display:swap;` +
 	`src:url('${url}') format('woff2');unicode-range:${range}}`;
+
+/**
+ * 영문·숫자(ASCII)는 보통 앞에 둔 영문 글꼴(Bodoni Moda, IBM Plex Mono)이 그립니다. 본문 글꼴(IBM Plex Sans KR)처럼
+ * 영문 글꼴 없이 먼저 쓰는 글꼴은 config의 ascii: true로 ASCII도 화면 글자 파일에 넣습니다. 빼면 흔한 영문·숫자마다
+ * 조각 파일을 받아야 해서, 서비스 워커가 저장하지 않은 조각 때문에 오프라인에서 대체 글꼴로 떨어집니다.
+ */
+const isScreenChar = (font, cp) => cp > 0x7e || font.ascii === true;
 
 const screen = await screenText();
 const missing = [];
@@ -192,7 +199,7 @@ for (const font of config.fonts) {
 	for (const [weight, src] of Object.entries(font.weights)) {
 		const original = await readFile(path.join(ROOT, src));
 		const cmap = cmapOf(await fontverter.convert(original, 'sfnt'));
-		const ui = new Set([...screen].filter((cp) => cmap.has(cp)));
+		const ui = new Set([...screen].filter((cp) => cmap.has(cp) && isScreenChar(font, cp)));
 
 		if (CHECK) {
 			// CSS의 unicode-range와 실제 화면 글자 파일의 글자 목록을 모두 확인
