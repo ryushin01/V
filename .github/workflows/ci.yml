@@ -1,44 +1,152 @@
 name: CI
 
+# 검사 내용은 scripts/check.mjs(pnpm check)에 있고, 여기서는 묶음별로 나눠 병렬로 부릅니다.
+# 로컬에서는 pnpm check 한 번으로 같은 검사를 모두 돌립니다.
 on:
   push:
     branches: [main]
+    paths-ignore: ['**/*.md', 'docs/**', 'LICENSE']
   pull_request:
+    paths-ignore: ['**/*.md', 'docs/**', 'LICENSE']
 
+# 같은 브랜치에 새로 푸시하면 이전 실행을 취소합니다.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  check:
-    name: Lint · FSD · Typecheck · Test · Build · Storybook · E2E
+  static:
+    name: Format · Lint · FSD · Typecheck · Unit(coverage)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
       # pnpm 버전은 package.json의 packageManager를 따릅니다.
       - uses: pnpm/action-setup@v6
-
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm lint:fsd
-      - run: pnpm check
-      - run: pnpm test
-      - run: pnpm build
-      - run: pnpm build-storybook
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
-      - run: pnpm size
-      - run: pnpm lhci
+      - uses: actions/cache@v6
+        with:
+          path: |
+            node_modules/.vite
+            node_modules/.cache
+            .svelte-kit
+          key: static-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: static-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - run: pnpm check static
+      - name: 커버리지 표
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
+        run: node scripts/coverage-summary.mjs
+      - uses: actions/upload-artifact@v7
+        if: failure() && hashFiles('coverage/index.html') != ''
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Build · Storybook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Vite·SvelteKit·Storybook 캐시(토큰이 필요 없는 GitHub Actions 캐시)
+      - uses: actions/cache@v6
+        with:
+          path: |
+            node_modules/.vite
+            node_modules/.cache
+            .svelte-kit
+          key: build-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: build-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - run: pnpm check build
+      # E2E·Lighthouse가 다시 빌드하지 않고 이 결과물을 씁니다(pnpm preview는 .svelte-kit/output을 씀).
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build
+          path: |
+            build/
+            storybook-static/
+            .svelte-kit/output/
+          include-hidden-files: true
+          retention-days: 1
+
+  e2e:
+    name: E2E (${{ matrix.name }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 화면 흐름·오프라인·접근성·성능
+            projects: --project=chromium
+          - name: 시각 회귀·Storybook
+            projects: --project=visual --project=storybook
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+      - name: Playwright 버전
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      # 브라우저 파일은 캐시하고, 운영체제 라이브러리만 설치합니다.
+      - uses: actions/cache@v6
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      - run: pnpm check e2e -- ${{ matrix.projects }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report
-          path: test-results/
+          name: playwright-report-${{ strategy.job-index }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  perf:
+    name: Size · Lighthouse
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+      - run: pnpm check perf
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: lighthouse
+          path: .lighthouseci/
+          include-hidden-files: true
           retention-days: 7

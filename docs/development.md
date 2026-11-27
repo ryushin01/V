@@ -140,7 +140,21 @@ My First Gear 쇼핑몰의 HUD 개편(1.2.0)과 같은 조합입니다. 큰 제�
 
 ## CI
 
-`.github/workflows/ci.yml`이 포맷, ESLint, Steiger, 타입, 단위 테스트, 빌드, Storybook 빌드, E2E를 차례로 실행합니다.
+검사는 `scripts/check.mjs`(`pnpm check`) 한곳에 있고, CI(`.github/workflows/ci.yml`)도 이 스크립트를 묶음별로 부릅니다. 로컬에서 `pnpm check` 한 번이면 CI와 같은 검사를 모두 돌리고 단계별 시간을 보여 줍니다.
+
+| 묶음     | 명령                                                          | CI 잡                               |
+| -------- | ------------------------------------------------------------- | ----------------------------------- |
+| `static` | `format:check`·`lint`·`lint:fsd`·`typecheck`·`test:coverage`  | static(build와 병렬)                |
+| `build`  | `build`·`build-storybook`                                     | build(결과물을 아티팩트로 올림)     |
+| `e2e`    | `test:e2e`(`pnpm check e2e -- --project=…`로 프로젝트를 고름) | e2e 2개(화면 흐름 / 시각·Storybook) |
+| `perf`   | `size`·`lhci`                                                 | perf(build 결과물을 다시 씀)        |
+
+- **빌드 시간:** 패키지(pnpm 저장소), `node_modules/.vite`·`node_modules/.cache`(Storybook)·`.svelte-kit`, Playwright 브라우저를 GitHub Actions 캐시에 둡니다(토큰이 필요한 원격 캐시는 쓰지 않음). 같은 브랜치에 다시 푸시하면 이전 실행을 취소하고(`concurrency`), Markdown·`docs/`만 바뀌면 돌지 않습니다. 빌드는 한 번만 하고 E2E·Lighthouse는 그 결과물(`build/`, `storybook-static/`, `.svelte-kit/output/`)을 받아 씁니다.
+- **리포트:** 커버리지 표(전체와 로직 계층 파일)를 잡 요약(`$GITHUB_STEP_SUMMARY`)에 씁니다. 실패할 때만 Playwright HTML 리포트·차이 이미지, 커버리지 HTML, Lighthouse 결과를 7일 보관합니다.
+- **커버리지:** `@vitest/coverage-v8`. 전체 기준선은 1.4.3 도입 때 값(문장 86%, 분기 74%, 함수 87%, 줄 87%) 아래로 내려가지 않게 하고, 로직 계층(점검·전력·케이블 계산 `analysis.ts`, 직렬화 `serialize.ts`·`guards.ts`·`backup.ts`, 공유 링크 `share-link.ts`, 저장 `plans-db.ts`·`plan-sync.ts`)은 파일마다 네 지표 모두 80% 이상이어야 합니다. 기준을 올리는 것은 괜찮지만 내리지 않습니다.
+- **시각 회귀:** `e2e/visual.spec.ts`가 첫 화면·편집·X-ray·공유 보기·없는 주소를 데스크톱(1280×800)·모바일(390×844)로, `e2e/storybook/stories.spec.ts`가 스토리마다 찍어 기준 이미지와 비교합니다. 애니메이션을 멈추고 동작 줄이기·밝은 테마를 고정하며 글꼴을 다 받은 뒤 찍습니다. 글자 그리기가 운영체제마다 달라 Linux에서만 비교하고, 기준 이미지는 CI와 같은 Playwright 공식 Docker 이미지(`pnpm test:visual:update`, macOS는 colima)로 만듭니다. colima는 홈 폴더만 연결하므로 저장소가 홈 폴더 아래에 있어야 합니다.
+- **접근성:** `e2e/a11y.spec.ts`(인트로 재생 중, 키보드 배치, 룰러 십자선, 거리 재기, 겹침 경고, 제품 등록 대화상자와 오류, 공유 대화상자, 다각형 방, 390px 화면)와 Storybook 스토리 전체를 axe(WCAG 2.2 AA까지)로 보고 위반이 있으면 실패합니다. addon-a11y도 미리보기에서 함께 돌므로(`test: 'error'`) 겹치면 끝날 때까지 기다렸다 다시 돌립니다.
+- **성능(큰 방):** `e2e/perf.spec.ts`가 15×15m 방에 물건 300개를 가져와 끌기·키보드 이동을 하며 가장 긴 조작 처리 시간(Event Timing, INP) 200ms 이하, 가장 긴 프레임 간격 200ms 이하, 50ms 넘는 프레임 10% 이하인지 봅니다.
 
 ## 배포
 
@@ -167,7 +181,7 @@ Vercel 프로젝트 `v`에 정적 결과물(`build/`)을 배포합니다. `main`
 배치도는 원래 브라우저에만 있으므로, 앱 파일을 저장해 두면 네트워크 없이도 만들고 고칠 수 있습니다.
 
 - **매니페스트**: `static/manifest.webmanifest`(이름, `standalone`, 아이콘 192·512·마스크용 512). 512 아이콘은 `pnpm icons`가 `scripts/brand/letter-v-512.png`(Flaticon 원본 512px)로 지금 아이콘과 같은 비율로 만듭니다.
-- **서비스 워커**: `src/service-worker/index.ts`. SvelteKit 3에서는 `$app/service-worker`(`self`), `$app/manifest`(`immutable`·`assets`·`prerendered`), `$app/env`(`version`)를 씁니다. 타입 검사는 따로 둔 `src/service-worker/tsconfig.json`(`$app/tsconfig/service-worker`)으로 하고(`pnpm check`에 포함), 루트 `tsconfig.json`과 Steiger에서는 뺍니다.
+- **서비스 워커**: `src/service-worker/index.ts`. SvelteKit 3에서는 `$app/service-worker`(`self`), `$app/manifest`(`immutable`·`assets`·`prerendered`), `$app/env`(`version`)를 씁니다. 타입 검사는 따로 둔 `src/service-worker/tsconfig.json`(`$app/tsconfig/service-worker`)으로 하고(`pnpm typecheck`에 포함), 루트 `tsconfig.json`과 Steiger에서는 뺍니다.
   - 설치할 때 앱 코드·스타일, 영문·라틴 확장 글꼴과 한글 화면 글자 글꼴, 첫 화면·공유 화면·`spa.html`, 아이콘을 저장합니다(약 0.7MB). 한글 글꼴 조각(`/fonts/<글꼴>/*`)과 다른 문자 묶음 글꼴은 쓸 때 받아 같은 버전 저장소에 둡니다(조각 목록 CSS는 화면 글자가 바뀌면 내용이 바뀌므로 버전과 함께 정리).
   - 페이지 이동은 네트워크를 먼저 쓰고, 오프라인이거나 4초 안에 답이 없으면 저장본을 줍니다(`/plans/*`는 `spa.html`). 온라인이면 새로 고칠 때 바로 새 버전을 받습니다.
   - 해시 파일은 저장본을 먼저 씁니다. 새 버전이 활성화되면 이전 버전의 저장본을 지웁니다(`v-app-<version>`).
@@ -195,7 +209,7 @@ Vercel 프로젝트 `v`에 정적 결과물(`build/`)을 배포합니다. `main`
 
 Svelte 컴파일러의 접근성 경고는 `eslint-plugin-svelte`의 `svelte/valid-compile`과 `svelte-check`가 이미 검사합니다.
 
-두 검사 모두 프로덕션 빌드가 먼저 있어야 하며, CI는 빌드 뒤에 돌립니다.
+두 검사 모두 프로덕션 빌드가 먼저 있어야 하며, CI는 build 잡의 결과물을 받아 perf 잡에서 돌립니다. Lighthouse 결과는 바깥 저장소에 올리지 않고 `.lighthouseci/`에만 씁니다(`upload.target: filesystem`).
 
 ## 모니터링
 

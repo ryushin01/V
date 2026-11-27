@@ -49,4 +49,43 @@ describe('공유 링크', () => {
 	it.each(['', '!!!', 'AAAA', 'x'.repeat(100_001)])('잘못된 링크를 거절합니다', async (token) => {
 		expect((await decodePlan(token)).ok).toBe(false);
 	});
+
+	it('비었거나 너무 긴 링크, base64가 아닌 글자, 압축이 아닌 내용은 같은 이유로 거절합니다', async () => {
+		const reason = '링크가 손상되었거나 V 공유 링크가 아닙니다.';
+		for (const token of ['', 'a'.repeat(100_001), '%%%', 'aGVsbG8']) {
+			expect(await decodePlan(token)).toEqual({ ok: false, error: reason });
+		}
+	});
+
+	it('압축은 맞지만 배치도가 아니면 파일 검사의 이유를 알려 줍니다', async () => {
+		const bytes = new TextEncoder().encode('{"version":9}');
+		const stream = new Response(bytes).body;
+		if (!stream) throw new Error('스트림을 만들지 못했습니다');
+		const compressed = new Uint8Array(
+			await new Response(stream.pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()
+		);
+		const token = btoa(String.fromCharCode(...compressed))
+			.replace(/\+/g, '-')
+			.replace(/\//g, '_')
+			.replace(/=+$/, '');
+		const decoded = await decodePlan(token);
+		expect(decoded.ok).toBe(false);
+	});
+
+	it('풀면 512KB가 넘는 링크는 끝까지 풀지 않고 거절합니다', async () => {
+		const bytes = new Uint8Array(600 * 1024).fill(32);
+		const stream = new Response(bytes).body;
+		if (!stream) throw new Error('스트림을 만들지 못했습니다');
+		const compressed = new Uint8Array(
+			await new Response(stream.pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()
+		);
+		const token = btoa(String.fromCharCode(...compressed))
+			.replace(/\+/g, '-')
+			.replace(/\//g, '_')
+			.replace(/=+$/, '');
+		expect(await decodePlan(token)).toEqual({
+			ok: false,
+			error: '링크가 손상되었거나 V 공유 링크가 아닙니다.'
+		});
+	});
 });

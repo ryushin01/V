@@ -24,6 +24,17 @@ function openDatabase(): Promise<IDBDatabase> {
 	});
 }
 
+/**
+ * 트랜잭션이 실패한 이유입니다. error 이벤트 때는 transaction.error가 아직 비어 있어(중단된 뒤에 채워짐)
+ * 실패한 요청의 오류를 먼저 씁니다.
+ */
+function failure(event: Event, transaction: IDBTransaction): unknown {
+	const { target } = event;
+	const requestError =
+		target !== null && target !== transaction && 'error' in target ? target.error : null;
+	return requestError ?? transaction.error;
+}
+
 async function run<T>(
 	mode: IDBTransactionMode,
 	action: (store: IDBObjectStore) => IDBRequest<T>,
@@ -35,8 +46,8 @@ async function run<T>(
 			const transaction = database.transaction(storeName, mode);
 			const request = action(transaction.objectStore(storeName));
 			transaction.oncomplete = () => resolve(request.result);
-			transaction.onerror = () => reject(transaction.error);
-			transaction.onabort = () => reject(transaction.error);
+			transaction.onerror = (event) => reject(failure(event, transaction));
+			transaction.onabort = (event) => reject(failure(event, transaction));
 		});
 	} finally {
 		database.close();
@@ -105,8 +116,8 @@ export async function saveCustomProducts(entries: readonly CatalogEntry[]): Prom
 			let limitError: CustomProductLimitError | null = null;
 			putCustomProducts(transaction, entries, (error) => (limitError = error));
 			transaction.oncomplete = () => resolve();
-			transaction.onerror = () => reject(limitError ?? transaction.error);
-			transaction.onabort = () => reject(limitError ?? transaction.error);
+			transaction.onerror = (event) => reject(limitError ?? failure(event, transaction));
+			transaction.onabort = (event) => reject(limitError ?? failure(event, transaction));
 		});
 	} finally {
 		database.close();
@@ -143,8 +154,8 @@ export async function restoreBackup(
 			const planStore = transaction.objectStore(STORE);
 			for (const plan of plans) planStore.put(plan);
 			transaction.oncomplete = () => resolve();
-			transaction.onerror = () => reject(limitError ?? transaction.error);
-			transaction.onabort = () => reject(limitError ?? transaction.error);
+			transaction.onerror = (event) => reject(limitError ?? failure(event, transaction));
+			transaction.onabort = (event) => reject(limitError ?? failure(event, transaction));
 		});
 	} finally {
 		database.close();

@@ -1,7 +1,7 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.4.2-121214)
+![version](https://img.shields.io/badge/version-1.4.3-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
@@ -79,17 +79,19 @@ pnpm dev        # http://localhost:5173
 
 `.env` 없이 바로 실행됩니다(`.env.example`의 `VITE_SENTRY_DSN`은 오류 수집용 선택 값). 제품 카탈로그(쇼핑몰 제품 스냅샷 포함), 글꼴, 아이콘은 모두 저장소에 들어 있고 쇼핑몰 피드는 `gear-sync` 워크플로가 받을 때만 쓰므로, 인터넷이 끊겨도 `pnpm dev`나 `pnpm build && pnpm preview`로 모든 화면을 그대로 볼 수 있습니다. 바깥 주소는 저장소·쇼핑몰 링크뿐입니다.
 
-| 명령                                         | 설명                                                                                                                                  |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm build` / `pnpm preview`                | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`)                                                                              |
-| `pnpm lint` / `pnpm lint:fsd` / `pnpm check` | ESLint / FSD 구조 / 타입 검사                                                                                                         |
-| `pnpm test`                                  | 단위·컴포넌트 테스트                                                                                                                  |
-| `pnpm test:e2e`                              | 프로덕션 빌드의 실제 화면 검사 (먼저 `build` 필요)                                                                                    |
-| `pnpm size` / `pnpm lhci`                    | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요)                                                                        |
-| `pnpm storybook`                             | Storybook 개발 서버 (`http://localhost:6006`)                                                                                         |
-| `pnpm fonts`                                 | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                                                                                        |
-| `pnpm icons`                                 | 설치용 아이콘(512·마스크용) 다시 만들기                                                                                               |
-| `pnpm screenshots`                           | README 화면과 공유 미리보기 그림 다시 찍기 (`pnpm exec playwright install chromium` 뒤, `build`와 `preview`를 띄우고 `BASE_URL` 지정) |
+| 명령                                             | 설명                                                                                                                                  |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build` / `pnpm preview`                    | 프로덕션 빌드 / 빌드 결과 실행 (`http://localhost:4173`)                                                                              |
+| `pnpm check`                                     | CI와 같은 검사 전체(서식·린트·FSD·타입·커버리지·빌드·E2E·번들 크기·Lighthouse)                                                        |
+| `pnpm lint` / `pnpm lint:fsd` / `pnpm typecheck` | ESLint / FSD 구조 / 타입 검사                                                                                                         |
+| `pnpm test` / `pnpm test:coverage`               | 단위·컴포넌트 테스트 / 커버리지 기준선 포함                                                                                           |
+| `pnpm test:e2e`                                  | 실제 화면·접근성·오프라인·성능·Storybook 검사 (먼저 `build`·`build-storybook` 필요)                                                   |
+| `pnpm test:visual:update`                        | 시각 회귀 기준 이미지 다시 만들기 (Playwright Docker 이미지, Docker 필요)                                                             |
+| `pnpm size` / `pnpm lhci`                        | 번들 크기 예산 / Lighthouse 점수 기준 검사 (먼저 `build` 필요)                                                                        |
+| `pnpm storybook`                                 | Storybook 개발 서버 (`http://localhost:6006`)                                                                                         |
+| `pnpm fonts`                                     | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                                                                                        |
+| `pnpm icons`                                     | 설치용 아이콘(512·마스크용) 다시 만들기                                                                                               |
+| `pnpm screenshots`                               | README 화면과 공유 미리보기 그림 다시 찍기 (`pnpm exec playwright install chromium` 뒤, `build`와 `preview`를 띄우고 `BASE_URL` 지정) |
 
 ## 프로젝트 구조
 
