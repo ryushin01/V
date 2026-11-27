@@ -1,5 +1,18 @@
 # 변경 기록
 
+## 1.4.3 - 2026-11-27
+
+검사를 넓히고 CI를 빠르게 나눴습니다. 화면과 기능은 그대로입니다(저장 실패 때 알리는 오류 하나만 고침). 유료 도구는 쓰지 않습니다.
+
+- 커버리지: `@vitest/coverage-v8`과 `pnpm test:coverage`. 전체는 도입 때 값 아래로 못 내려가게, 로직 계층(점검·전력·케이블 계산, 직렬화·공유 링크, 저장)은 파일마다 80% 이상. 공유 링크의 손상·과대 링크, 옛 데이터베이스 올리기·더 새 버전, 저장 실패 경로 테스트를 더함
+- 수정: IndexedDB 저장이 트랜잭션 오류로 실패하면 `null`로 거절하던 문제. error 이벤트 때는 `transaction.error`가 아직 비어 있어 실패한 요청의 오류(예: `QuotaExceededError`)로 알립니다
+- 시각 회귀: 첫 화면·편집·X-ray·공유 보기·없는 주소(데스크톱·모바일)와 Storybook 스토리 47개를 `toHaveScreenshot`으로 비교. 기준 이미지는 Playwright 공식 Docker 이미지에서 만듦(`pnpm test:visual:update`)
+- 접근성: 인트로 재생 중, 키보드 배치, 룰러 십자선, 거리 재기, 겹침 경고, 제품 등록 대화상자·오류, 공유 대화상자, 다각형 방, 좁은 화면을 axe로 검사. Storybook 스토리도 하나씩 열어 axe 위반이 있으면 실패
+- 성능: 물건 300개 큰 방에서 끌기·키보드 이동의 프레임과 INP 검사(`e2e/perf.spec.ts`). Lighthouse·size-limit 기준은 그대로
+- CI: `pnpm check`(`scripts/check.mjs`) 한 명령으로 CI와 같은 검사를 로컬에서 돌림. 기존 타입 검사는 `pnpm typecheck`로 이름을 바꿈(`gear-sync`도 맞춤). CI는 static·build를 병렬로, build 결과물을 E2E 2개와 Lighthouse가 다시 쓰고, Vite·SvelteKit·Storybook·Playwright 브라우저를 캐시하며, 문서만 바뀌면 돌지 않음
+- 리포트: 커버리지 표를 잡 요약에 쓰고, 실패할 때만 Playwright 리포트·차이 이미지·커버리지·Lighthouse 결과를 7일 보관. Lighthouse 결과는 공개 임시 저장소에 올리지 않음
+- 개발: E2E Storybook 서버 포트 `STORYBOOK_PORT`(기본 6007)
+
 ## 1.4.2 - 2026-11-27
 
 오프라인·로컬 동작을 모든 화면으로 넓혀 확인하고, 그 과정에서 찾은 빈틈을 고쳤습니다. 포트폴리오라 바깥이 끊겨도 화면이 비거나 깨지면 안 되기 때문입니다.

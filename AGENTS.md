@@ -26,28 +26,31 @@ pnpm install
 pnpm dev   # http://localhost:5173
 ```
 
-- 환경 변수(이름만, `.env.example`): `VITE_SENTRY_DSN`(있을 때만 Sentry). `pnpm screenshots`는 `BASE_URL`, E2E는 `PORT`(기본 4173, 다른 서버와 겹치면 바꿈)를 씁니다.
+- 환경 변수(이름만, `.env.example`): `VITE_SENTRY_DSN`(있을 때만 Sentry). `pnpm screenshots`는 `BASE_URL`, E2E는 `PORT`·`STORYBOOK_PORT`(기본 4173·6007, 다른 서버와 겹치면 바꿈)를 씁니다.
 - 자료 명령: `pnpm fonts`(화면 글자를 바꾼 뒤 한글 글꼴, 원본을 바꾸면 `--all`), `pnpm icons`(설치 아이콘), `pnpm screenshots`(`build`·`preview` 뒤 README 화면과 `static/og-image.jpg`).
 
 ## 4. 검사·테스트 명령
 
-| 명령                                | 내용                                                                    |
-| ----------------------------------- | ----------------------------------------------------------------------- |
-| `pnpm format:check` / `pnpm format` | Prettier 검사 / 정리(Markdown 포함)                                     |
-| `pnpm lint`                         | ESLint(eslint-plugin-svelte)                                            |
-| `pnpm lint:fsd`                     | Steiger(FSD)                                                            |
-| `pnpm check`                        | svelte-check + 서비스 워커 타입 검사                                    |
-| `pnpm test`                         | 단위·컴포넌트(Vitest, Testing Library)                                  |
-| `pnpm build`                        | 정적 빌드(`build/`, `spa.html`을 `404.html`로 복사)                     |
-| `pnpm build-storybook`              | Storybook 빌드                                                          |
-| `pnpm test:e2e`                     | 프로덕션 빌드 E2E(룰러·키보드·저장·화면 폭·axe·CSP·오프라인), 먼저 빌드 |
-| `pnpm size`                         | 전체 JS 125 kB, CSS 42 kB(gzip) 예산(`.size-limit.json`)                |
-| `pnpm lhci`                         | 성능 90·접근성 100·권장 95·SEO 90 등(`lighthouserc.json`)               |
+| 명령                                | 내용                                                                  |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| `pnpm format:check` / `pnpm format` | Prettier 검사 / 정리(Markdown 포함)                                   |
+| `pnpm lint`                         | ESLint(eslint-plugin-svelte)                                          |
+| `pnpm lint:fsd`                     | Steiger(FSD)                                                          |
+| `pnpm check`                        | CI와 같은 검사 전체(`scripts/check.mjs`, 묶음만: `pnpm check static`) |
+| `pnpm typecheck`                    | svelte-check + 서비스 워커 타입 검사                                  |
+| `pnpm test` / `pnpm test:coverage`  | 단위·컴포넌트(Vitest, Testing Library) / 커버리지 기준선 포함         |
+| `pnpm build`                        | 정적 빌드(`build/`, `spa.html`을 `404.html`로 복사)                   |
+| `pnpm build-storybook`              | Storybook 빌드                                                        |
+| `pnpm test:e2e`                     | E2E(화면 흐름·axe·오프라인·성능·Storybook), 먼저 두 빌드              |
+| `pnpm test:visual(:update)`         | 시각 회귀 비교(기준 이미지 다시 만들기), Playwright Docker 이미지     |
+| `pnpm size`                         | 전체 JS 125 kB, CSS 42 kB(gzip) 예산(`.size-limit.json`)              |
+| `pnpm lhci`                         | 성능 90·접근성 100·권장 95·SEO 90 등(`lighthouserc.json`)             |
 
-- CI(`.github/workflows/ci.yml`, PR·main 푸시) 순서: `format:check` → `lint` → `lint:fsd` → `check` → `test` → `build` → `build-storybook` → Chromium 설치 → `test:e2e` → `size` → `lhci`.
+- `pnpm check` 묶음: `static`(`format:check`·`lint`·`lint:fsd`·`typecheck`·`test:coverage`) → `build`(`build`·`build-storybook`) → `e2e`(`test:e2e`) → `perf`(`size`·`lhci`). CI(`.github/workflows/ci.yml`, PR·main 푸시, 문서만 바뀌면 건너뜀)는 같은 묶음을 잡으로 나눠 부르고(static·build 병렬, build 결과물을 e2e 2개·perf가 다시 씀), 커버리지 표를 잡 요약에 쓰며 실패할 때만 리포트·차이 이미지를 7일 보관합니다.
+- 커버리지(`vite.config.ts`의 `coverage.thresholds`): 전체는 도입 때 값 아래로 못 내려가고, 로직 계층(`entities/plan`의 analysis·serialize·guards·backup, api의 share-link·plans-db·plan-sync)은 파일마다 80% 이상. 시각 회귀 기준 이미지(`e2e/**/*-snapshots`)는 Linux에서만 비교하며 화면을 바꾸면 `pnpm test:visual:update`(홈 폴더 아래 저장소, Docker 필요)로 다시 만듭니다.
 - 오프라인 검사: `e2e/offline.spec.ts`는 localhost 밖 요청을 모두 막은 채 모든 화면·주요 상태(편집·카탈로그·X-ray·그림 저장·공유·축척·백업)를 처음 방문과 서비스 워커 저장 뒤 다시 방문 두 경우로 둘러보며 내용·axe·글꼴·바깥 요청 0건을 보고, `e2e/app.spec.ts`는 서비스 워커 저장 뒤 오프라인(`setOffline`)을 봅니다. 실행 중 바깥 API·CDN을 새로 부르지 않습니다(쇼핑몰 피드는 `gear-sync`만, 자세한 것은 `docs/development.md`).
 - 커밋 훅(husky 등)은 없으므로 PR 전에 위 검사를 직접 돌립니다. CI·배포·릴리스 상태는 명령 결과(`gh pr checks`, `gh run list`, 주소 200 확인)로 확인한 뒤에만 말합니다.
-- **테스트 원칙: Testing Library.** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 도구: 단위·컴포넌트는 Vitest + Testing Library(`@testing-library/svelte`·`user-event`), 화면 흐름은 Playwright E2E, 접근성은 axe(`@axe-core/playwright`, Storybook addon-a11y). 스토리는 addon-a11y로 보지만 CI는 Storybook을 빌드만 합니다.
+- **테스트 원칙: Testing Library.** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 도구: 단위·컴포넌트는 Vitest + Testing Library(`@testing-library/svelte`·`user-event`), 화면 흐름은 Playwright E2E, 접근성은 axe(`@axe-core/playwright`, Storybook addon-a11y). 스토리는 `e2e/storybook/stories.spec.ts`가 하나씩 열어 axe 위반이 있으면 실패하고 시각 비교도 합니다. `e2e/a11y.spec.ts`는 키보드 배치·룰러 십자선·거리 재기·대화상자·좁은 화면 상태를, `e2e/perf.spec.ts`는 물건 300개 방에서 프레임·INP를 봅니다.
 
 ## 5. 코드 스타일
 

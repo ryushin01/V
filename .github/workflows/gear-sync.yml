@@ -45,7 +45,7 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: |
           pnpm fonts
-          pnpm check
+          pnpm typecheck
           pnpm test
       - name: main에 반영
         if: steps.diff.outputs.changed == 'true'

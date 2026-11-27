@@ -12,7 +12,8 @@ export default ts.config(
 			'build',
 			'storybook-static',
 			'playwright-report',
-			'test-results'
+			'test-results',
+			'coverage'
 		]
 	},
 	js.configs.recommended,

@@ -26,5 +26,6 @@ vite.config.ts.timestamp-*
 /storybook-static
 /playwright-report
 /test-results
+/coverage
 *storybook.log
 .lighthouseci

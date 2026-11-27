@@ -69,7 +69,31 @@ export default defineConfig(({ mode }) => {
 		test: {
 			environment: 'jsdom',
 			include: ['src/**/*.test.ts'],
-			setupFiles: ['./vitest.setup.ts']
+			setupFiles: ['./vitest.setup.ts'],
+			coverage: {
+				provider: 'v8',
+				include: ['src/**/*.{ts,svelte}'],
+				exclude: [
+					'src/**/*.{test,stories}.ts',
+					'src/**/*.d.ts',
+					'src/service-worker/**',
+					'src/routes/**',
+					// 동기화 스크립트가 만드는 데이터 파일
+					'src/entities/plan/model/sync/shop-feed.ts'
+				],
+				reporter: ['text-summary', 'json-summary', 'html'],
+				reportsDirectory: 'coverage',
+				// 전체는 1.4.3 도입 때 값(문장 86.1%, 분기 75.0%, 함수 87.2%, 줄 87.3%) 아래로 내려가지 않게 하고,
+				// 로직 계층(점검·전력·케이블 계산, 직렬화·공유 링크, 저장)은 파일마다 80%를 넘게 합니다.
+				thresholds: {
+					statements: 86,
+					branches: 74,
+					functions: 87,
+					lines: 87,
+					'src/entities/plan/{model/{analysis,serialize,guards,backup},api/{share-link,plans-db,plan-sync}}.ts':
+						{ statements: 80, branches: 80, functions: 80, lines: 80, perFile: true }
+				}
+			}
 		}
 	};
 });
