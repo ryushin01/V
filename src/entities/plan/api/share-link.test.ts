@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createSamplePlan } from '../model/factory';
-import { decodePlan, encodePlan } from './share-link';
+import { decodePlan, decodeShareHash, encodePlan } from './share-link';
 
 describe('공유 링크', () => {
 	it('주소에 넣을 수 있는 문자로 왕복합니다', async () => {
@@ -87,5 +87,16 @@ describe('공유 링크', () => {
 			ok: false,
 			error: '링크가 손상되었거나 V 공유 링크가 아닙니다.'
 		});
+	});
+
+	it('주소 해시(# 포함·제외)에서 배치도를 읽고, 비었거나 다른 값이면 같은 오류를 돌려줍니다', async () => {
+		const plan = createSamplePlan();
+		const token = await encodePlan(plan);
+		for (const hash of [`#${token}`, token]) {
+			const result = await decodeShareHash(hash);
+			expect(result.ok && result.plan.name).toBe(plan.name);
+		}
+		const broken = await decodeShareHash('#broken');
+		for (const hash of ['', '#']) expect(await decodeShareHash(hash)).toEqual(broken);
 	});
 });
