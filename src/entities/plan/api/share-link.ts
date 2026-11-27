@@ -77,3 +77,8 @@ export async function decodePlan(token: string): Promise<ParseResult> {
 		return INVALID;
 	}
 }
+
+/** 주소 해시(`#` 포함·제외)에서 배치도를 읽습니다. 공유 보기는 해시가 바뀔 때마다 이 함수로 다시 읽습니다. */
+export function decodeShareHash(hash: string): Promise<ParseResult> {
+	return decodePlan(hash.startsWith('#') ? hash.slice(1) : hash);
+}

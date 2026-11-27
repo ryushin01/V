@@ -428,6 +428,47 @@ test.describe('공유와 오류 화면', () => {
 		await expect(page.locator('[data-item-id]')).toHaveCount(13);
 	});
 
+	test('같은 탭에서 해시만 바꾸면 그 배치도를 보이고, 뒤로 가면 앞의 배치도로 돌아옵니다', async ({
+		page
+	}) => {
+		const shareUrl = async () => {
+			await page.getByRole('button', { name: '공유' }).click();
+			const field = page.getByLabel('주소');
+			await expect(field).toHaveValue(/\/shared#/);
+			return new URL(await field.inputValue());
+		};
+		await openSample(page);
+		const sample = await shareUrl();
+		await openEmpty(page);
+		const empty = await shareUrl();
+
+		await page.goto(sample.href);
+		const heading = page.getByRole('heading', { level: 1 });
+		await expect(heading).toHaveText('예시: 책상과 TV를 함께 쓰는 방');
+		const copy = page.getByRole('button', { name: /내 배치도로 복사/ });
+		await copy.focus();
+
+		// 다른 공유 링크를 주소창에 붙여 넣은 것처럼 해시만 바꿉니다(문서는 다시 읽지 않음).
+		await page.evaluate((hash) => (location.hash = hash), empty.hash);
+		await expect(heading).toHaveText('새 배치도');
+		await expect(page).toHaveTitle(/^새 배치도 \|/);
+		await expect(page.getByRole('status').filter({ hasText: '새 배치도' })).toBeAttached();
+		await expect(copy).toBeFocused();
+
+		await page.goBack();
+		await expect(heading).toHaveText('예시: 책상과 TV를 함께 쓰는 방');
+		await page.goForward();
+		await expect(heading).toHaveText('새 배치도');
+
+		await page.evaluate(() => (location.hash = '#broken'));
+		await expect(page.getByRole('alert')).toContainText('V 공유 링크가 아닙니다');
+		await expect(heading).toHaveText('배치도를 열 수 없습니다');
+		await page.goBack();
+		await expect(heading).toHaveText('새 배치도');
+		await expect(page.getByRole('alert').filter({ hasText: '공유 링크' })).toHaveCount(0);
+		await expectNoAxeViolations(page);
+	});
+
 	test('손상된 공유 링크는 이유를 알려 줍니다', async ({ page }) => {
 		await page.goto('/shared#broken');
 		await expect(page.getByRole('alert')).toContainText('V 공유 링크가 아닙니다');

@@ -39,7 +39,7 @@ export {
 	unregisterCustomEntry,
 	WATTS_BASIS_LABELS
 } from './model/catalog';
-export { decodePlan, encodePlan } from './api/share-link';
+export { decodePlan, decodeShareHash, encodePlan } from './api/share-link';
 export {
 	BACKUP_FILE_MAX_BYTES,
 	BACKUP_PLAN_LIMIT,
