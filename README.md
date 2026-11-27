@@ -1,7 +1,7 @@
 # V - 데스크·게이밍 셋업 배치도
 
 [![CI](https://github.com/ryushin01/V/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/V/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.4.1-121214)
+![version](https://img.shields.io/badge/version-1.4.2-121214)
 ![Svelte](https://img.shields.io/badge/Svelte_5-runes-FF3E00?logo=svelte&logoColor=white)
 
 책상, 모니터, PC, 게임기, 의자, TV, 오디오, 콘센트를 실제 cm 크기로 방에 배치하고 겹침, 동선, 시청 거리, 전력을 바로 점검하는 웹 앱입니다.
@@ -49,7 +49,7 @@
 | 키보드       | 방향키 10cm, Shift+방향키 1cm, `R` 15° 회전, 끌기를 대신하는 숫자 입력과 화면 이동 버튼, 키보드로 거리 재기(십자선), 화면 낭독기 결과 안내                                                                                                                                                                                                                                                                     |
 | 터치         | 두 손가락 확대·이동, 한 손가락 끌기                                                                                                                                                                                                                                                                                                                                                                            |
 | 저장·공유    | 자동 저장, 되돌리기·다시 하기, 같은 배치도를 연 다른 탭과 자동으로 맞춤, JSON 내보내기·불러오기(파일 검증), 전체 백업·복원, 배치도 복제, 평면도 그림(PNG) 저장, 서버 없는 공유 링크(금액·이미지 제외)와 공유 미리보기, 라이트·다크 테마                                                                                                                                                                        |
-| 오프라인     | 홈 화면에 앱으로 설치, 서비스 워커로 네트워크 없이도 열고 고침, 브라우저에 저장 공간 보호 요청                                                                                                                                                                                                                                                                                                                 |
+| 오프라인     | 홈 화면에 앱으로 설치, 서비스 워커로 네트워크 없이도 열고 고침(바깥 요청 없음, 모든 화면 오프라인 E2E), 브라우저에 저장 공간 보호 요청                                                                                                                                                                                                                                                                         |
 
 ## 기술 스택
 
